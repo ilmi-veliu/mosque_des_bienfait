@@ -5,7 +5,7 @@
 ## 0. Objectifs du projet  
 
 **But**  
-Le projet **Mosquée des Bienfaisants** a pour objectif de fournir une plateforme web moderne qui facilite la communication et la gestion communautaire au sein d’une mosquée. Elle permet aux fidèles de **contacter l’imam**, de **consulter les événements et horaires de prières** (via l’API Mawaqit), et de **réaliser des dons en ligne de manière sécurisée**.  
+Le projet **Mosquée des Bienfaisants** a pour objectif de fournir une plateforme web moderne qui facilite la communication et la gestion communautaire au sein d’une mosquée. Elle permet aux fidèles de **contacter l’imam**, de **consulter les événements et horaires de prières** (via l’API Mawaqit)**.  
 
 ### 🎯 Objectifs SMART  
 
@@ -22,11 +22,6 @@ Le projet **Mosquée des Bienfaisants** a pour objectif de fournir une plateform
 - Gestion complète des événements (ajout, modification, suppression).  
 - Livrable avant la **semaine 6**.  
 
-3. **Système de dons en ligne**  
-- Ajout d’un bouton de don (Stripe ou PayPal).  
-- Chaque don génère une confirmation.  
-- Intégration simple au MVP.  
-- Livrable avant la **semaine 8**.  
 
 ---
 
@@ -61,7 +56,6 @@ Projet réalisé en **solo**, donc tous les rôles sont assurés par une seule p
 - Messagerie fidèle ↔ imam.  
 - Gestion et affichage d’événements.  
 - Intégration de l’API **Mawaqit** (horaires de prières).  
-- Système de dons (Stripe/PayPal).  
 
 **Exclus du périmètre (hors MVP)**  
 - Messagerie avancée (groupes, fichiers, audio).  
@@ -102,8 +96,7 @@ Projet réalisé en **solo**, donc tous les rôles sont assurés par une seule p
   - Gestion des événements (CRUD).  
   - Intégration API Mawaqit.  
 
-### Phase 3 : Paiements et finalisation (Semaines 7–8)  
-- Intégration des dons en ligne (Stripe/PayPal).  
+### Phase 3 : finalisation (Semaines 7–8)    
 - Tests fonctionnels (messagerie, événements, horaires, paiements).  
 - Améliorations UI (Vue.js + Tailwind CSS responsive).  
 
