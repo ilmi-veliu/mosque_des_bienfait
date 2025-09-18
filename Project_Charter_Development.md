@@ -82,30 +82,32 @@ Projet réalisé en **solo**, donc tous les rôles sont assurés par une seule p
 
 ### Phase 1 : Cadrage & Préparation (Semaines 1–2)  
 - Rédaction de la fiche de cadrage (ce document).  
-- Choix définitif du stack : **Node.js + HTML + Tailwind CSS + Vue.js + API Mawaqit**.  
+- Choix définitif du stack : **Node.js + HTML + Tailwind CSS + Vue.js + API pour les heures de priere **.  
 - Mise en place des outils : GitHub, Trello, documentation.  
 - Création des maquettes (Figma ou wireframes simples).  
 
-### Phase 2 : Développement du cœur du MVP (Semaines 3–6)  
-- **Semaine 3-4** :  
-  - Authentification basique (JWT + bcrypt).  
-  - Mise en place du backend Node.js (Express).  
-  - Base de données (MongoDB ou PostgreSQL).  
-- **Semaine 5-6** :  
-  - Messagerie simple (text only).  
-  - Gestion des événements (CRUD).  
-  - Intégration API Mawaqit.  
+### Phase 2 : Développement du cœur du MVP (Semaines 3–7)
 
-### Phase 3 : finalisation (Semaines 7–8)    
-- Tests fonctionnels (messagerie, événements, horaires, paiements).  
-- Améliorations UI (Vue.js + Tailwind CSS responsive).  
 
-### Phase 4 : Préparation Demo Day (Semaine 9)  
-- Corrections des bugs.  
-- Documentation rapide (guide utilisateur).  
-- Présentation du parcours utilisateur (messagerie + événements + dons).  
+- **Semaine 3**  
+  - **Frontend** : Page d’accueil (UI/UX simple)  
+  - **Backend** : Intégration API Mawaqit pour les horaires de prière  
+  - **Objectif** : Affichage en direct des heures de prière sur la page d’accueil  
+- **Semaine 4**  
+  - **Frontend** : Formulaire d’inscription + connexion  
+  - **Backend** : Authentification (JWT + bcrypt) + base de données (MongoDB ou PostgreSQL)  
+  - **Objectif** : Permettre aux utilisateurs de créer un compte et de se connecter  
 
----
+- **Semaine 5/6**  
+  - **Frontend** : Interface de messagerie simple (text only)  
+  - **Backend** : Gestion des messages (CRUD, possibilité d’ajout de socket.io)  
+  - **Objectif** : Contacter l’imam et échanger des messages  
+
+- **Semaine 7**  
+  - **Frontend** : Interface de gestion des événements (liste + formulaires)  
+  - **Backend** : API événements (CRUD)  
+  - **Objectif** : Création, affichage et gestion des événements  
+
 
 ## 👤 ilmi 
 
