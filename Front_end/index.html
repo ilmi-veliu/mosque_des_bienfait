@@ -7,19 +7,8 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Navbar -->
-  <header>
-    <nav class="navbar">
-      <div class="logo">Mosquée des Bienfaisants</div>
-      <ul class="nav-links">
-        <li><a href="#">Accueil</a></li>
-        <li><a href="inscription.html">S'inscrire</a></li>
-        <li><a href="#">Contact Imam</a></li>
-        <li><a href="#">Événements</a></li>
-        <li><a href="#">Horaires</a></li>
-      </ul>
-    </nav>
-  </header>
+  <!-- Navbar automatique -->
+  <div id="navbar-container"></div>
 
   <!-- Section Bienvenue -->
   <section class="Bienvenue">
@@ -39,57 +28,17 @@
 
   <!-- Horaires de prières (API) -->
   <section id="times">
-    <h3>Horaires aujourd’hui – Périgueux</h3>
+    <h3>Horaires aujourd'hui – Périgueux</h3>
     <ul id="prayer-times"></ul>
   </section>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-container">
+  <!-- Footer automatique -->
+  <div id="footer-container"></div>
 
-      <!-- Bloc présentation -->
-      <div class="footer-col">
-        <h3>Mosquée des Bienfaisants</h3>
-        <p>
-          Un lieu de paix, de spiritualité et de communauté au service des musulmans de Périgueux 
-          et de tous ceux qui souhaitent découvrir l'Islam.
-        </p>
-      </div>
-
-      <!-- Bloc contact -->
-      <div class="footer-col">
-        <h3>Contact</h3>
-        <p>📍 Mosquée Perigueux - مسجد, 18 Rue du Tennis, 24000 Périgueux</p>
-        <p>📞 05 53 35 14 27</p>
-        <p>📧 Email à mettre ici</p>
-      </div>
-
-      <!-- Bloc horaires -->
-      <div class="footer-col">
-        <h3>Horaires d'Ouverture</h3>
-        <p>Ouvert tous les jours pour les prières<br>20 minutes avant et après la prière</p>
-      </div>
-
-      <!-- Bloc liens rapides -->
-      <div class="footer-col">
-        <h3>Liens Rapides</h3>
-        <ul>
-          <li><a href="#">Accueil</a></li>
-          <li><a href="#">Contacter l'Imam</a></li>
-          <li><a href="#">Événements</a></li>
-          <li><a href="#">Horaires des Prières</a></li>
-        </ul>
-      </div>
-
-    </div>
-
-    <!-- Bas du footer -->
-    <div class="footer-bottom">
-      <p>&copy; 2025 Mosquée des Bienfaisants. Tous droits réservés.</p>
-      <p>Site créé avec respect et dévouement pour servir notre communauté</p>
-    </div>
-  </footer>
-
+  <!-- Scripts -->
+  <script src="navbar.js"></script>
+  <script src="footer.js"></script>
+  
   <!-- Script API Horaires -->
   <script>
     const URL = "https://api.aladhan.com/v1/timingsByCity?city=Perigueux&country=France&method=99&customFajr=12&customIsha=12&school=1&latitudeAdjustmentMethod=MIDDLE_OF_THE_NIGHT&adjustment=0&tune=0,0,0,0,0,0";
@@ -155,8 +104,6 @@
         document.getElementById("prayer-times").innerHTML =
           `<li style="color:red;border:0;box-shadow:none;">Impossible de charger les horaires.</li>`;
       });
-  </script>
-  
   </script>
 </body>
 </html>
