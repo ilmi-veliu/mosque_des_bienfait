@@ -729,24 +729,3 @@
   .visible {
     display: block;
   }
-
-  #talkjs-container {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    z-index: 50;
-    width: 20rem;
-    height: 28rem;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: calc(var(--radius) + 4px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    overflow: hidden;
-  }
-  
-  .chat-close-talkjs {
-    position: absolute !important;
-    top: 10px !important;
-    right: 10px !important;
-    z-index: 10000 !important;
-  }
