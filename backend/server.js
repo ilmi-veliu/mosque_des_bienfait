@@ -26,6 +26,7 @@ sequelize.sync({ alter: true })
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/login'));
 
 // Route de test
 app.get('/api', (req, res) => {

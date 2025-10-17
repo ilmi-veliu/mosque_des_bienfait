@@ -22,7 +22,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
             Accueil
           </a>
-          <a href="inscription.html">
+          <a href="inscription.html" id="nav-inscription">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
             S'inscrire
           </a>
@@ -220,6 +220,16 @@
         }
       });
     });
+
+    // ===== MASQUER S'INSCRIRE SI CONNECTÉ =====
+    document.addEventListener('DOMContentLoaded', function() {
+      const isLoggedIn = localStorage.getItem('token') !== null;
+      const inscriptionLink = document.getElementById('nav-inscription');
+      
+      if (isLoggedIn && inscriptionLink) {
+        inscriptionLink.style.display = 'none';
+      }
+    });
   </script>
 
   <!--Start of Tawk.to Script-->
@@ -235,5 +245,6 @@
   })();
   </script>
   <!--End of Tawk.to Script-->
+
 </body>
 </html>
