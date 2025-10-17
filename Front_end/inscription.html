@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription - Mosquée des Bienfaisants</title>
+    <title>Inscription & Connexion - Mosquée des Bienfaisants</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        .inscription-container {
+        .auth-container {
             max-width: 1200px;
             margin: 80px auto;
             padding: 40px 20px;
@@ -15,7 +15,7 @@
             gap: 40px;
         }
 
-        .inscription-card {
+        .auth-card {
             background: white;
             border-radius: 12px;
             padding: 40px;
@@ -23,7 +23,7 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
-        .inscription-card h2 {
+        .auth-card h2 {
             font-size: 28px;
             margin-bottom: 24px;
             color: #1f2937;
@@ -59,8 +59,56 @@
             font-size: 15px;
         }
 
-        .form-section {
-            grid-column: 2;
+        /* ONGLETS */
+        .tabs-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn:hover {
+            color: #2c5f2d;
+        }
+
+        .tab-btn.active {
+            color: #2c5f2d;
+            border-bottom-color: #2c5f2d;
+        }
+
+        /* CONTENU DES ONGLETS */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .form-description {
@@ -133,6 +181,57 @@
             box-shadow: 0 0 0 3px rgba(44, 95, 45, 0.1);
         }
 
+        .form-group input.error {
+            border-color: #dc2626;
+        }
+
+        .success-message {
+            display: none;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #a7f3d0;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        .error-message {
+            display: none;
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #fecaca;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .submit-btn {
             width: 100%;
             padding: 14px;
@@ -154,6 +253,11 @@
         .submit-btn:hover {
             background: #234d24;
             box-shadow: 0 4px 12px rgba(44, 95, 45, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
         }
 
         .btn-icon {
@@ -184,83 +288,56 @@
             color: #2c5f2d;
         }
 
-        .privacy-section {
-            grid-column: 1;
-            grid-row: 2;
-        }
-
-        .privacy-section h2 {
-            font-size: 24px;
-        }
-
-        .privacy-section p {
-            color: #6b7280;
-            line-height: 1.7;
-            font-size: 15px;
-        }
-
-        .success-message {
-            display: none;
-            background: #d1fae5;
-            color: #065f46;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .forgot-password {
             text-align: center;
-            border: 1px solid #a7f3d0;
+            margin-top: 16px;
+        }
+
+        .forgot-password a {
+            color: #2c5f2d;
+            text-decoration: none;
+            font-size: 14px;
             font-weight: 500;
         }
 
-        .success-message.show {
-            display: block;
-            animation: slideIn 0.5s;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .forgot-password a:hover {
+            color: #234d24;
         }
 
         @media (max-width: 968px) {
-            .inscription-container {
+            .auth-container {
                 grid-template-columns: 1fr;
                 padding: 20px;
                 margin-top: 40px;
-            }
-
-            .form-section {
-                grid-column: 1;
-            }
-
-            .privacy-section {
-                grid-column: 1;
-                grid-row: auto;
             }
 
             .form-row {
                 grid-template-columns: 1fr;
             }
 
-            .inscription-card {
+            .auth-card {
                 padding: 30px 20px;
+            }
+
+            .tabs-container {
+                margin-bottom: 24px;
+            }
+
+            .tab-btn {
+                font-size: 14px;
+                padding: 10px 16px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar automatique -->
+    <!-- Navbar -->
     <div id="navbar-container"></div>
 
     <!-- Contenu principal -->
-    <div class="inscription-container">
-        <div class="inscription-card">
-            <h2>Pourquoi s'inscrire ?</h2>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Rejoignez notre communauté</h2>
             
             <div class="benefit">
                 <h3>Événements et activités</h3>
@@ -278,105 +355,277 @@
             </div>
         </div>
 
-        <div class="inscription-card form-section">
-            <h2>Formulaire d'inscription</h2>
-            <p class="form-description">Remplissez vos informations pour rejoindre notre communauté</p>
-
-            <div class="success-message" id="successMessage">
-                ✓ Inscription réussie ! Bienvenue dans notre communauté.
+        <div class="auth-card">
+            <!-- ONGLETS -->
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="switchTab('inscription')">
+                    Inscription
+                </button>
+                <button class="tab-btn" onclick="switchTab('connexion')">
+                    Connexion
+                </button>
             </div>
 
-            <form id="registrationForm">
-                <div class="form-row">
+            <!-- CONTENU INSCRIPTION -->
+            <div id="inscription-tab" class="tab-content active">
+                <p class="form-description">Créez votre compte pour rejoindre notre communauté</p>
+
+                <div class="success-message" id="registerSuccess"></div>
+                <div class="error-message" id="registerError"></div>
+
+                <form id="registrationForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Prénom <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="reg_prenom" placeholder="Votre prénom" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nom <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="reg_nom" placeholder="Votre nom" required>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label>Prénom <span class="required">*</span></label>
+                        <label>Email <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <div class="input-icon">
                                 <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                                 </svg>
                             </div>
-                            <input type="text" placeholder="Votre prénom" required>
+                            <input type="email" id="reg_email" placeholder="votre.email@example.com" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Nom <span class="required">*</span></label>
+                        <label>Téléphone <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <div class="input-icon">
                                 <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                                 </svg>
                             </div>
-                            <input type="text" placeholder="Votre nom de famille" required>
+                            <input type="tel" id="reg_telephone" placeholder="+33 1 23 45 67 89" required>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label>Email <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <div class="input-icon">
-                            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    <div class="form-group">
+                        <label>Mot de passe <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <input type="password" id="reg_password" placeholder="Min 6 caractères" required minlength="6">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <div class="btn-icon">
+                            <svg viewBox="0 0 24 24" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
                             </svg>
                         </div>
-                        <input type="email" placeholder="votre.email@example.com" required>
-                    </div>
-                </div>
+                        S'inscrire
+                    </button>
 
-                <div class="form-group">
-                    <label>Numéro de téléphone <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <div class="input-icon">
-                            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                    <a href="index.html" class="back-link">
+                        <span>←</span> Retour à l'accueil
+                    </a>
+                </form>
+            </div>
+
+            <!-- CONTENU CONNEXION -->
+            <div id="connexion-tab" class="tab-content">
+                <p class="form-description">Connectez-vous à votre compte</p>
+
+                <div class="success-message" id="loginSuccess"></div>
+                <div class="error-message" id="loginError"></div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Email <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                </svg>
+                            </div>
+                            <input type="email" id="login_email" placeholder="votre.email@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mot de passe <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <div class="input-icon">
+                                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <input type="password" id="login_password" placeholder="Votre mot de passe" required>
+                        </div>
+                    </div>
+
+                    <div class="forgot-password">
+                        <a href="#">Mot de passe oublié ?</a>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <div class="btn-icon">
+                            <svg viewBox="0 0 24 24" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                             </svg>
                         </div>
-                        <input type="tel" placeholder="+33 1 23 45 67 89" required>
-                    </div>
-                </div>
+                        Se connecter
+                    </button>
 
-                <button type="submit" class="submit-btn">
-                    <div class="btn-icon">
-                        <svg viewBox="0 0 24 24" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-                        </svg>
-                    </div>
-                    S'inscrire maintenant
-                </button>
-
-                <a href="index.html" class="back-link">
-                    <span>←</span>
-                    Retour à l'accueil
-                </a>
-            </form>
-        </div>
-
-        <div class="inscription-card privacy-section">
-            <h2>Protection des données</h2>
-            <p>Vos informations personnelles sont protégées et utilisées uniquement pour la communication de la mosquée. Nous ne partageons jamais vos données avec des tiers et respectons votre vie privée.</p>
+                    <a href="index.html" class="back-link">
+                        <span>←</span> Retour à l'accueil
+                    </a>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Footer automatique -->
+    <!-- Footer -->
     <div id="footer-container"></div>
 
     <!-- Scripts -->
     <script src="navbar.js"></script>
     <script src="footer.js"></script>
     <script>
-        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        // SWITCH ENTRE ONGLETS
+        function switchTab(tabName) {
+            // Gérer les boutons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Gérer le contenu
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // FORM INSCRIPTION
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const successMsg = document.getElementById('successMessage');
-            successMsg.classList.add('show');
+            const formData = {
+                prenom: document.getElementById('reg_prenom').value,
+                nom: document.getElementById('reg_nom').value,
+                email: document.getElementById('reg_email').value,
+                telephone: document.getElementById('reg_telephone').value,
+                password: document.getElementById('reg_password').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('registerSuccess').textContent = '✓ ' + data.message;
+                    document.getElementById('registerSuccess').classList.add('show');
+                    this.reset();
+                    setTimeout(() => {
+                        document.getElementById('registerSuccess').classList.remove('show');
+                    }, 5000);
+                } else {
+                    document.getElementById('registerError').textContent = '✕ ' + (data.message || 'Erreur lors de l\'inscription');
+                    document.getElementById('registerError').classList.add('show');
+                    setTimeout(() => {
+                        document.getElementById('registerError').classList.remove('show');
+                    }, 5000);
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('registerError').textContent = '✕ Impossible de se connecter au serveur';
+                document.getElementById('registerError').classList.add('show');
+            }
+        });
+
+        // FORM CONNEXION
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            this.reset();
+            const emailInput = document.getElementById('login_email');
+            const passwordInput = document.getElementById('login_password');
             
-            setTimeout(() => {
-                successMsg.classList.remove('show');
-            }, 5000);
+            document.getElementById('loginError').classList.remove('show');
+            emailInput.classList.remove('error');
+            passwordInput.classList.remove('error');
+            
+            const formData = {
+                email: emailInput.value,
+                password: passwordInput.value
+            };
+
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('loginSuccess').textContent = '✓ Connexion réussie ! Redirection...';
+                    document.getElementById('loginSuccess').classList.add('show');
+                    
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                    }
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                    
+                } else {
+                    let errorText = '';
+                    
+                    if (response.status === 404) {
+                        errorText = '✕ Aucun compte trouvé avec cet email';
+                        emailInput.classList.add('error');
+                    } else if (response.status === 401) {
+                        errorText = '✕ Mot de passe incorrect';
+                        passwordInput.classList.add('error');
+                    } else {
+                        errorText = '✕ ' + (data.message || 'Erreur lors de la connexion');
+                    }
+                    
+                    document.getElementById('loginError').textContent = errorText;
+                    document.getElementById('loginError').classList.add('show');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('loginError').textContent = '✕ Impossible de se connecter au serveur';
+                document.getElementById('loginError').classList.add('show');
+            }
         });
     </script>
 </body>

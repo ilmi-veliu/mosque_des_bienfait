@@ -1,102 +1,688 @@
-html, body { margin:0; padding:0; }
-.Bienvenue {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 20px;
-}
-
-.services {
-    display: flex;      /* flex permet de aligner sur la meme ligne */
-    justify-content: center;
-    gap: 40px;
-    margin-top: 20px;
-    margin-bottom: 100px;
+/* ===================================
+   VARIABLES CSS - Design System
+   =================================== */
+   :root {
+    --font-size: 16px;
+    --background: #ffffff;
+    --foreground: oklch(0.145 0 0);
+    --card: #ffffff;
+    --card-foreground: oklch(0.145 0 0);
+    --primary: #030213;
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.95 0.0058 264.53);
+    --secondary-foreground: #030213;
+    --muted: #ececf0;
+    --muted-foreground: #717182;
+    --accent: #e9ebef;
+    --accent-foreground: #030213;
+    --border: rgba(0, 0, 0, 0.1);
+    --input-background: #f3f3f5;
+    --font-weight-medium: 500;
+    --font-weight-normal: 400;
+    --radius: 0.625rem;
   }
   
-  .services h2 {
-    cursor: pointer;
-    color: #006400;
+  /* ===================================
+     RESET & BASE
+     =================================== */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
-
-.footer {
-    background-color: #f4f4f4;
-    text-align: center;
-    padding: 10px 0;
-    position: relative;
-    bottom: 0;
+  
+  html {
+    font-size: var(--font-size);
+  }
+  
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    line-height: 1.5;
+  }
+  
+  h1 {
+    font-size: 2.25rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.2;
+  }
+  
+  h2 {
+    font-size: 1.875rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.3;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.4;
+  }
+  
+  h4 {
+    font-size: 1.125rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+  
+  p {
+    font-size: 1rem;
+    font-weight: var(--font-weight-normal);
+    line-height: 1.6;
+  }
+  
+  /* ===================================
+     HEADER / NAVBAR
+     =================================== */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     width: 100%;
-}
-.mosque_info {
-    font-size: 14px;
-    color: #555;
-    margin-top: 10px;
-}
-
-.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .navbar .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .navbar-content {
     display: flex;
-    justify-content: space-between; /* logo à gauche, liens à droite */
+    height: 4rem;
     align-items: center;
-    padding: 15px 40px;
-    background: white;
+    justify-content: space-between;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--foreground);
+    font-weight: 600;
+    font-size: 1.125rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .logo:hover {
+    opacity: 0.8;
+  }
+  
+  .logo svg {
+    width: 24px;
+    height: 24px;
+    color: var(--primary);
   }
   
   .nav-links {
-    display: flex;
-    gap: 20px; /* espace entre les liens */
+    display: none;
+    align-items: center;
+    gap: 1.5rem;
     list-style: none;
-    margin: 0;
-    padding: 0;
   }
   
   .nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--foreground);
     text-decoration: none;
-    color: #333;
-    font-weight: bold;
-    padding: 0.5em 1em; 
-    border: 2px solid #f3f6f3;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    font-size: 0.9375rem;
+    font-weight: var(--font-weight-normal);
+    transition: color 0.2s;
   }
   
-  .nav-links a:hover {
-    background-color: #ffffff;
-    color: white;
+  .nav-links a:hover,
+  .nav-links a.active {
+    color: var(--primary);
   }
-
+  
+  .nav-links svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  /* Desktop navigation visible */
+  @media (min-width: 768px) {
+    .nav-links {
+      display: flex;
+    }
+  }
+  
+  /* ===================================
+     HERO SECTION
+     =================================== */
+  .hero-section {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  
+  .hero-background img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+  }
+  
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    color: white;
+    padding: 2rem 1rem;
+    max-width: 56rem;
+    margin: 0 auto;
+  }
+  
+  .hero-content h1 {
+    margin-bottom: 1.5rem;
+    font-size: 2.5rem;
+    line-height: 1.2;
+  }
+  
+  .hero-content p {
+    margin-bottom: 2rem;
+    font-size: 1.125rem;
+    line-height: 1.7;
+    max-width: 42rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .hero-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .hero-btn-primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 1rem;
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .hero-btn-primary:hover {
+    background: rgba(3, 2, 19, 0.9);
+  }
+  
+  .hero-btn-secondary {
+    background: transparent;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius);
+    border: 2px solid white;
+    font-size: 1rem;
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .hero-btn-secondary:hover {
+    background: white;
+    color: var(--primary);
+  }
+  
+  @media (min-width: 640px) {
+    .hero-buttons {
+      flex-direction: row;
+    }
+    
+    .hero-btn-primary,
+    .hero-btn-secondary {
+      width: auto;
+    }
+  }
+  
+  /* ===================================
+     SECTION HORAIRES DE PRIÈRES
+     =================================== */
+  #times {
+    padding: 5rem 1rem;
+    background: rgba(236, 236, 240, 0.3);
+  }
+  
+  #times .container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  
+  .section-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--primary);
+    margin: 0 auto 1rem;
+  }
+  
+  .section-header h2 {
+    margin-bottom: 1rem;
+    color: var(--foreground);
+  }
+  
+  .section-header p {
+    max-width: 42rem;
+    margin: 0 auto;
+    color: var(--muted-foreground);
+  }
+  
+  /* Card Prochaine Prière */
+  .next-prayer-card {
+    max-width: 32rem;
+    margin: 0 auto 3rem;
+    background: var(--card);
+    border: 2px solid var(--primary);
+    border-radius: calc(var(--radius) + 4px);
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(3, 2, 19, 0.12);
+  }
+  
+  .next-prayer-label {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .next-prayer-name {
+    font-size: 2.25rem;
+    color: var(--foreground);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  
+  .next-prayer-time {
+    font-size: 1rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  
+  .current-prayer-info {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  
+  /* Grille des prières */
+  #prayer-times {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  #prayer-times li {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem 1.25rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  #prayer-times li:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-color: var(--muted-foreground);
+  }
+  
+  .prayer-icon {
+    font-size: 2.5rem;
+    opacity: 0.85;
+    margin-bottom: 0.25rem;
+  }
+  
+  .prayer-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 0.75rem;
+  }
+  
+  .prayer-adhan {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--foreground);
+    margin-bottom: 0.25rem;
+  }
+  
+  .prayer-adhan small {
+    font-size: 0.75rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--muted-foreground);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  
+  .prayer-iqama {
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-weight: var(--font-weight-normal);
+    margin-bottom: 0.5rem;
+  }
+  
+  .prayer-desc {
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    line-height: 1.3;
+  }
+  
+  /* Prière active/suivante */
+  #prayer-times li.active {
+    border: 2px solid var(--primary);
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    box-shadow: 0 4px 16px rgba(3, 2, 19, 0.15);
+  }
+  
+  #prayer-times li.active .prayer-name,
+  #prayer-times li.active .prayer-adhan {
+    color: var(--primary);
+  }
+  
+  /* Responsive grille prières */
+  @media (min-width: 1024px) {
+    #prayer-times {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+  
+  @media (max-width: 640px) {
+    #prayer-times {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.875rem;
+    }
+    
+    #prayer-times li {
+      padding: 1.25rem 0.875rem;
+    }
+    
+    .prayer-icon {
+      font-size: 1.75rem;
+    }
+    
+    .prayer-adhan {
+      font-size: 1.5rem;
+    }
+    
+    .prayer-name {
+      font-size: 1rem;
+    }
+  }
+  
+  /* ===================================
+     CHAT WIDGET
+     =================================== */
+  .chat-button {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 50;
+    width: 3.5rem;
+    height: 3.5rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transition: all 0.2s;
+  }
+  
+  .chat-button:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    transform: scale(1.05);
+  }
+  
+  .chat-button svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .chat-widget {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 50;
+    width: 20rem;
+    height: 24rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) + 4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    display: none;
+    flex-direction: column;
+  }
+  
+  .chat-widget.open {
+    display: flex;
+  }
+  
+  .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: calc(var(--radius) + 4px) calc(var(--radius) + 4px) 0 0;
+  }
+  
+  .chat-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: var(--font-weight-medium);
+    font-size: 1rem;
+  }
+  
+  .chat-close {
+    background: transparent;
+    border: none;
+    color: var(--primary-foreground);
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+  }
+  
+  .chat-close:hover {
+    opacity: 1;
+  }
+  
+  .chat-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .chat-message {
+    display: flex;
+    flex-direction: column;
+    max-width: 70%;
+  }
+  
+  .chat-message.user {
+    align-self: flex-end;
+  }
+  
+  .chat-message.imam {
+    align-self: flex-start;
+  }
+  
+  .chat-message-content {
+    padding: 0.75rem;
+    border-radius: var(--radius);
+  }
+  
+  .chat-message.user .chat-message-content {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  
+  .chat-message.imam .chat-message-content {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+  
+  .chat-message-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-bottom: 0.25rem;
+  }
+  
+  .chat-message-text {
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+  
+  .chat-message-time {
+    font-size: 0.75rem;
+    opacity: 0.5;
+    margin-top: 0.25rem;
+  }
+  
+  .chat-input-area {
+    border-top: 1px solid var(--border);
+    padding: 1rem;
+  }
+  
+  .chat-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .chat-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--input-background);
+    font-size: 0.875rem;
+    font-family: inherit;
+  }
+  
+  .chat-input:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  
+  .chat-send-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .chat-send-btn:hover {
+    opacity: 0.9;
+  }
+  
+  .chat-info {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    margin-top: 0.5rem;
+  }
+  
+  /* ===================================
+     FOOTER
+     =================================== */
   .footer {
-    background-color: #0a0a23;
-    color: #fff;
-    padding: 40px 20px;
-    margin-top: 50px;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    padding: 3rem 1.5rem 2rem;
+    margin-top: 5rem;
   }
   
   .footer-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 30px;
-    max-width: 1200px;
+    gap: 2.5rem;
+    max-width: 75rem;
     margin: 0 auto;
   }
   
   .footer-col {
-    flex: 1 1 200px;
+    flex: 1 1 13.75rem;
   }
   
   .footer-col h3 {
-    margin-bottom: 15px;
-    font-size: 18px;
-    border-bottom: 2px solid #444;
-    padding-bottom: 5px;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-foreground);
   }
   
   .footer-col p,
   .footer-col li {
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--muted-foreground);
   }
   
   .footer-col ul {
@@ -104,98 +690,42 @@ html, body { margin:0; padding:0; }
     padding: 0;
   }
   
+  .footer-col ul li {
+    margin-bottom: 0.5rem;
+  }
+  
   .footer-col a {
-    color: #fff;
+    color: var(--muted-foreground);
     text-decoration: none;
-    transition: color 0.3s;
+    transition: color 0.2s;
   }
   
   .footer-col a:hover {
-    color: #00b894; /* vert clair au survol */
+    color: var(--primary-foreground);
   }
   
   .footer-bottom {
     text-align: center;
-    margin-top: 30px;
-    font-size: 13px;
-    border-top: 1px solid #333;
-    padding-top: 15px;
+    margin-top: 2.5rem;
+    font-size: 0.8125rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1.25rem;
+    color: var(--muted-foreground);
   }
-/* === Cartes des prières === */
-#times { background: transparent; }
-
-#prayer-times {
-  list-style: none;
-  padding: 20px;
-  margin: 0 auto;
-  max-width: 1200px;
-
-  display: grid;
-  grid-template-columns: repeat(5, minmax(200px, 1fr));
-  gap: 22px;
-}
-
-#prayer-times li {
-  background: #ffffffcc;                   /* blanc léger comme la maquette */
-  border: 1px solid #e5e7eb;               /* gris clair */
-  border-radius: 22px;                     /* arrondi généreux */
-  padding: 22px 18px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.06);  /* légère ombre */
-  text-align: center;
-
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* entête (icône + nom) */
-.prayer-icon {
-  font-size: 32px;
-  opacity: .85;
-}
-.prayer-name {
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
-  margin-top: 2px;
-}
-
-/* lignes */
-.prayer-adhan {
-  margin-top: 8px;
-  font-size: 28px;
-  font-weight: 800;
-  color: #111827;
-}
-.prayer-adhan small {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.prayer-iqama {
-  color: #6b7280;               /* gris */
-  font-size: 16px;
-  margin-top: 4px;
-}
-
-.prayer-desc {
-  color: #6b7280;
-  font-size: 15px;
-  line-height: 1.3;
-  margin-top: 6px;
-}
-
-/* carte active (prière en cours) */
-#prayer-times li.active {
-  border: 2px solid #111827;
-  box-shadow: 0 6px 18px rgba(0,0,0,.10);
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  #prayer-times { grid-template-columns: repeat(3, minmax(200px,1fr)); }
-}
-@media (max-width: 640px) {
-  #prayer-times { grid-template-columns: repeat(2, minmax(160px,1fr)); padding: 12px; gap: 14px; }
-  .prayer-adhan { font-size: 22px; }
-}
+  
+  /* ===================================
+     UTILITY CLASSES
+     =================================== */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .visible {
+    display: block;
+  }
