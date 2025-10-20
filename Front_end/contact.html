@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Imam - Mosquée des Bienfaisants</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* CSS SPÉCIFIQUE PAGE CONTACT */
+    .contact-section {
+      padding: 80px 20px 60px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+      min-height: 100vh;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: white;
+      color: #374151;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-bottom: 25px;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .back-button:hover {
+      background: #f9fafb;
+      transform: translateX(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .back-button svg {
+      transition: transform 0.3s;
+      width: 16px;
+      height: 16px;
+    }
+
+    .back-button:hover svg {
+      transform: translateX(-2px);
+    }
+
+    .contact-header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+
+    .contact-icon {
+      color: #2c5f2d;
+      margin-bottom: 15px;
+      width: 48px;
+      height: 48px;
+    }
+
+    .contact-header h1 {
+      font-size: 2rem;
+      color: #1f2937;
+      margin-bottom: 12px;
+    }
+
+    .contact-header p {
+      font-size: 1rem;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .contact-info-card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .contact-info-card h2 {
+      font-size: 1.4rem;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+
+    .contact-subtitle {
+      color: #6b7280;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+
+    .contact-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 25px;
+    }
+
+    .contact-method {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 10px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .contact-method:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(44, 95, 45, 0.12);
+    }
+
+    .method-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #2c5f2d 0%, #3a7a3c 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .method-icon svg {
+      color: white;
+      width: 20px;
+      height: 20px;
+    }
+
+    .method-content h3 {
+      font-size: 1rem;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+
+    .method-content p {
+      color: #6b7280;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .request-types {
+      background: #f0fdf4;
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 3px solid #2c5f2d;
+    }
+
+    .request-types h3 {
+      font-size: 1.1rem;
+      color: #1f2937;
+      margin-bottom: 12px;
+    }
+
+    .request-types ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .request-types li {
+      padding: 6px 0;
+      color: #374151;
+      font-size: 0.9rem;
+      position: relative;
+      padding-left: 22px;
+    }
+
+    .request-types li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #2c5f2d;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .chat-direct-card {
+      background: linear-gradient(135deg, #2c5f2d 0%, #3a7a3c 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(44, 95, 45, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .chat-icon-large {
+      margin-bottom: 15px;
+      opacity: 0.9;
+    }
+
+    .chat-icon-large svg {
+      width: 64px;
+      height: 64px;
+    }
+
+    .chat-direct-card h2 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+
+    .chat-direct-card > p {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .chat-instructions {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .chat-instructions p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .arrow-down {
+      animation: bounce 2s infinite;
+    }
+
+    .arrow-down svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-8px);
+      }
+      60% {
+        transform: translateY(-4px);
+      }
+    }
+
+    .chat-button-demo {
+      margin: 15px 0;
+    }
+
+    .demo-chat-btn {
+      background: white;
+      color: #2c5f2d;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .demo-chat-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .demo-chat-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+
+    @media (max-width: 968px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .contact-header h1 {
+        font-size: 2rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .contact-section {
+        padding: 100px 15px 60px;
+      }
+      
+      .contact-info-card,
+      .chat-direct-card {
+        padding: 25px;
+      }
+      
+      .contact-method {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .method-icon {
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- HEADER / NAVBAR -->
+  <header class="navbar">
+    <div class="container">
+      <div class="navbar-content">
+        <a href="index.html" class="logo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+          <span>Mosquée des Bienfaisants</span>
+        </a>
+
+        <nav class="nav-links">
+          <a href="index.html">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
+            Accueil
+          </a>
+          <a href="inscription.html" id="nav-inscription">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+            S'inscrire
+          </a>
+          <a href="contact.html" class="active">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Contact Imam
+          </a>
+          <a href="index.html#evenements">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            Événements
+          </a>
+          <a href="index.html#times">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Horaires
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTACT SECTION -->
+  <section class="contact-section">
+    <div class="container">
+      
+      <!-- Bouton retour -->
+      <a href="index.html" class="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        Retour à l'accueil
+      </a>
+      
+      <!-- En-tête -->
+      <div class="contact-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-icon">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <h1>Contacter l'Imam</h1>
+        <p>Vous avez des questions sur l'Islam, besoin de conseils spirituels, ou souhaitez organiser une cérémonie ? N'hésitez pas à nous contacter.</p>
+      </div>
+
+      <!-- Grille -->
+      <div class="contact-grid">
+        
+        <!-- Infos Contact -->
+        <div class="contact-info-card">
+          <h2>Informations de Contact</h2>
+          <p class="contact-subtitle">Plusieurs moyens pour nous joindre</p>
+          
+          <div class="contact-methods">
+            
+            <!-- Téléphone -->
+            <div class="contact-method">
+              <div class="method-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+              </div>
+              <div class="method-content">
+                <h3>Téléphone</h3>
+                <p>+33 5 53 45 67 89</p>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="contact-method">
+              <div class="method-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"/>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </div>
+              <div class="method-content">
+                <h3>Email</h3>
+                <p>elmernissi.fr@gmail.com</p>
+              </div>
+            </div>
+
+            <!-- Horaires -->
+            <div class="contact-method">
+              <div class="method-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="method-content">
+                <h3>Horaires de consultation</h3>
+                <p>Lundi à Vendredi: 9h-12h, 14h-17h<br>Samedi: 9h-12h</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Types demandes -->
+          <div class="request-types">
+            <h3>Types de Demandes</h3>
+            <ul>
+              <li>Questions religieuses et spirituelles</li>
+              <li>Conseil religieux</li>
+              <li>Organisation de mariages (Nikah)</li>
+              <li>Cours et enseignements islamiques</li>
+              <li>Soutien communautaire</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Chat Direct -->
+        <div class="chat-direct-card">
+          <div class="chat-icon-large">
+            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <h2>Chat Direct avec l'Imam</h2>
+          <p>Pour toute question urgente ou consultation rapide</p>
+          
+          <div class="chat-instructions">
+            <p>Cliquez sur le bouton de chat en bas à droite de votre écran pour démarrer une conversation directe avec l'Imam.</p>
+            <div class="arrow-down">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="chat-button-demo">
+            <button class="demo-chat-btn" onclick="openTawkChat()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              Bouton de chat "Imam"
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <h3>À propos</h3>
+        <p>La Mosquée des Bienfaisants est un lieu de culte, d'apprentissage et de partage au service de la communauté musulmane de Périgueux.</p>
+      </div>
+      <div class="footer-col">
+        <h3>Liens utiles</h3>
+        <ul>
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="index.html#times">Horaires</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="index.html#evenements">Événements</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>Contact</h3>
+        <p>123 Rue de la Mosquée<br>24000 Périgueux, France</p>
+        <p>Tél: +33 5 53 45 67 89<br>Email: contact@mosquee-bienfaisants.fr</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Mosquée des Bienfaisants. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const isLoggedIn = localStorage.getItem('token') !== null;
+      const inscriptionLink = document.getElementById('nav-inscription');
+      
+      if (isLoggedIn && inscriptionLink) {
+        inscriptionLink.style.display = 'none';
+      }
+    });
+
+    function openTawkChat() {
+      if (window.Tawk_API && window.Tawk_API.maximize) {
+        window.Tawk_API.maximize();
+      }
+    }
+  </script>
+
+  <!--Tawk.to Script-->
+  <script type="text/javascript">
+  var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+  (function(){
+  var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+  s1.async=true;
+  s1.src='https://embed.tawk.to/68ee9823ab07261951f59f2d/1j7i04j9u';
+  s1.charset='UTF-8';
+  s1.setAttribute('crossorigin','*');
+  s0.parentNode.insertBefore(s1,s0);
+  })();
+  </script>
+
+</body>
+</html>
