@@ -19,12 +19,11 @@
 ---
 
 ## COULD HAVE:
-- En tant que donateur, je veux consulter l’historique de mes dons, afin de suivre mes contributions.  
--- Critères d’acceptations :  
---- L’utilisateur voit la liste de ses dons avec date, montant et mode de paiement.  
---- L’utilisateur peut télécharger un reçu pour chaque don.  
---- L’utilisateur peut filtrer ses dons par période.  
-
+- En tant que fidèle, je veux recevoir des notifications par email pour les nouveaux événements, 
+  afin de ne pas manquer les activités importantes de la mosquée.
+  -- Critères d'acceptations :
+  --- L'utilisateur peut s'inscrire à la newsletter avec son email.
+  --- L'utilisateur reçoit un email lors de la publication d'un nouvel événement.
 ---
 
 ## WON’T HAVE:
