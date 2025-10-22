@@ -7,12 +7,6 @@
 --- L’affichage se met à jour chaque jour automatiquement.  
 --- Les horaires sont présentés de manière claire et lisible.  
 
-- En tant que donateur, je veux effectuer un don en ligne, afin de soutenir les activités de la mosquée facilement.  
--- Critères d’acceptations :  
---- L’utilisateur peut entrer un montant libre ou choisir un montant prédéfini.  
---- Le paiement est sécurisé (CB, PayPal, etc.).  
---- Une confirmation du don est envoyée à l’utilisateur.  
-
 ---
 
 ## SHOULD HAVE:
