@@ -41,122 +41,66 @@
       <div class="max-w-6xl mx-auto">
         <h2 class="text-3xl font-semibold text-gray-900 mb-10">Événements à Venir</h2>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Loading -->
+        <div v-if="loading" class="text-center py-20">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-900"></div>
+          <p class="mt-4 text-gray-600">Chargement des événements...</p>
+        </div>
+
+        <!-- Erreur -->
+        <div v-else-if="error" class="text-center py-20">
+          <p class="text-red-600">{{ error }}</p>
+        </div>
+
+        <!-- Events Grid -->
+        <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           
-          <!-- Event Card 1 -->
-          <div class="bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all cursor-pointer">
+          <div 
+            v-for="event in filteredEvents" 
+            :key="event.id"
+            class="bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all cursor-pointer"
+          >
             <div class="relative">
               <img 
-                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800" 
-                alt="Iftar" 
+                :src="event.image_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800'" 
+                :alt="event.titre" 
                 class="w-full h-56 object-cover"
               >
               <span class="absolute top-4 left-4 bg-[#030213] text-white px-4 py-1.5 rounded-full text-xs font-semibold">
-                Religieux
+                {{ event.categorie }}
               </span>
             </div>
             <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-3">Iftar Communautaire</h3>
+              <h3 class="text-xl font-semibold text-gray-900 mb-3">{{ event.titre }}</h3>
               <p class="text-gray-600 text-sm leading-relaxed mb-5">
-                Partagez le repas de rupture du jeûne avec la communauté dans une ambiance chaleureuse et fraternelle.
+                {{ event.description }}
               </p>
               <div class="space-y-2.5">
                 <div class="flex items-center gap-2.5 text-sm text-gray-700">
                   <Calendar :size="18" class="text-gray-400" />
-                  <span>lundi 15 septembre 2025</span>
+                  <span>{{ formatDate(event.date) }}</span>
                 </div>
                 <div class="flex items-center gap-2.5 text-sm text-gray-700">
                   <Clock :size="18" class="text-gray-400" />
-                  <span>19:30</span>
+                  <span>{{ formatTime(event.heure) }}</span>
                 </div>
                 <div class="flex items-center gap-2.5 text-sm text-gray-700">
                   <MapPin :size="18" class="text-gray-400" />
-                  <span>Salle principale de la mosquée</span>
+                  <span>{{ event.lieu }}</span>
                 </div>
                 <div class="flex items-center gap-2.5 text-sm text-gray-700">
                   <Users :size="18" class="text-gray-400" />
-                  <span>150 participants attendus</span>
+                  <span>{{ event.participants_max }} participants attendus</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Event Card 2 -->
-          <div class="bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all cursor-pointer">
-            <div class="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=800" 
-                alt="Conférence" 
-                class="w-full h-56 object-cover"
-              >
-              <span class="absolute top-4 left-4 bg-[#030213] text-white px-4 py-1.5 rounded-full text-xs font-semibold">
-                Éducation
-              </span>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-3">Conférence: Les Valeurs Islamiques</h3>
-              <p class="text-gray-600 text-sm leading-relaxed mb-5">
-                Conférence sur l'application des valeurs islamiques dans la vie moderne avec des intervenants experts.
-              </p>
-              <div class="space-y-2.5">
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Calendar :size="18" class="text-gray-400" />
-                  <span>lundi 22 septembre 2025</span>
-                </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Clock :size="18" class="text-gray-400" />
-                  <span>14:00</span>
-                </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <MapPin :size="18" class="text-gray-400" />
-                  <span>Auditorium Al-Nour</span>
-                </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Users :size="18" class="text-gray-400" />
-                  <span>80 participants attendus</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        </div>
 
-          <!-- Event Card 3 -->
-          <div class="bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all cursor-pointer">
-            <div class="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1609599006353-e629aaabfeae?q=80&w=800" 
-                alt="Cours Arabe" 
-                class="w-full h-56 object-cover"
-              >
-              <span class="absolute top-4 left-4 bg-[#030213] text-white px-4 py-1.5 rounded-full text-xs font-semibold">
-                Éducation
-              </span>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-3">Cours d'Arabe pour Débutants</h3>
-              <p class="text-gray-600 text-sm leading-relaxed mb-5">
-                Initiation à l'apprentissage de la langue arabe avec une méthode progressive et adaptée.
-              </p>
-              <div class="space-y-2.5">
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Calendar :size="18" class="text-gray-400" />
-                  <span>dimanche 28 septembre 2025</span>
-                </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Clock :size="18" class="text-gray-400" />
-                  <span>10:00</span>
-                </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <MapPin :size="18" class="text-gray-400" />
-                  <span>Salle de classe n°2</span>
-                </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Users :size="18" class="text-gray-400" />
-                  <span>25 participants attendus</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <!-- Aucun événement -->
+        <div v-if="!loading && !error && filteredEvents.length === 0" class="text-center py-20">
+          <p class="text-gray-600">Aucun événement trouvé.</p>
         </div>
       </div>
     </section>
@@ -164,8 +108,48 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ChevronLeft, Search, Filter, Calendar, Clock, MapPin, Users } from 'lucide-vue-next'
 
 const searchQuery = ref('')
+const events = ref([])
+const loading = ref(true)
+const error = ref(null)
+
+const filteredEvents = computed(() => {
+  if (!searchQuery.value) return events.value
+  
+  return events.value.filter(event => 
+    event.titre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    event.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
+
+const formatDate = (dateString) => {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+  return new Date(dateString).toLocaleDateString('fr-FR', options)
+}
+
+const formatTime = (timeString) => {
+  return timeString.substring(0, 5) // "19:30:00" -> "19:30"
+}
+
+const fetchEvents = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/evenements')
+    if (!response.ok) throw new Error('Erreur lors du chargement des événements')
+    
+    const data = await response.json()
+    events.value = data
+  } catch (err) {
+    console.error('Erreur:', err)
+    error.value = 'Impossible de charger les événements. Vérifiez que le serveur backend est démarré.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchEvents()
+})
 </script>
