@@ -1,9 +1,9 @@
-require('dotenv').config(); // ← EN PREMIER !
-
+// Imports
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const sequelize = require('./config/database');
-
+console.log('🌿 ENV DB_NAME =', process.env.DB_NAME);
 const app = express();
 
 // Middleware
@@ -19,11 +19,6 @@ app.use(cors({
 sequelize.authenticate()
   .then(() => console.log('✅ PostgreSQL connecté'))
   .catch(err => console.log('❌ Erreur PostgreSQL:', err));
-
-// Synchroniser les modèles (créer les tables)
-sequelize.sync({ alter: true })
-  .then(() => console.log('✅ Tables créées/synchronisées'))
-  .catch(err => console.log('❌ Erreur sync:', err));
 
 // Routes authentification
 app.use('/api/auth', require('./routes/auth'));
@@ -47,12 +42,13 @@ app.get('/api/evenements', async (req, res) => {
   }
 });
 
+
 // POST : Créer un événement
 app.post('/api/evenements', async (req, res) => {
   try {
     const { titre, description, categorie, date, heure, lieu, participants_max, image_url } = req.body;
     await sequelize.query(
-      'INSERT INTO evenements (titre, description, categorie, date, heure, lieu, participants_max, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      'INSERT INTO public.evenements (titre, description, categorie, date, heure, lieu, participants_max, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
       { bind: [titre, description, categorie, date, heure, lieu, participants_max, image_url] }
     );
     res.status(201).json({ message: 'Événement créé' });
@@ -68,7 +64,7 @@ app.put('/api/evenements/:id', async (req, res) => {
     const { id } = req.params;
     const { titre, description, categorie, date, heure, lieu, participants_max, image_url } = req.body;
     await sequelize.query(
-      'UPDATE evenements SET titre=$1, description=$2, categorie=$3, date=$4, heure=$5, lieu=$6, participants_max=$7, image_url=$8 WHERE id=$9',
+      'UPDATE public.evenements SET titre=$1, description=$2, categorie=$3, date=$4, heure=$5, lieu=$6, participants_max=$7, image_url=$8 WHERE id=$9',
       { bind: [titre, description, categorie, date, heure, lieu, participants_max, image_url, id] }
     );
     res.json({ message: 'Événement modifié' });
@@ -82,7 +78,7 @@ app.put('/api/evenements/:id', async (req, res) => {
 app.delete('/api/evenements/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await sequelize.query('DELETE FROM evenements WHERE id=$1', { bind: [id] });
+    await sequelize.query('DELETE FROM public.evenements WHERE id=$1', { bind: [id] });
     res.json({ message: 'Événement supprimé' });
   } catch (error) {
     console.error('Erreur:', error);

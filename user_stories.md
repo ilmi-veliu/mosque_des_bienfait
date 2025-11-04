@@ -7,12 +7,6 @@
 --- L’affichage se met à jour chaque jour automatiquement.  
 --- Les horaires sont présentés de manière claire et lisible.  
 
-- En tant que donateur, je veux effectuer un don en ligne, afin de soutenir les activités de la mosquée facilement.  
--- Critères d’acceptations :  
---- L’utilisateur peut entrer un montant libre ou choisir un montant prédéfini.  
---- Le paiement est sécurisé (CB, PayPal, etc.).  
---- Une confirmation du don est envoyée à l’utilisateur.  
-
 ---
 
 ## SHOULD HAVE:
@@ -25,12 +19,11 @@
 ---
 
 ## COULD HAVE:
-- En tant que donateur, je veux consulter l’historique de mes dons, afin de suivre mes contributions.  
--- Critères d’acceptations :  
---- L’utilisateur voit la liste de ses dons avec date, montant et mode de paiement.  
---- L’utilisateur peut télécharger un reçu pour chaque don.  
---- L’utilisateur peut filtrer ses dons par période.  
-
+- En tant que fidèle, je veux recevoir des notifications par email pour les nouveaux événements, 
+  afin de ne pas manquer les activités importantes de la mosquée.
+  -- Critères d'acceptations :
+  --- L'utilisateur peut s'inscrire à la newsletter avec son email.
+  --- L'utilisateur reçoit un email lors de la publication d'un nouvel événement.
 ---
 
 ## WON’T HAVE:
