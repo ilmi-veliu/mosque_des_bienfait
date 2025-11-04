@@ -131,7 +131,7 @@ const formatDate = (dateString) => {
 }
 
 const formatTime = (timeString) => {
-  return timeString.substring(0, 5) // "19:30:00" -> "19:30"
+  return timeString.substring(0, 5)
 }
 
 const fetchEvents = async () => {

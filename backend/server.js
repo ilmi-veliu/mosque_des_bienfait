@@ -33,21 +33,11 @@ app.get('/api', (req, res) => {
 
 // GET : Récupérer tous les événements
 app.get('/api/evenements', async (req, res) => {
-  console.log('🔥 Route /api/evenements appelée !');
   try {
-    // 🔍 Vérifie à quelle base ton backend est connecté
-    const [info] = await sequelize.query(
-      'SELECT current_database() AS db, current_user AS user, inet_server_addr() AS host, inet_server_port() AS port'
-    );
-    console.log('🧠 Contexte de connexion :', info);
-
-    // 🔹 Récupère les événements dans le schéma public
-    const [results] = await sequelize.query('SELECT * FROM public.evenements ORDER BY date ASC');
-    console.log('📊 Nombre d\'événements trouvés :', results.length);
-
+    const [results] = await sequelize.query('SELECT * FROM evenements ORDER BY date ASC');
     res.json(results);
   } catch (error) {
-    console.error('❌ Erreur:', error);
+    console.error('Erreur:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
@@ -96,7 +86,6 @@ app.delete('/api/evenements/:id', async (req, res) => {
   }
 });
 
-// Démarrage serveur
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Serveur lancé sur le port ${PORT}`);
