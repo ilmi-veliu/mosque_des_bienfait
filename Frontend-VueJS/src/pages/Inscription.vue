@@ -362,6 +362,7 @@ const handleLogin = async () => {
       
       if (data.token) {
         localStorage.setItem('token', data.token)
+        window.dispatchEvent(new Event('auth-change'))  // ← LIGNE AJOUTÉE
       }
       
       setTimeout(() => {
