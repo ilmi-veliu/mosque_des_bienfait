@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 router.post('/login', async (req, res) => {
@@ -27,10 +28,21 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Connexion réussie
+    // Générer le token JWT
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Connexion réussie avec token
     res.status(200).json({
       success: true,
       message: 'Connexion réussie',
+      token: token,  // ← TOKEN AJOUTÉ !
       user: {
         id: user.id,
         prenom: user.prenom,
