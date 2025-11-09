@@ -30,14 +30,10 @@ const User = sequelize.define('User', {
   password: {
     type: DataTypes.STRING,
     allowNull: false
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'users',
-  timestamps: false // ← Désactive les timestamps automatiques
+  timestamps: false
 });
 
 module.exports = User;
