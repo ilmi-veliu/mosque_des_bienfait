@@ -15,7 +15,7 @@
         <h3 class="mb-4 text-base font-semibold">Contact</h3>
         <p class="text-sm leading-[1.7] text-[#717182] mb-2">📍 Mosquée Perigueux - مسجد, 18 Rue du Tennis, 24000 Périgueux</p>
         <p class="text-sm leading-[1.7] text-[#717182] mb-2">📞 05 53 35 14 27</p>
-        <p class="text-sm leading-[1.7] text-[#717182]">📧 Email à mettre ici</p>
+        <p class="text-sm leading-[1.7] text-[#717182]">📧 elmernissi.fr@gmail.com</p>
       </div>
       
       <!-- Colonne 3 : Horaires -->
