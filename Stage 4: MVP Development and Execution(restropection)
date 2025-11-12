@@ -1,4 +1,66 @@
-# Stage 4 : Développement et Exécution du MVP
+# 🕌 Mosquée des Bienfaisants – Présentation du projet
+
+## Nom du projet
+**Mosquée des Bienfaisants**
+
+## Présentation brève
+Mosquée des Bienfaisants est une plateforme web complète destinée à la communauté musulmane de Périgueux. Elle permet de consulter les horaires de prière en temps réel, gérer et découvrir les événements de la mosquée, et échanger avec les membres via un système de chat intégré. 
+
+L'objectif est d'offrir un outil moderne, accessible et pratique pour renforcer les liens communautaires et faciliter la pratique religieuse au quotidien.
+
+## Présentation détaillée
+
+### Architecture technique
+Le projet repose sur une architecture full-stack moderne et scalable, avec un frontend développé en **Vue.js 3** et un backend API REST construit avec **Node.js/Express**.
+
+### Frontend
+Le frontend utilise **Vue.js 3** avec la Composition API pour une réactivité optimale, combiné à **Vue Router** pour la navigation dynamique et **Tailwind CSS** pour un design responsive mobile-first. 
+
+L'interface propose des fonctionnalités avancées comme :
+- La recherche dynamique par mots-clés
+- Le filtrage par catégories (Religieux, Éducation, Social, Culturel)
+- Une gestion complète des événements avec opérations CRUD
+
+L'expérience utilisateur s'adapte parfaitement à tous les appareils (ordinateurs, tablettes, smartphones).
+
+### Backend
+Le backend est structuré en architecture MVC avec **Express.js**, offrant une API REST complète, sécurisée et documentée. 
+
+**Sequelize ORM** gère les interactions avec **PostgreSQL**, garantissant une manipulation efficace des données avec validation des entrées et gestion des erreurs robuste. Le système d'authentification protège les routes sensibles et distingue les utilisateurs connectés des visiteurs.
+
+### Base de données
+La base de données **PostgreSQL** stocke de manière fiable et structurée toutes les informations :
+- Comptes utilisateurs avec leurs préférences
+- Événements détaillés (titre, description, date, lieu, catégorie, image)
+- Métadonnées pour assurer la traçabilité des modifications
+
+### Sécurité
+Sur le plan de la sécurité, la plateforme implémente :
+- **bcrypt** pour le hachage sécurisé des mots de passe
+- **JWT** avec tokens d'accès pour l'authentication des sessions
+- Des guards de routes pour protéger les fonctionnalités réservées aux membres
+
+Les horaires de prière sont synchronisés automatiquement quotidiennement via l'**API Aladhan** (méthode de calcul validée par les autorités religieuses), tandis que le système de chat utilise **Tawk.to** pour permettre une communication instantanée entre les membres et les responsables de la mosquée.
+
+### Méthodologie et qualité
+Le projet suit une méthodologie **Agile** avec 7 sprints sur 8 semaines, intégrant :
+- **Git** pour le versioning (150+ commits)
+- **Trello** pour la gestion des tâches
+- Une documentation technique complète (README, API endpoints, guide d'installation)
+
+**24 tests automatisés** (**Vitest** pour le frontend, **Jest** pour le backend) couvrent les fonctionnalités critiques avec un taux de réussite de 100%, assurant stabilité, maintenabilité et évolutivité du code.
+
+## Conclusion
+Mosquée des Bienfaisants propose une solution technique robuste et professionnelle, développée selon les standards de l'industrie, combinant performance, sécurité, qualité logicielle et expérience utilisateur optimale pour servir efficacement les besoins réels de la communauté musulmane de Périgueux.
+Cette version utilise le formatage Markdown de GitHub avec :
+
+Des titres hiérarchisés (#, ##, ###)
+Des sauts de ligne entre les paragraphes
+Des listes à puces pour les énumérations
+Du texte en gras pour les technologies importantes
+Une structure claire et aérée
+
+Copie-colle ce texte dans ton fichier README.md sur GitHub, ça s'affichera proprement !Réessayer# Stage 4 : Développement et Exécution du MVP
 
 **Projet :** Mosquée des Bienfaisants - Plateforme Communautaire  
 **Développeur :** Ilmi Veliu  
@@ -9,673 +71,145 @@
 
 ## 📋 Table des Matières
 
-1. [Planification et Définition des Sprints](#planification-et-définition-des-sprints)
-2. [Exécution des Tâches de Développement](#exécution-des-tâches-de-développement)
-3. [Surveillance des Progrès et Ajustements](#surveillance-des-progrès-et-ajustements)
-4. [Revues de Sprint et Rétrospectives](#revues-de-sprint-et-rétrospectives)
-5. [Intégration Finale et Tests QA](#intégration-finale-et-tests-qa)
-6. [Livrables](#livrables)
+1. [Planification et Définition des Sprints](#planification-pastedPfait sa en bcp plsu courtVoici une version beaucoup plus courte et concise :
+markdown# Stage 4 : Développement et Exécution du MVP
+
+**Projet :** Mosquée des Bienfaisants  
+**Développeur :** Ilmi Veliu  
+**Période :** Octobre - Novembre 2025 (8 semaines)
 
 ---
 
-## 0. Planification et Définition des Sprints
+## 📊 Vue d'Ensemble des Sprints
 
-### Vue d'Ensemble des Sprints
-
-| Sprint | Durée | Domaine d'Action | Vélocité |
-|--------|-------|------------------|----------|
-| Sprint 1 | Semaines 1-2 | Configuration & Planification | 100% |
-| Sprint 2 | Semaine 3 | Frontend - Page d'Accueil | 85% |
-| Sprint 3 | Semaine 4 | Système d'Authentification | 90% |
-| Sprint 4 | Semaine 5 | Migration Vue.js | 87% |
-| Sprint 5 | Semaine 6 | Gestion des Événements | 78% |
-| Sprint 6 | Semaine 7 | Chat & Tests | 83% |
-| Sprint 7 | Semaine 8 | Tests Finaux & Documentation | 83% |
+| Sprint | Période | Objectifs | Vélocité |
+|--------|---------|-----------|----------|
+| 1 | Sem 1-2 | Configuration & Planification | 100% |
+| 2 | Sem 3 | Frontend - Page d'Accueil | 85% |
+| 3 | Sem 4 | Système d'Authentification | 90% |
+| 4 | Sem 5 | Migration Vue.js | 87% |
+| 5 | Sem 6 | Gestion des Événements | 78% |
+| 6 | Sem 7 | Chat & Tests | 83% |
+| 7 | Sem 8 | Tests Finaux & Documentation | 83% |
 
 **Vélocité Moyenne : 86%**
 
 ---
 
-### Sprint 1 : Configuration & Planification (Semaines 1-2)
+## 🎯 Réalisations par Sprint
 
-**Objectifs :**
-- Définir le périmètre du MVP
-- Créer wireframes et maquettes
-- Configurer l'environnement de développement
+### Sprint 1 : Configuration & Planification
+- ✅ Stack technique définie (Vue.js, Node.js, PostgreSQL)
+- ✅ Maquettes Figma créées
+- ✅ Repository GitHub et Trello configurés
 
-**Tâches (Priorité MoSCoW) :**
+### Sprint 2 : Frontend - Page d'Accueil
+- ✅ Page d'accueil responsive en HTML/CSS
+- ✅ Intégration API Aladhan (horaires de prière)
+- ❌ **Blocage :** CORS avec API Mawaqit → Migration vers Aladhan (+2 jours)
 
-| Priorité | Tâche | Assigné | Statut |
-|----------|-------|---------|--------|
-| MUST | Créer fiche de cadrage | Ilmi | ✅ Terminé |
-| MUST | Définir stack technique (Vue.js, Node.js, PostgreSQL) | Ilmi | ✅ Terminé |
-| MUST | Créer maquettes Figma/wireframes | Ilmi | ✅ Terminé |
-| MUST | Configurer repository GitHub | Ilmi | ✅ Terminé |
-| MUST | Configurer Trello | Ilmi | ✅ Terminé |
-| SHOULD | Rechercher APIs horaires de prière | Ilmi | ✅ Terminé |
-| COULD | Définir identité de marque | Ilmi | ✅ Terminé |
+### Sprint 3 : Système d'Authentification
+- ✅ Base de données PostgreSQL configurée
+- ✅ Routes API /register et /login
+- ✅ Sécurité JWT + hashage bcrypt
+- ❌ **Blocage :** Conflit timestamps Sequelize (+2 jours)
 
-**Livrables :**
-- ✅ Document de cadrage projet
-- ✅ Wireframes et maquettes
-- ✅ Repository GitHub configuré
-- ✅ Trello board organisé
+### Sprint 4 : Migration Vue.js
+- ✅ Migration complète HTML/CSS vers Vue.js
+- ✅ Architecture basée composants réutilisables
+- ✅ Vue Router configuré
 
----
+### Sprint 5 : Gestion des Événements
+- ✅ API CRUD complète pour événements
+- ✅ Recherche dynamique en temps réel
+- ✅ Page événements avec cartes
 
-### Sprint 2 : Frontend - Page d'Accueil (Semaine 3)
-
-**Objectifs :**
-- Construire page d'accueil en HTML/CSS
-- Intégrer API horaires de prière
-- Implémentation design responsive
-
-**Tâches (Priorité MoSCoW) :**
-
-| Priorité | Tâche | Assigné | Statut |
-|----------|-------|---------|--------|
-| MUST | Créer structure HTML page d'accueil | Ilmi | ✅ Terminé |
-| MUST | Intégrer Tailwind CSS | Ilmi | ✅ Terminé |
-| MUST | Intégrer API Aladhan (horaires prière) | Ilmi | ✅ Terminé |
-| MUST | Hero section avec CTA | Ilmi | ✅ Terminé |
-| MUST | Navbar responsive | Ilmi | ✅ Terminé |
-| SHOULD | Footer avec liens sociaux | Ilmi | ✅ Terminé |
-| COULD | Animations CSS | Ilmi | ⚠️ Partiel |
-
-**Défis Rencontrés :**
-- ❌ **Blocage :** Erreurs CORS avec API Mawaqit
-- ✅ **Solution :** Migration vers API Aladhan
-- ⏱️ **Impact :** +2 jours
-
-**Livrables :**
-- ✅ Page d'accueil responsive
-- ✅ Affichage horaires de prière en temps réel
-- ✅ Navigation fonctionnelle
-
----
-
-### Sprint 3 : Système d'Authentification (Semaine 4)
-
-**Objectifs :**
-- Créer système inscription/connexion
-- Configurer base de données PostgreSQL
-- Implémenter sécurité JWT
-
-**Tâches (Priorité MoSCoW) :**
-
-| Priorité | Tâche | Assigné | Statut |
-|----------|-------|---------|--------|
-| MUST | Configurer PostgreSQL | Ilmi | ✅ Terminé |
-| MUST | Créer table users | Ilmi | ✅ Terminé |
-| MUST | Route API /register | Ilmi | ✅ Terminé |
-| MUST | Route API /login | Ilmi | ✅ Terminé |
-| MUST | Hashage password avec bcrypt | Ilmi | ✅ Terminé |
-| MUST | Génération tokens JWT | Ilmi | ✅ Terminé |
-| SHOULD | Page inscription frontend | Ilmi | ✅ Terminé |
-| SHOULD | Page connexion frontend | Ilmi | ✅ Terminé |
-| COULD | Validation email | Ilmi | ⚠️ Partiel |
-
-**Défis Rencontrés :**
-- ❌ **Blocage :** Conflit `created_at` vs `createdAt` Sequelize
-- ✅ **Solution :** Désactivation timestamps dans modèle
-- ⏱️ **Impact :** +2 jours
-
-**Livrables :**
-- ✅ Inscription utilisateur fonctionnelle
-- ✅ Connexion sécurisée avec JWT
-- ✅ Table users PostgreSQL
-- ✅ Routes protégées
-
----
-
-### Sprint 4 : Migration Vue.js (Semaine 5)
-
-**Objectifs :**
-- Migrer HTML/CSS vers Vue.js
-- Créer composants réutilisables
-- Configurer Vue Router
-
-**Tâches (Priorité MoSCoW) :**
-
-| Priorité | Tâche | Assigné | Statut |
-|----------|-------|---------|--------|
-| MUST | Installer Vue.js + Vite | Ilmi | ✅ Terminé |
-| MUST | Configurer Vue Router | Ilmi | ✅ Terminé |
-| MUST | Créer composant Navbar | Ilmi | ✅ Terminé |
-| MUST | Créer composant Footer | Ilmi | ✅ Terminé |
-| MUST | Migrer page Accueil | Ilmi | ✅ Terminé |
-| MUST | Migrer page Contact | Ilmi | ✅ Terminé |
-| MUST | Migrer pages Authentification | Ilmi | ✅ Terminé |
-| SHOULD | Gestion état global | Ilmi | ⚠️ Partiel (localStorage) |
-
-**Défis Rencontrés :**
-- ⚠️ **Courbe d'apprentissage :** Concepts Vue.js
-- ⏱️ **Impact :** +2 jours pour apprentissage
-
-**Livrables :**
-- ✅ Migration complète Vue.js
-- ✅ Architecture basée composants
-- ✅ Système de routing fonctionnel
-
----
-
-### Sprint 5 : Gestion des Événements (Semaine 6)
-
-**Objectifs :**
-- Créer opérations CRUD pour événements
-- Construire page événements frontend
-- Implémenter recherche dynamique
-
-**Tâches (Priorité MoSCoW) :**
-
-| Priorité | Tâche | Assigné | Statut |
-|----------|-------|---------|--------|
-| MUST | Créer table evenements PostgreSQL | Ilmi | ✅ Terminé |
-| MUST | API GET /evenements | Ilmi | ✅ Terminé |
-| MUST | API POST /evenements | Ilmi | ✅ Terminé |
-| MUST | API PUT /evenements/:id | Ilmi | ✅ Terminé |
-| MUST | API DELETE /evenements/:id | Ilmi | ✅ Terminé |
-| MUST | Page événements frontend | Ilmi | ✅ Terminé |
-| MUST | Recherche en temps réel | Ilmi | ✅ Terminé |
-| SHOULD | Filtre par catégorie | Ilmi | ✅ Terminé (Sprint 6) |
-| COULD | Upload images | Ilmi | ❌ Non fait (URLs Unsplash) |
-
-**Défis Rencontrés :**
-- ⚠️ **Problème :** Formatage date/heure
-- ⏱️ **Impact :** +1 jour
-
-**Livrables :**
-- ✅ Page événements complète
-- ✅ API CRUD pour événements
-- ✅ Recherche dynamique fonctionnelle
-- ✅ Table evenements PostgreSQL
-
----
-
-### Sprint 6 : Chat & Tests (Semaine 7)
-
-**Objectifs :**
-- Intégrer système de chat
-- Ajouter filtre par catégorie
-- Implémenter tests automatisés
-
-**Tâches (Priorité MoSCoW) :**
-
-| Priorité | Tâche | Assigné | Statut |
-|----------|-------|---------|--------|
-| MUST | Intégrer système chat | Ilmi | ✅ Terminé (Tawk.to) |
-| MUST | Filtre catégorie événements | Ilmi | ✅ Terminé |
-| SHOULD | Tests frontend (Vitest) | Ilmi | ✅ Terminé (18 tests) |
-| SHOULD | Tests backend (Jest) | Ilmi | ✅ Terminé (6 tests) |
-| SHOULD | Documentation API | Ilmi | ✅ Terminé |
-| COULD | Tests E2E | Ilmi | ❌ Non fait |
-
-**Défis Rencontrés :**
-- ❌ **Blocage Majeur :** Échecs intégration TalkJS
-- ✅ **Solution :** Migration vers Tawk.to
-- ⏱️ **Impact :** +4 jours
-
-**Livrables :**
+### Sprint 6 : Chat & Tests
 - ✅ Widget chat Tawk.to intégré
-- ✅ Filtre par catégorie fonctionnel
-- ✅ 24 tests automatisés (100% réussite)
-- ✅ Documentation API complète
+- ✅ Filtre par catégorie événements
+- ✅ 24 tests automatisés (Vitest + Jest)
+- ❌ **Blocage Majeur :** Échecs TalkJS → Migration Tawk.to (+4 jours)
+
+### Sprint 7 : Tests & Documentation
+- ✅ Tous les tests passent (100% réussite)
+- ✅ Documentation technique complète
+- ✅ Rétrospectives sprints terminées
 
 ---
 
-### Sprint 7 : Tests & Documentation (Semaine 8)
-
-**Objectifs :**
-- Finaliser tous les tests
-- Compléter la documentation
-- Préparer présentation finale
-
-**Tâches (Priorité MoSCoW) :**
-
-| Priorité | Tâche | Assigné | Statut |
-|----------|-------|---------|--------|
-| MUST | Corriger tests backend | Ilmi | ✅ Terminé |
-| MUST | Document "Résultats & Leçons Apprises" | Ilmi | ✅ Terminé |
-| MUST | Rétrospectives sprints | Ilmi | ✅ Terminé |
-| MUST | Présentation finale | Ilmi | 🔄 En cours |
-| SHOULD | README complet | Ilmi | ✅ Terminé |
-| COULD | Déploiement production | Ilmi | 🔄 En cours |
-
-**Livrables :**
-- ✅ Tous les tests passent (24/24)
-- ✅ Documentation complète
-- ✅ Rétrospectives terminées
-- 🔄 Présentation en cours
-
----
-
-### Carte des Dépendances
-```
-Sprint 1 (Configuration)
-    ↓
-Sprint 2 (Frontend HTML)
-    ↓
-Sprint 3 (Authentification) ← Requiert PostgreSQL
-    ↓
-Sprint 4 (Migration Vue.js) ← Requiert Frontend HTML
-    ↓
-Sprint 5 (Événements) ← Requiert PostgreSQL + Vue.js
-    ↓
-Sprint 6 (Chat & Tests) ← Requiert Frontend Complet
-    ↓
-Sprint 7 (Tests Finaux) ← Requiert Toutes Fonctionnalités
-```
-
----
-
-## 1. Exécution des Tâches de Développement
-
-### Stratégie de Branches Git
-
-**Branches Utilisées :**
-- `main` - Production (code stable)
-- `ilmi` - Branche de développement principale
-- Branches feature - Créées selon besoin
-
-**Exemple de Workflow :**
-```bash
-# Créer branche feature
-git checkout -b feature/authentication
-
-# Développement
-git add .
-git commit -m "feat: Ajout système authentification JWT"
-
-# Merge dans ilmi
-git checkout ilmi
-git merge feature/authentication
-git push origin ilmi
-```
-
-### Processus de Revue de Code
-
-**Approche Projet Solo :**
-- Auto-revue avant chaque merge
-- Tests automatisés via Jest/Vitest
-- Vérification manuelle fonctionnalités
-- Contrôles qualité du code
-
-### Standards de Code
-
-**JavaScript/Vue.js :**
-- Camel case pour variables (`userEmail`)
-- Pascal case pour composants (`NavbarMenu.vue`)
-- Commentaires pour logique complexe
-- Async/await pour appels API
-
-**Backend :**
-- Routes RESTful (`GET /api/evenements`)
-- Middleware pour authentification
-- Try/catch pour gestion erreurs
-- Console.log pour débogage
-
-**SQL :**
-- Snake case (`created_at`)
-- Clés primaires `id SERIAL`
-- Contraintes NOT NULL explicites
-
----
-
-## 2. Surveillance des Progrès et Ajustements
-
-### Stand-Ups Quotidiens (Format Solo)
-
-**Routine Quotidienne :**
-- Revue Trello matinale
-- Répondre à 3 questions :
-  1. Qu'ai-je accompli hier ?
-  2. Sur quoi je travaille aujourd'hui ?
-  3. Y a-t-il des blocages ?
-
-**Exemple Stand-Up :**
-```
-Lundi 4 Nov :
-✅ Hier : Terminé API événements GET/POST
-🔄 Aujourd'hui : Implémenter PUT/DELETE + tests
-⚠️ Blocage : Problèmes formatage dates PostgreSQL
-```
-
-### Métriques Suivies
-
-| Sprint | Tâches Planifiées | Complétées | Vélocité | Bugs |
-|--------|-------------------|------------|----------|------|
-| Sprint 1 | 7 | 7 | 100% | 0 |
-| Sprint 2 | 7 | 6 | 85% | 2 |
-| Sprint 3 | 9 | 8 | 90% | 3 |
-| Sprint 4 | 8 | 7 | 87% | 2 |
-| Sprint 5 | 9 | 7 | 78% | 4 |
-| Sprint 6 | 6 | 5 | 83% | 5 |
-| Sprint 7 | 6 | 5 | 83% | 1 |
-
-**Vélocité Moyenne : 86%**
-
-**Taux de Résolution des Bugs :**
-- Bugs critiques : Résolus en <1 jour
-- Bugs mineurs : Résolus en <3 jours
-- Taux de résolution : 100%
-
-### Ajustements Effectués
-
-**Sprint 2 :**
-- ❌ **Problème :** CORS avec API Mawaqit
-- ✅ **Solution :** Migration vers API Aladhan
-- ⏱️ **Impact :** +2 jours
-
-**Sprint 3 :**
-- ❌ **Problème :** Conflit timestamps Sequelize
-- ✅ **Solution :** Désactivation timestamps
-- ⏱️ **Impact :** +2 jours
-
-**Sprint 6 :**
-- ❌ **Problème :** Échecs intégration TalkJS
-- ✅ **Solution :** Migration vers Tawk.to
-- ⏱️ **Impact :** +4 jours
-
----
-
-## 3. Revues de Sprint et Rétrospectives
-
-### Rétrospective Sprint 1
-
-**Ce Qui a Bien Fonctionné ✅**
-- Définition claire du périmètre projet
-- Sélection stack technique réussie
-- Configuration GitHub/Trello efficace
-
-**Défis ❌**
-- Incertitude MongoDB vs PostgreSQL
-- Temps passé à rechercher APIs
-
-**Améliorations pour Prochain Sprint 🔧**
-- Valider choix techniques avec école plus tôt
-- Tester APIs avant engagement
-- Allouer plus de temps pour configuration initiale
-
----
-
-### Rétrospective Sprint 2
-
-**Ce Qui a Bien Fonctionné ✅**
-- Développement HTML/CSS rapide
-- Intégration API Aladhan réussie
-- Implémentation design responsive
-
-**Défis ❌**
-- Erreurs CORS initiales
-- Multiples ajustements design
-
-**Améliorations pour Prochain Sprint 🔧**
-- Tester appels API tôt
-- Finaliser design avant codage
-- Utiliser librairies formatage dates
-
----
-
-### Rétrospective Sprint 3
-
-**Ce Qui a Bien Fonctionné ✅**
-- Configuration PostgreSQL réussie
-- Routes auth fonctionnelles
-- Implémentation JWT sécurisée
-
-**Défis ❌**
-- Conflit colonnes timestamps
-- Problèmes gestion état navbar
-
-**Améliorations pour Prochain Sprint 🔧**
-- Définir schéma DB clairement dès le début
-- Considérer Vuex/Pinia pour gestion état
-- Documenter conventions nommage
-
----
-
-### Rétrospective Sprint 4
-
-**Ce Qui a Bien Fonctionné ✅**
-- Migration Vue.js réussie
-- Architecture composants réutilisables
-- Vue Router fonctionne bien
-
-**Défis ❌**
-- Refactoring complet code nécessaire
-- Courbe apprentissage Vue.js
-
-**Améliorations pour Prochain Sprint 🔧**
-- Commencer directement avec Vue.js si possible
-- Utiliser composables Vue pour logique partagée
-- Meilleure organisation structure dossiers
-
----
-
-### Rétrospective Sprint 5
-
-**Ce Qui a Bien Fonctionné ✅**
-- API CRUD complète
-- Recherche dynamique parfaitement fonctionnelle
-- Design cartes événements réussi
-
-**Défis ❌**
-- Gestion images (contournement URLs Unsplash)
-- Complexités formatage date/heure
-
-**Améliorations pour Prochain Sprint 🔧**
-- Planifier upload images dès début
-- Utiliser librairies dates (moment.js/day.js)
-- Implémenter tous filtres dès première itération
-
----
-
-### Rétrospective Sprint 6
-
-**Ce Qui a Bien Fonctionné ✅**
-- Intégration Tawk.to réussie après pivot
-- Filtre catégorie implémenté
-- 24 tests automatisés complétés
-
-**Défis ❌**
-- Échecs multiples TalkJS (4 jours perdus)
-- Problèmes configuration Jest (ES6/CommonJS)
-
-**Améliorations pour Prochain Sprint 🔧**
-- "Règle des 2h" : si bloqué, trouver alternatives plus vite
-- Tester intégrations tierces avant engagement
-- Standardiser syntaxe modules dès début
-
----
-
-### Rétrospective Sprint 7
-
-**Ce Qui a Bien Fonctionné ✅**
-- Tous tests passent (100% succès)
-- Documentation complète
-- Rétrospectives complètes
-
-**Défis ❌**
-- Configuration Jest backend
-- Problèmes colonne `created_at` dans tests
-- Temps limité pour tests E2E
-
-**Améliorations pour Projets Futurs 🔧**
-- Implémenter TDD dès début
-- Standardiser ES6 partout
-- Allouer plus temps pour tests
-
----
-
-## 4. Intégration Finale et Tests QA
-
-### Tests d'Intégration
-
-**Frontend ↔ Backend :**
-```bash
-# Test 1 : Inscription Utilisateur
-✅ Frontend envoie POST /api/auth/register
-✅ Backend hash password + sauvegarde DB
-✅ Frontend reçoit token JWT
-✅ Redirection vers page accueil
-
-# Test 2 : Connexion Utilisateur
-✅ Frontend envoie POST /api/auth/login
-✅ Backend vérifie password
-✅ Frontend stocke token dans localStorage
-✅ Navbar affiche bouton "Déconnexion"
-
-# Test 3 : Gestion Événements
-✅ Frontend GET /api/evenements
-✅ Backend requête PostgreSQL
-✅ Frontend affiche cartes événements
-✅ Recherche temps réel filtre résultats
-```
+## 📈 Métriques Projet
 
 ### Tests Automatisés
+- **Frontend (Vitest) :** 18 tests ✅
+- **Backend (Jest) :** 6 tests ✅
+- **Total :** 24/24 tests passent (100%)
 
-**Tests Frontend (Vitest) - 18 Tests :**
-```bash
-npm run test
+### Qualité Code
+- **Commits :** 150+
+- **Bugs résolus :** 17/17 (100%)
+- **Taux de complétion :** 100%
 
-✅ Navbar.test.js - 2 tests
-✅ Inscription.test.js - 4 tests
-✅ Connexion.test.js - 4 tests
-✅ Auth.test.js - 4 tests
-✅ DateFormat.test.js - 2 tests
-✅ Footer.test.js - 2 tests
-
-Total : 18/18 passent (100%)
-```
-
-**Tests Backend (Jest) - 6 Tests :**
-```bash
-npm run test
-
-✅ auth.test.js - 2 tests
-✅ login.test.js - 3 tests
-✅ api.test.js - 1 test
-
-Total : 6/6 passent (100%)
-```
-
-### Tests Manuels
-
-**Navigateurs Testés :**
-- ✅ Chrome (Mac)
-- ✅ Safari (Mac)
-- ✅ Firefox (Mac)
-- ✅ Chrome Mobile (iOS)
-
-**Appareils Testés :**
-- ✅ MacBook Air (13")
-- ✅ iPhone (Safari mobile)
-- ✅ iPad (Safari)
-
-**Résultats :**
-- Design responsive : ✅ OK sur tous appareils
-- Fonctionnalités : ✅ OK sur tous navigateurs
-- Performance : ✅ <2s temps chargement
-
-### Bugs Critiques Résolus
-
-| Bug | Gravité | Statut | Temps Résolution |
-|-----|---------|--------|------------------|
-| Navbar ne se met pas à jour après connexion | 🔴 Critique | ✅ Résolu | 1 jour |
-| Colonne `created_at` manquante | 🔴 Critique | ✅ Résolu | 2 jours |
-| Erreurs CORS API Mawaqit | 🔴 Critique | ✅ Résolu (changé API) | 2 jours |
-| Tests backend ES6/CommonJS | 🟡 Moyen | ✅ Résolu | 1 jour |
-| Échecs intégration TalkJS | 🟡 Moyen | ✅ Résolu (changé outil) | 4 jours |
+### Technologies Utilisées
+- **Frontend :** Vue.js 3, Tailwind CSS, Vue Router
+- **Backend :** Node.js, Express, Sequelize
+- **Base de données :** PostgreSQL
+- **APIs :** Aladhan (horaires), Tawk.to (chat)
+- **Tests :** Vitest, Jest
+- **Gestion :** Git, Trello
 
 ---
 
-## 5. Livrables
+## 🔧 Défis Rencontrés et Solutions
 
-### Code Source
+| Problème | Impact | Solution |
+|----------|--------|----------|
+| CORS API Mawaqit | +2 jours | Migration vers API Aladhan |
+| Conflit timestamps Sequelize | +2 jours | Désactivation timestamps |
+| Échecs intégration TalkJS | +4 jours | Migration vers Tawk.to |
+| Configuration Jest ES6 | +1 jour | Standardisation syntaxe |
 
-**Repository GitHub :**
-- **URL :** `https://github.com/[username]/mosque_des_bienfait`
-- **Branches :** `main`, `ilmi`
-- **Commits :** 150+ commits
-- **README :** Documentation complète
-
-### Gestion de Projet
-
-**Trello Board :**
-- **URL :** `https://trello.com/b/[board-id]`
-- **Listes :** À Faire, En Cours, Tests, Terminé
-- **Cartes :** 50+ tâches suivies
-
-### Documentation
-
-**Documentation Technique :**
-- `README.md` - Vue d'ensemble projet et installation
-- `API_DOCS.md` - Documentation endpoints API
-- `RESULTATS_ET_LECONS.md` - Résultats et leçons apprises
-- `RETROSPECTIVES_SPRINTS.md` - Toutes revues sprints
-
-### Preuves de Tests
-
-**Fichiers de Tests :**
-- Frontend : `Frontend-VueJS/src/TEST/`
-- Backend : `backend/__tests__/`
-- **Couverture :** 24 tests, 100% réussite
-
-**Rapports de Tests :**
-- Captures d'écran résultats tests
-- Rapport couverture tests
-
-### Documentation Sprints
-
-**Documents Complétés :**
-- ✅ Planning Sprints (7 sprints)
-- ✅ Revues Sprints (7 sprints)
-- ✅ Rétrospectives Sprints (7 sprints)
-- ✅ Notes stand-ups quotidiens
-- ✅ Métriques vélocité
-
-### Environnement Production
-
-**Déploiement (En Cours) :**
-- **Frontend :** Vercel - `https://mosquee-bienfaisants.vercel.app`
-- **Backend :** Railway - `https://mosquee-backend.up.railway.app`
-- **Base de Données :** PostgreSQL sur Railway
-- **Statut :** 🔄 Déploiement en cours
+**Leçon clé :** Règle des 2h - chercher alternatives rapidement si bloqué
 
 ---
 
-## Résumé
+## 📦 Livrables
 
-**Complétion Projet : 100%**
-
-**Fonctionnalités Totales Livrées :**
-- ✅ Authentification utilisateur (inscription/connexion)
+### Fonctionnalités
+- ✅ Authentification (inscription/connexion)
 - ✅ Horaires de prière en temps réel
 - ✅ Gestion événements (CRUD)
-- ✅ Recherche dynamique et filtrage
-- ✅ Design responsive
-- ✅ Widget chat en direct
-- ✅ 24 tests automatisés
+- ✅ Recherche et filtrage dynamiques
+- ✅ Design responsive (mobile-first)
+- ✅ Chat en direct
 
-**Temps Total Investi :**
+### Documentation
+- README complet
+- Documentation API
+- Rétrospectives sprints
+- Guide d'installation
+
+### Code
+- **GitHub :** `https://github.com/[username]/mosque_des_bienfait`
+- **Branches :** main, ilmi
+- **150+ commits**
+
+---
+
+## 📊 Résumé
+
+**Complétion : 100%**
+
+**Répartition du temps :**
 - Planification : 15%
 - Développement Frontend : 35%
 - Développement Backend : 25%
 - Tests & Débogage : 20%
 - Documentation : 5%
 
-**Réalisations Clés :**
-- 🎯 86% vélocité moyenne sprints
-- ✅ 100% taux réussite tests
-- ✅ 100% taux résolution bugs
+**Résultats :**
+- 🎯 86% vélocité moyenne
+- ✅ 100% tests réussis
+- ✅ 100% bugs résolus
 - 🚀 Architecture moderne et scalable
-- 📱 Design entièrement responsive
-
-**Prochaines Étapes :**
-- 🔄 Compléter déploiement production
-- 🔄 Finaliser présentation
-- 🔜 Implémenter dons en ligne
 
 ---
-
-**Dernière Mise à Jour :** 10 Novembre 2025
