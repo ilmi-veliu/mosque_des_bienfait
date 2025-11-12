@@ -1,12 +1,54 @@
-🕌 Mosquée des Bienfaisants – Présentation du projet
-Nom du projet
-Mosquée des Bienfaisants
-Présentation brève
-Mosquée des Bienfaisants est une plateforme web complète destinée à la communauté musulmane de Périgueux. Elle permet de consulter les horaires de prière en temps réel, gérer et découvrir les événements de la mosquée, et échanger avec les membres via un système de chat intégré. L’objectif est d’offrir un outil moderne, accessible et pratique pour renforcer les liens communautaires et faciliter la pratique religieuse au quotidien.
-Présentation détaillée
-Le projet repose sur une architecture full-stack moderne et scalable, avec un frontend développé en Vue.js 3 et un backend API REST construit avec Node.js/Express.
-Le frontend utilise Vue.js 3 avec la Composition API pour une réactivité optimale, combiné à Vue Router pour la navigation et Tailwind CSS pour un design responsive mobile-first. L’interface est intuitive et s’adapte parfaitement à tous les appareils (ordinateurs, tablettes, smartphones).
-Le backend est structuré en architecture MVC avec Express.js, offrant une API REST complète et documentée. Sequelize ORM gère les interactions avec PostgreSQL, garantissant une manipulation sécurisée et efficace des données (utilisateurs, événements, horaires de prière).
-La base de données PostgreSQL stocke de manière fiable et structurée toutes les informations : comptes utilisateurs, événements avec leurs catégories, et historique des activités.
-Sur le plan de la sécurité, la plateforme implémente bcrypt pour le hachage des mots de passe et JWT pour l’authentification des sessions utilisateurs. Les horaires de prière sont synchronisés automatiquement via l’API Aladhan, tandis que le système de chat utilise Tawk.to pour permettre une communication fluide entre les membres et les responsables.
-Enfin, le projet intègre 24 tests automatisés (Vitest et Jest) couvrant les fonctionnalités critiques, assurant stabilité et maintenabilité du code. Ainsi, Mosquée des Bienfaisants propose une solution technique robuste et professionnelle, combinant performance, sécurité et expérience utilisateur de qualité pour servir au mieux la communauté.​​​​​​​​​​​​​​​​
+# 🕌 Mosquée des Bienfaisants – Présentation du projet
+
+## Nom du projet
+**Mosquée des Bienfaisants**
+
+## Présentation brève
+Mosquée des Bienfaisants est une plateforme web complète destinée à la communauté musulmane de Périgueux. Elle permet de consulter les horaires de prière en temps réel, gérer et découvrir les événements de la mosquée, et échanger avec les membres via un système de chat intégré. 
+
+L'objectif est d'offrir un outil moderne, accessible et pratique pour renforcer les liens communautaires et faciliter la pratique religieuse au quotidien.
+
+## Présentation détaillée
+
+### Architecture technique
+Le projet repose sur une architecture full-stack moderne et scalable, avec un frontend développé en **Vue.js 3** et un backend API REST construit avec **Node.js/Express**.
+
+### Frontend
+Le frontend utilise **Vue.js 3** avec la Composition API pour une réactivité optimale, combiné à **Vue Router** pour la navigation dynamique et **Tailwind CSS** pour un design responsive mobile-first. 
+
+L'interface propose des fonctionnalités avancées comme :
+- La recherche dynamique par mots-clés
+- Le filtrage par catégories (Religieux, Éducation, Social, Culturel)
+- Une gestion complète des événements avec opérations CRUD
+
+L'expérience utilisateur s'adapte parfaitement à tous les appareils (ordinateurs, tablettes, smartphones).
+
+### Backend
+Le backend est structuré en architecture MVC avec **Express.js**, offrant une API REST complète, sécurisée et documentée. 
+
+**Sequelize ORM** gère les interactions avec **PostgreSQL**, garantissant une manipulation efficace des données avec validation des entrées et gestion des erreurs robuste. Le système d'authentification protège les routes sensibles et distingue les utilisateurs connectés des visiteurs.
+
+### Base de données
+La base de données **PostgreSQL** stocke de manière fiable et structurée toutes les informations :
+- Comptes utilisateurs avec leurs préférences
+- Événements détaillés (titre, description, date, lieu, catégorie, image)
+- Métadonnées pour assurer la traçabilité des modifications
+
+### Sécurité
+Sur le plan de la sécurité, la plateforme implémente :
+- **bcrypt** pour le hachage sécurisé des mots de passe
+- **JWT** avec tokens d'accès pour l'authentication des sessions
+- Des guards de routes pour protéger les fonctionnalités réservées aux membres
+
+Les horaires de prière sont synchronisés automatiquement quotidiennement via l'**API Aladhan** (méthode de calcul validée par les autorités religieuses), tandis que le système de chat utilise **Tawk.to** pour permettre une communication instantanée entre les membres et les responsables de la mosquée.
+
+### Méthodologie et qualité
+Le projet suit une méthodologie **Agile** avec 7 sprints sur 8 semaines, intégrant :
+- **Git** pour le versioning (150+ commits)
+- **Trello** pour la gestion des tâches
+- Une documentation technique complète (README, API endpoints, guide d'installation)
+
+**24 tests automatisés** (**Vitest** pour le frontend, **Jest** pour le backend) couvrent les fonctionnalités critiques avec un taux de réussite de 100%, assurant stabilité, maintenabilité et évolutivité du code.
+
+## Conclusion
+Mosquée des Bienfaisants propose une solution technique robuste et professionnelle, développée selon les standards de l'industrie, combinant performance, sécurité, qualité logicielle et expérience utilisateur optimale pour servir efficacement les besoins réels de la communauté musulmane de Périgueux.
