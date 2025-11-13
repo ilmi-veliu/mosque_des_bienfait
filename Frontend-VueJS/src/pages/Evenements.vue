@@ -18,23 +18,78 @@
     </section>
 
     <!-- Filters -->
-    <section class="bg-white py-10 px-4 border-b border-gray-200">
-      <div class="max-w-6xl mx-auto flex flex-wrap gap-5 items-center">
-        <div class="flex-1 min-w-[300px] relative">
-          <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" :size="20" />
-          <input 
-            v-model="searchQuery"
-            type="text" 
-            placeholder="Rechercher un événement..."
-            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-gray-900 transition-colors"
-          >
-        </div>
-        <div class="flex items-center gap-3 px-5 py-3 border border-gray-300 rounded-xl bg-white cursor-pointer hover:bg-gray-50 transition-colors">
-          <Filter :size="18" />
-          <span class="text-sm font-medium">Toutes les catégories</span>
-        </div>
+<section class="bg-white py-10 px-4 border-b border-gray-200">
+  <div class="max-w-6xl mx-auto flex flex-wrap gap-5 items-center">
+    <!-- Barre de recherche -->
+    <div class="flex-1 min-w-[300px] relative">
+      <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" :size="20" />
+      <input 
+        v-model="searchQuery"
+        type="text" 
+        placeholder="Rechercher un événement..."
+        class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-gray-900 transition-colors"
+      >
+    </div>
+    
+    <!-- Dropdown filtres (À DROITE) -->
+    <div class="relative">
+      <button 
+        @click="dropdownOpen = !dropdownOpen"
+        class="flex items-center gap-3 px-5 py-3 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-colors"
+      >
+        <Filter :size="18" />
+        <span class="text-sm font-medium">{{ selectedCategoryLabel }}</span>
+        <ChevronDown :size="16" :class="{ 'rotate-180': dropdownOpen }" class="transition-transform" />
+      </button>
+
+      <!-- Menu dropdown -->
+      <div 
+        v-show="dropdownOpen"
+        class="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-10"
+      >
+        <button 
+          @click="selectCategory(null)"
+          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
+        >
+          <span>Toutes les catégories</span>
+          <span v-if="selectedCategory === null" class="text-green-600">✓</span>
+        </button>
+        
+        <button 
+          @click="selectCategory('Religieux')"
+          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
+        >
+          <span>Religieux</span>
+          <span v-if="selectedCategory === 'Religieux'" class="text-green-600">✓</span>
+        </button>
+        
+        <button 
+          @click="selectCategory('Éducation')"
+          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
+        >
+          <span>Éducation</span>
+          <span v-if="selectedCategory === 'Éducation'" class="text-green-600">✓</span>
+        </button>
+        
+        <button 
+          @click="selectCategory('Social')"
+          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
+        >
+          <span>Social</span>
+          <span v-if="selectedCategory === 'Social'" class="text-green-600">✓</span>
+        </button>
+        
+        <button 
+          @click="selectCategory('Culturel')"
+          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
+        >
+          <span>Culturel</span>
+          <span v-if="selectedCategory === 'Culturel'" class="text-green-600">✓</span>
+        </button>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
     <!-- Events List -->
     <section class="py-16 px-4">
@@ -109,20 +164,41 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ChevronLeft, Search, Filter, Calendar, Clock, MapPin, Users } from 'lucide-vue-next'
+import { ChevronLeft, ChevronDown, Search, Filter, Calendar, Clock, MapPin, Users } from 'lucide-vue-next'
 
 const searchQuery = ref('')
+const selectedCategory = ref(null)
+const dropdownOpen = ref(false)
 const events = ref([])
 const loading = ref(true)
 const error = ref(null)
 
+const selectedCategoryLabel = computed(() => {
+  return selectedCategory.value || 'Toutes les catégories'
+})
+
+const selectCategory = (category) => {
+  selectedCategory.value = category
+  dropdownOpen.value = false
+}
+
 const filteredEvents = computed(() => {
-  if (!searchQuery.value) return events.value
+  let filtered = events.value
   
-  return events.value.filter(event => 
-    event.titre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    event.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+  // Filtre par recherche
+  if (searchQuery.value) {
+    filtered = filtered.filter(event => 
+      event.titre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+  }
+  
+  // Filtre par catégorie
+  if (selectedCategory.value) {
+    filtered = filtered.filter(event => event.categorie === selectedCategory.value)
+  }
+  
+  return filtered
 })
 
 const formatDate = (dateString) => {
