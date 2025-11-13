@@ -17,7 +17,10 @@ const sequelize = new Sequelize(
     dialect: 'postgres',
     logging: false,
     dialectOptions: {
-      application_name: 'mosquee_backend'
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
     }
   }
 );
