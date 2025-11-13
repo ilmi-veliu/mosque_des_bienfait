@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mosquée des Bienfaisants - Présentation Projet</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">🕌 Mosquée des Bienfaisants</div>
+            <div class="nav-links">
+                <a href="#features">Fonctionnalités</a>
+                <a href="#tech">Technologies</a>
+                <a href="#demo">Démo</a>
+                <a href="#about">À Propos</a>
+                <a href="https://github.com/ilmi-veliu/mosque_des_bienfait" target="_blank" class="btn-github">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <span class="badge">Projet Holberton School 2025</span>
+                <h1 class="hero-title">Mosquée des Bienfaisants</h1>
+                <p class="hero-subtitle">Plateforme web moderne pour la communauté musulmane de Périgueux</p>
+                <p class="hero-description">
+                    Site web responsive permettant de consulter les horaires de prière en temps réel, 
+                    découvrir les événements communautaires et rester connecté avec la mosquée.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#demo" class="btn btn-primary">Voir la Démo</a>
+                    <a href="https://github.com/ilmi-veliu/mosque_des_bienfait" class="btn btn-secondary">Code Source</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">24</div>
+                        <div class="stat-label">Tests Automatisés</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">86%</div>
+                        <div class="stat-label">Vélocité Moyenne</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">Semaines de Dev</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Fonctionnalités Principales</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🕋</div>
+                    <h3>Horaires de Prière</h3>
+                    <p>Affichage en temps réel des 5 prières quotidiennes avec mise à jour automatique via API Aladhan</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <h3>Gestion Événements</h3>
+                    <p>Recherche dynamique et filtrage par catégorie (Religieux, Éducation, Social, Culturel)</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Authentification</h3>
+                    <p>Inscription et connexion sécurisées avec JWT et hashage bcrypt des mots de passe</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Chat en Direct</h3>
+                    <p>Widget de chat intégré pour communiquer facilement avec l'équipe de la mosquée</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section id="tech" class="tech-stack">
+        <div class="container">
+            <h2 class="section-title">Stack Technique</h2>
+            <div class="tech-grid">
+                <div class="tech-category">
+                    <h3>Frontend</h3>
+                    <div class="tech-items">
+                        <div class="tech-item">
+                            <span class="tech-icon">⚡</span>
+                            <span>Vue.js 3</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="tech-icon">🎨</span>
+                            <span>Tailwind CSS</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="tech-icon">🚀</span>
+                            <span>Vite</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="tech-icon">🧪</span>
+                            <span>Vitest</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h3>Backend</h3>
+                    <div class="tech-items">
+                        <div class="tech-item">
+                            <span class="tech-icon">🟢</span>
+                            <span>Node.js</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="tech-icon">⚙️</span>
+                            <span>Express.js</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="tech-icon">🐘</span>
+                            <span>PostgreSQL</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="tech-icon">🔒</span>
+                            <span>JWT + bcrypt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo">
+        <div class="container">
+            <h2 class="section-title">Aperçu du Projet</h2>
+            
+            <!-- Screenshots Grid -->
+            <div class="screenshots-grid">
+                <div class="screenshot-item">
+                    <img src="images/accueil.png" alt="Page d'accueil">
+                    <p>Page d'Accueil</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="images/evenements.png" alt="Page événements">
+                    <p>Page Événements</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="images/inscription.png" alt="Page inscription">
+                    <p>Inscription</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="images/connexion.png" alt="Page connexion">
+                    <p>Connexion</p>
+                </div>
+            </div>
+            
+            <div class="demo-links">
+                <a href="https://mosquee-bienfaisants.vercel.app" target="_blank" class="demo-link">
+                    <span>🌐</span>
+                    <div>
+                        <strong>Site en Direct</strong>
+                        <small>mosquee-bienfaisants.vercel.app</small>
+                    </div>
+                </a>
+                <a href="https://github.com/ilmi-veliu/mosque_des_bienfait" target="_blank" class="demo-link">
+                    <span>💻</span>
+                    <div>
+                        <strong>Code Source</strong>
+                        <small>GitHub Repository</small>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">À Propos du Projet</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Contexte</h3>
+                    <p>
+                        Projet réalisé dans le cadre du cursus de développement web à <strong>Holberton School</strong>.
+                        Développé sur 8 semaines en suivant une méthodologie Agile avec 7 sprints.
+                    </p>
+                    <h3>Objectif</h3>
+                    <p>
+                        Créer une plateforme web moderne pour moderniser la communication au sein de la 
+                        Mosquée des Bienfaisants à Périgueux et faciliter l'accès aux informations pour la communauté.
+                    </p>
+                    <h3>Résultats</h3>
+                    <ul>
+                        <li>✅ MVP fonctionnel (100% des objectifs atteints)</li>
+                        <li>✅ 24 tests automatisés (100% réussite)</li>
+                        <li>✅ Architecture scalable et moderne</li>
+                        <li>✅ Design responsive mobile-first</li>
+                    </ul>
+                </div>
+                <div class="about-author">
+                    <div class="author-card">
+                        <div class="author-avatar">IV</div>
+                        <h3>Ilmi Veliu</h3>
+                        <p>Étudiant Développeur Full-Stack</p>
+                        <p class="author-school">Holberton School</p>
+                        <div class="author-links">
+                            <a href="https://github.com/ilmi-veliu" target="_blank">GitHub</a>
+                            <a href="https://www.linkedin.com/in/ilmi-veliu-a00318389/" target="_blank">LinkedIn</a>
+                            <a href="mailto:iveliu96@gmail.com">Email</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Ilmi Veliu - Holberton School</p>
+            <p>Mosquée des Bienfaisants - Périgueux, France</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
