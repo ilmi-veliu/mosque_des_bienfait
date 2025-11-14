@@ -166,65 +166,73 @@
 import { ref, computed, onMounted } from 'vue'
 import { ChevronLeft, ChevronDown, Search, Filter, Calendar, Clock, MapPin, Users } from 'lucide-vue-next'
 
-const searchQuery = ref('')
-const selectedCategory = ref(null)
-const dropdownOpen = ref(false)
-const events = ref([])
-const loading = ref(true)
-const error = ref(null)
+// Variables réactives
+const searchQuery = ref('') // Requête de recherche
+const selectedCategory = ref(null) // Catégorie sélectionnée pour le filtrage
+const dropdownOpen = ref(false) // État d'ouverture du menu déroulant
+const events = ref([]) // Liste des événements
+const loading = ref(true) // Indicateur de chargement
+const error = ref(null) // Message d'erreur
 
+// Calculer l'étiquette de la catégorie sélectionnée
 const selectedCategoryLabel = computed(() => {
-  return selectedCategory.value || 'Toutes les catégories'
+  return selectedCategory.value || 'Toutes les catégories' // Si aucune catégorie n'est sélectionnée, afficher "Toutes les catégories"
 })
 
+// Fonction pour sélectionner une catégorie
 const selectCategory = (category) => {
-  selectedCategory.value = category
-  dropdownOpen.value = false
+  selectedCategory.value = category // Met à jour la catégorie sélectionnée
+  dropdownOpen.value = false // Ferme le menu déroulant
 }
 
+// Fonction pour filtrer les événements en fonction de la recherche et de la catégorie
 const filteredEvents = computed(() => {
-  let filtered = events.value
+  let filtered = events.value // Commence avec tous les événements
   
-  // Filtre par recherche
+  // Filtrer par recherche
   if (searchQuery.value) {
     filtered = filtered.filter(event => 
-      event.titre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+      event.titre.toLowerCase().includes(searchQuery.value.toLowerCase()) || // Vérifie si le titre contient la requête
+      event.description.toLowerCase().includes(searchQuery.value.toLowerCase()) // Vérifie si la description contient la requête
     )
   }
   
-  // Filtre par catégorie
+  // Filtrer par catégorie
   if (selectedCategory.value) {
-    filtered = filtered.filter(event => event.categorie === selectedCategory.value)
+    filtered = filtered.filter(event => event.categorie === selectedCategory.value) // Garde uniquement les événements de la catégorie sélectionnée
   }
   
-  return filtered
+  return filtered // Retourne la liste filtrée
 })
 
+// Fonction pour formater une date pour l'affichage
 const formatDate = (dateString) => {
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-  return new Date(dateString).toLocaleDateString('fr-FR', options)
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' } // Options pour le formatage
+  return new Date(dateString).toLocaleDateString('fr-FR', options) // Retourne la date formatée en français
 }
 
+// Fonction pour formater une heure pour l'affichage
 const formatTime = (timeString) => {
-  return timeString.substring(0, 5)
+  return timeString.substring(0, 5) // Retourne uniquement les heures et minutes (HH:mm)
 }
 
+// Fonction pour récupérer les événements depuis le backend
 const fetchEvents = async () => {
   try {
-    const response = await fetch('http://localhost:3001/api/evenements')
-    if (!response.ok) throw new Error('Erreur lors du chargement des événements')
+    const response = await fetch('http://localhost:3001/api/evenements') // Appel à l'API pour récupérer les événements
+    if (!response.ok) throw new Error('Erreur lors du chargement des événements') // Gère les erreurs HTTP
     
-    const data = await response.json()
-    events.value = data
+    const data = await response.json() // Parse les données JSON
+    events.value = data // Met à jour la liste des événements
   } catch (err) {
-    console.error('Erreur:', err)
-    error.value = 'Impossible de charger les événements. Vérifiez que le serveur backend est démarré.'
+    console.error('Erreur:', err) // Affiche l'erreur dans la console
+    error.value = 'Impossible de charger les événements. Vérifiez que le serveur backend est démarré.' // Définit un message d'erreur
   } finally {
-    loading.value = false
+    loading.value = false // Désactive l'indicateur de chargement
   }
 }
 
+// Appelle la fonction pour récupérer les événements lorsque le composant est monté
 onMounted(() => {
   fetchEvents()
 })

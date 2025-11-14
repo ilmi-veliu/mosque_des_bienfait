@@ -277,45 +277,48 @@ import { useRouter } from 'vue-router'
 import { User, Mail, Phone, Lock, UserPlus, LogIn } from 'lucide-vue-next'
 
 const router = useRouter()
-const activeTab = ref('inscription')
-const isLoading = ref(false)
+const activeTab = ref('inscription') // Onglet actif (inscription ou connexion)
+const isLoading = ref(false) // Indicateur de chargement pour les actions
 
-// Inscription
+// Formulaire d'inscription
 const registerForm = ref({
-  prenom: '',
-  nom: '',
-  email: '',
-  telephone: '',
-  password: ''
+  prenom: '', // Champ pour le prénom
+  nom: '', // Champ pour le nom
+  email: '', // Champ pour l'email
+  telephone: '', // Champ pour le téléphone
+  password: '' // Champ pour le mot de passe
 })
-const registerSuccess = ref('')
-const registerError = ref('')
+const registerSuccess = ref('') // Message de succès pour l'inscription
+const registerError = ref('') // Message d'erreur pour l'inscription
 
-// Connexion
+// Formulaire de connexion
 const loginForm = ref({
-  email: '',
-  password: ''
+  email: '', // Champ pour l'email
+  password: '' // Champ pour le mot de passe
 })
-const loginSuccess = ref('')
-const loginError = ref('')
-const emailError = ref(false)
-const passwordError = ref(false)
+const loginSuccess = ref('') // Message de succès pour la connexion
+const loginError = ref('') // Message d'erreur pour la connexion
+const emailError = ref(false) // Indicateur d'erreur pour l'email
+const passwordError = ref(false) // Indicateur d'erreur pour le mot de passe
 
+// Fonction pour gérer l'inscription
 const handleRegister = async () => {
-  isLoading.value = true
-  registerSuccess.value = ''
-  registerError.value = ''
+  isLoading.value = true // Activer l'indicateur de chargement
+  registerSuccess.value = '' // Réinitialiser le message de succès
+  registerError.value = '' // Réinitialiser le message d'erreur
 
   try {
+    // Envoi de la requête d'inscription au serveur
     const response = await fetch('http://localhost:3001/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(registerForm.value)
+      body: JSON.stringify(registerForm.value) // Données du formulaire
     })
 
     const data = await response.json()
 
     if (response.ok) {
+      // Si l'inscription est réussie
       registerSuccess.value = data.message
       registerForm.value = {
         prenom: '',
@@ -324,51 +327,60 @@ const handleRegister = async () => {
         telephone: '',
         password: ''
       }
+      // Effacer le message de succès après 5 secondes
       setTimeout(() => {
         registerSuccess.value = ''
       }, 5000)
     } else {
+      // Si une erreur est retournée par le serveur
       registerError.value = data.message || 'Erreur lors de l\'inscription'
       setTimeout(() => {
         registerError.value = ''
       }, 5000)
     }
   } catch (error) {
+    // En cas d'erreur réseau ou serveur
     console.error('Erreur:', error)
     registerError.value = 'Impossible de se connecter au serveur'
   } finally {
-    isLoading.value = false
+    isLoading.value = false // Désactiver l'indicateur de chargement
   }
 }
 
+// Fonction pour gérer la connexion
 const handleLogin = async () => {
-  isLoading.value = true
-  loginSuccess.value = ''
-  loginError.value = ''
-  emailError.value = false
-  passwordError.value = false
+  isLoading.value = true // Activer l'indicateur de chargement
+  loginSuccess.value = '' // Réinitialiser le message de succès
+  loginError.value = '' // Réinitialiser le message d'erreur
+  emailError.value = false // Réinitialiser l'erreur d'email
+  passwordError.value = false // Réinitialiser l'erreur de mot de passe
 
   try {
+    // Envoi de la requête de connexion au serveur
     const response = await fetch('http://localhost:3001/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(loginForm.value)
+      body: JSON.stringify(loginForm.value) // Données du formulaire
     })
 
     const data = await response.json()
 
     if (response.ok) {
+      // Si la connexion est réussie
       loginSuccess.value = 'Connexion réussie ! Redirection...'
       
       if (data.token) {
+        // Stocker le token JWT dans le localStorage
         localStorage.setItem('token', data.token)
-        window.dispatchEvent(new Event('auth-change'))  // ← LIGNE AJOUTÉE
+        window.dispatchEvent(new Event('auth-change')) // Déclencher un événement d'authentification
       }
       
+      // Rediriger vers la page d'accueil après 1,5 seconde
       setTimeout(() => {
         router.push('/')
       }, 1500)
     } else {
+      // Si une erreur est retournée par le serveur
       if (response.status === 404) {
         loginError.value = 'Aucun compte trouvé avec cet email'
         emailError.value = true
@@ -380,10 +392,11 @@ const handleLogin = async () => {
       }
     }
   } catch (error) {
+    // En cas d'erreur réseau ou serveur
     console.error('Erreur:', error)
     loginError.value = 'Impossible de se connecter au serveur'
   } finally {
-    isLoading.value = false
+    isLoading.value = false // Désactiver l'indicateur de chargement
   }
 }
 </script>
