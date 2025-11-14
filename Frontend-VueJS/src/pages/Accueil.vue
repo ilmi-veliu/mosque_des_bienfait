@@ -124,11 +124,15 @@
 import { ref, onMounted } from 'vue'
 import { Clock, Sunrise, Sun, Sunset, Moon } from 'lucide-vue-next'
 
-const prayerTimes = ref([])
-const currentPrayer = ref('')
-const nextPrayer = ref(null)
+// Liste des horaires de prière
+const prayerTimes = ref([]) // Contient les informations sur les prières
+const currentPrayer = ref('') // Prière actuelle
+const nextPrayer = ref(null) // Prochaine prière
 
+// Délais d'Iqama pour chaque prière
 const IQAMA = { Fajr: 10, Dhuhr: 10, Asr: 10, Maghrib: 10, Isha: 10 }
+
+// Métadonnées pour chaque prière (icône et description)
 const META = {
   Fajr:    { icon: Sunrise, description: "Prière de l'aube" },
   Dhuhr:   { icon: Sun, description: "Prière du midi" },
@@ -136,25 +140,30 @@ const META = {
   Maghrib: { icon: Sunset, description: "Prière du coucher du soleil" },
   Isha:    { icon: Moon, description: "Prière de la nuit" }
 }
-const ORDER = ["Fajr","Dhuhr","Asr","Maghrib","Isha"]
 
+// Ordre des prières
+const ORDER = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
+
+// Fonction pour convertir une chaîne horaire (HH:mm) en objet Date
 const parseHM = (s) => {
-  const [h,m] = s.split(":").map(Number)
+  const [h, m] = s.split(":").map(Number)
   const d = new Date()
-  d.setHours(h,m,0,0)
+  d.setHours(h, m, 0, 0)
   return d
 }
 
+// Fonction pour déterminer la prière actuelle
 const getCurrentPrayer = (timings) => {
   const now = new Date()
   for (let i = 0; i < ORDER.length; i++) {
     const curr = parseHM(timings[ORDER[i]])
-    const next = ORDER[i+1] ? parseHM(timings[ORDER[i+1]]) : new Date(curr.getTime() + 24*60*60*1000)
+    const next = ORDER[i + 1] ? parseHM(timings[ORDER[i + 1]]) : new Date(curr.getTime() + 24 * 60 * 60 * 1000)
     if (now >= curr && now < next) return ORDER[i]
   }
-  return "Isha"
+  return "Isha" // Par défaut, retourne "Isha" si aucune autre prière n'est en cours
 }
 
+// Fonction pour déterminer la prochaine prière et le temps restant
 const getNextPrayer = (timings) => {
   const now = new Date()
   const currentTime = now.getHours() * 60 + now.getMinutes()
@@ -176,6 +185,7 @@ const getNextPrayer = (timings) => {
     }
   }
 
+  // Si aucune prière n'est restante aujourd'hui, retourne la première prière de demain
   const firstPrayer = times[0]
   const diff = (24 * 60) + firstPrayer.minutes - currentTime
   const hours = Math.floor(diff / 60)
@@ -186,6 +196,7 @@ const getNextPrayer = (timings) => {
   }
 }
 
+// Fonction pour récupérer les horaires de prière depuis l'API
 const fetchPrayerTimes = async () => {
   try {
     const URL = "https://api.aladhan.com/v1/timingsByCity?city=Perigueux&country=France&method=99&customFajr=12&customIsha=12&school=1&latitudeAdjustmentMethod=MIDDLE_OF_THE_NIGHT&adjustment=0&tune=0,0,0,0,0,0"
@@ -195,23 +206,26 @@ const fetchPrayerTimes = async () => {
     const { data } = await response.json()
     const timings = data.timings
     
+    // Détermine la prière actuelle et la prochaine prière
     currentPrayer.value = getCurrentPrayer(timings)
     nextPrayer.value = getNextPrayer(timings)
     
+    // Met à jour les horaires des prières avec les métadonnées
     prayerTimes.value = ORDER.map(key => ({
       name: key,
-      adhan: timings[key],
-      iqama: IQAMA[key],
-      icon: META[key].icon,
-      description: META[key].description,
-      isNext: key === nextPrayer.value.name
+      adhan: timings[key], // Heure de l'Adhan
+      iqama: IQAMA[key], // Délai d'Iqama
+      icon: META[key].icon, // Icône associée
+      description: META[key].description, // Description de la prière
+      isNext: key === nextPrayer.value.name // Indique si c'est la prochaine prière
     }))
   } catch (error) {
     console.error('Erreur chargement horaires:', error)
-    prayerTimes.value = []
+    prayerTimes.value = [] // Réinitialise les horaires en cas d'erreur
   }
 }
 
+// Appelle la fonction pour récupérer les horaires de prière lorsque le composant est monté
 onMounted(() => {
   fetchPrayerTimes()
 })
