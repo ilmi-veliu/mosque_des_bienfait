@@ -38,195 +38,69 @@
       </div>
     </div>
 
-    <!-- Prayer Times Section -->
-    <div class="min-h-screen bg-gray-50 py-12 px-4">
-      <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-12">
-          <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-md mb-4">
-            <Clock :size="32" class="text-gray-800" />
-          </div>
-          <h2 class="text-3xl mb-3">Horaires des Prières</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">
-            Consultez les horaires des cinq prières quotidiennes. Les heures peuvent varier légèrement selon la saison.
-          </p>
-        </div>
-
-        <!-- Next Prayer Card -->
-        <div v-if="nextPrayer" class="bg-white rounded-lg shadow-lg ring-2 ring-black p-8 mb-8 text-center">
-          <p class="text-gray-600 mb-2">Prochaine Prière</p>
-          <h2 class="text-5xl mb-2">{{ nextPrayer.name }}</h2>
-          <p class="text-gray-600 mb-1">dans {{ nextPrayer.timeUntil }}</p>
-          <p class="text-sm text-gray-500">Prière actuelle: {{ currentPrayer }}</p>
-        </div>
-
-        <!-- Prayer Times Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div
-            v-for="prayer in prayerTimes"
-            :key="prayer.name"
-            :class="[
-              'bg-white rounded-lg p-6 text-center transition-all',
-              prayer.isNext 
-                ? 'ring-2 ring-black shadow-lg' 
-                : 'shadow-md hover:shadow-lg'
-            ]"
-          >
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-3">
-              <component :is="prayer.icon" :size="24" class="text-gray-700" />
-            </div>
-            <h3 class="mb-1 font-semibold">{{ prayer.name }}</h3>
-            <div class="space-y-2">
-              <div>
-                <p class="text-sm text-gray-600">Adhan: {{ prayer.adhan }}</p>
-                <p class="text-xs text-gray-500">Iqama: +{{ prayer.iqama }}</p>
+    <!-- Donation Section -->
+    <section class="py-16 bg-gradient-to-br from-emerald-50 to-teal-50">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+          <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="md:flex">
+              <!-- Left side - Icon & Message -->
+              <div class="md:w-1/2 bg-gradient-to-br from-emerald-600 to-teal-700 p-8 md:p-12 flex flex-col justify-center items-center text-white text-center">
+                <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm">
+                  <Heart :size="40" fill="currentColor" />
+                </div>
+                <h2 class="text-3xl mb-4">Soutenez la Mosquée</h2>
+                <p class="text-emerald-100 leading-relaxed">
+                  Votre générosité aide à maintenir et développer les activités de notre mosquée
+                </p>
               </div>
-              <p class="text-xs text-gray-500">{{ prayer.description }}</p>
+              
+              <!-- Right side - Call to Action -->
+              <div class="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+                <div class="space-y-6">
+                  <div>
+                    <h3 class="text-2xl text-gray-800 mb-3">
+                      Faites un don (Sadaqa)
+                    </h3>
+                    <p class="text-gray-600 leading-relaxed">
+                      Participez à la construction et au développement de notre mosquée. Chaque don compte, quelle que soit sa valeur.
+                    </p>
+                  </div>
+                  
+                  <div class="bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded">
+                    <p class="text-sm text-gray-700 italic">
+                      "La sadaqa éteint les péchés comme l'eau éteint le feu"
+                    </p>
+                    <p class="text-xs text-gray-500 mt-2">- Hadith rapporté par At-Tirmidhi</p>
+                  </div>
+                  
+                  <button
+                    @click="handleDonation"
+                    class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 group"
+                  >
+                    <Heart :size="20" fill="currentColor" />
+                    Faire un don - Sadaqa
+                    <ExternalLink :size="16" class="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  
+                  <p class="text-xs text-center text-gray-500">
+                    Paiement sécurisé via HelloAsso
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- Additional Info Cards -->
-        <div class="grid md:grid-cols-2 gap-6 mb-8">
-          <!-- Prière du Vendredi -->
-          <div class="bg-white rounded-lg p-6 shadow-md">
-            <h3 class="text-lg font-semibold mb-4">Prière du Vendredi (Jumu'ah)</h3>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-700">Khutba et Prière:</span>
-              <span class="text-2xl font-bold">13:00</span>
-            </div>
-          </div>
-
-          <!-- Informations Iqama -->
-          <div class="bg-white rounded-lg p-6 shadow-md">
-            <h3 class="text-lg font-semibold mb-4">Informations Iqama</h3>
-            <p class="text-sm text-gray-600 mb-4">
-              L'Iqama est donnée 10 minutes après l'Adhan pour toutes les prières.
-            </p>
-            <div class="text-center">
-              <div class="text-3xl font-bold">+10 minutes</div>
-              <div class="text-sm text-gray-500">Délai standard pour toutes les prières</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer Note -->
-        <div class="text-center text-sm text-gray-500">
-          <p>Les horaires sont calculés pour Périgueux, France</p>
-          <p class="mt-1">Dernière mise à jour: 31 octobre 2025</p>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Clock, Sunrise, Sun, Sunset, Moon } from 'lucide-vue-next'
+import { Heart, ExternalLink } from 'lucide-vue-next'
 
-// Liste des horaires de prière
-const prayerTimes = ref([]) // Contient les informations sur les prières
-const currentPrayer = ref('') // Prière actuelle
-const nextPrayer = ref(null) // Prochaine prière
-
-// Délais d'Iqama pour chaque prière
-const IQAMA = { Fajr: 10, Dhuhr: 10, Asr: 10, Maghrib: 10, Isha: 10 }
-
-// Métadonnées pour chaque prière (icône et description)
-const META = {
-  Fajr:    { icon: Sunrise, description: "Prière de l'aube" },
-  Dhuhr:   { icon: Sun, description: "Prière du midi" },
-  Asr:     { icon: Sun, description: "Prière de l'après-midi" },
-  Maghrib: { icon: Sunset, description: "Prière du coucher du soleil" },
-  Isha:    { icon: Moon, description: "Prière de la nuit" }
+// Gestion du don
+const handleDonation = () => {
+  window.open('https://www.helloasso.com/associations/association-des-musulmans-de-perigueux', '_blank')
 }
-
-// Ordre des prières
-const ORDER = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
-
-// Fonction pour convertir une chaîne horaire (HH:mm) en objet Date
-const parseHM = (s) => {
-  const [h, m] = s.split(":").map(Number)
-  const d = new Date()
-  d.setHours(h, m, 0, 0)
-  return d
-}
-
-// Fonction pour déterminer la prière actuelle
-const getCurrentPrayer = (timings) => {
-  const now = new Date()
-  for (let i = 0; i < ORDER.length; i++) {
-    const curr = parseHM(timings[ORDER[i]])
-    const next = ORDER[i + 1] ? parseHM(timings[ORDER[i + 1]]) : new Date(curr.getTime() + 24 * 60 * 60 * 1000)
-    if (now >= curr && now < next) return ORDER[i]
-  }
-  return "Isha" // Par défaut, retourne "Isha" si aucune autre prière n'est en cours
-}
-
-// Fonction pour déterminer la prochaine prière et le temps restant
-const getNextPrayer = (timings) => {
-  const now = new Date()
-  const currentTime = now.getHours() * 60 + now.getMinutes()
-  
-  const times = ORDER.map(name => ({
-    name,
-    minutes: parseHM(timings[name]).getHours() * 60 + parseHM(timings[name]).getMinutes()
-  }))
-
-  for (let prayer of times) {
-    if (currentTime < prayer.minutes) {
-      const diff = prayer.minutes - currentTime
-      const hours = Math.floor(diff / 60)
-      const minutes = diff % 60
-      return {
-        name: prayer.name,
-        timeUntil: `${hours}h ${minutes}m`
-      }
-    }
-  }
-
-  // Si aucune prière n'est restante aujourd'hui, retourne la première prière de demain
-  const firstPrayer = times[0]
-  const diff = (24 * 60) + firstPrayer.minutes - currentTime
-  const hours = Math.floor(diff / 60)
-  const minutes = diff % 60
-  return {
-    name: firstPrayer.name,
-    timeUntil: `${hours}h ${minutes}m`
-  }
-}
-
-// Fonction pour récupérer les horaires de prière depuis l'API
-const fetchPrayerTimes = async () => {
-  try {
-    const URL = "https://api.aladhan.com/v1/timingsByCity?city=Perigueux&country=France&method=99&customFajr=12&customIsha=12&school=1&latitudeAdjustmentMethod=MIDDLE_OF_THE_NIGHT&adjustment=0&tune=0,0,0,0,0,0"
-    const response = await fetch(URL)
-    if (!response.ok) throw new Error('HTTP ' + response.status)
-    
-    const { data } = await response.json()
-    const timings = data.timings
-    
-    // Détermine la prière actuelle et la prochaine prière
-    currentPrayer.value = getCurrentPrayer(timings)
-    nextPrayer.value = getNextPrayer(timings)
-    
-    // Met à jour les horaires des prières avec les métadonnées
-    prayerTimes.value = ORDER.map(key => ({
-      name: key,
-      adhan: timings[key], // Heure de l'Adhan
-      iqama: IQAMA[key], // Délai d'Iqama
-      icon: META[key].icon, // Icône associée
-      description: META[key].description, // Description de la prière
-      isNext: key === nextPrayer.value.name // Indique si c'est la prochaine prière
-    }))
-  } catch (error) {
-    console.error('Erreur chargement horaires:', error)
-    prayerTimes.value = [] // Réinitialise les horaires en cas d'erreur
-  }
-}
-
-// Appelle la fonction pour récupérer les horaires de prière lorsque le composant est monté
-onMounted(() => {
-  fetchPrayerTimes()
-})
 </script>
