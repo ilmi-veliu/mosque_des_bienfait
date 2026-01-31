@@ -15,18 +15,11 @@
             Accueil
           </router-link>
           
-          <!-- S'inscrire OU Se déconnecter -->
-          <router-link 
-            v-if="!isLoggedIn" 
-            to="/inscription" 
-            class="hover:text-gray-600 transition-colors flex items-center gap-2"
-          >
-            <UserPlus :size="18" />
-            S'inscrire
-          </router-link>
+          <!-- Suppression du lien vers Inscription -->
+          <!-- <router-link to="/inscription">Inscription</router-link> -->
 
           <button 
-            v-else
+            v-if="isLoggedIn"
             @click="logout" 
             class="hover:text-gray-600 transition-colors flex items-center gap-2"
           >

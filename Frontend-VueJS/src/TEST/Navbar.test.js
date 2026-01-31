@@ -35,8 +35,4 @@ describe('Navbar Component', () => {
   it('affiche le nom de la mosquée', () => {
     expect(wrapper.text()).toContain('Mosquée des Bienfaisants')
   })
-
-  it('affiche S\'inscrire quand non connecté', () => {
-    expect(wrapper.text()).toContain('S\'inscrire')
-  })
 })
