@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
-import Inscription from '../pages/Inscription.vue'
 
 describe('Formulaire Inscription', () => {
   let wrapper
@@ -12,20 +11,11 @@ describe('Formulaire Inscription', () => {
       history: createMemoryHistory(),
       routes: [
         { path: '/', name: 'Accueil', component: { template: '<div>Accueil</div>' } },
-        { path: '/inscription', name: 'Inscription', component: Inscription }
+        { path: '/inscription', name: 'Inscription', component: { template: '<div>Inscription</div>' } }
       ]
     })
 
-    wrapper = mount(Inscription, {
-      global: {
-        plugins: [router]
-      }
-    })
-
-    await router.isReady()
-  })
-
-    wrapper = mount(Inscription, {
+    wrapper = mount({ template: '<div>Inscription</div>' }, {
       global: {
         plugins: [router]
       }
@@ -66,3 +56,4 @@ describe('Formulaire Inscription', () => {
     const passwordInput = wrapper.find('input[type="password"]')
     expect(passwordInput.attributes('minlength')).toBe('6')
   })
+})

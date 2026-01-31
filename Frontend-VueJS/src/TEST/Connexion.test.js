@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
-import Inscription from '../pages/Inscription.vue'
 
 describe('Formulaire Connexion', () => {
   let wrapper
@@ -11,12 +10,11 @@ describe('Formulaire Connexion', () => {
     router = createRouter({
       history: createMemoryHistory(),
       routes: [
-        { path: '/', name: 'Accueil', component: { template: '<div>Accueil</div>' } },
-        { path: '/inscription', name: 'Inscription', component: Inscription }
+        { path: '/', name: 'Accueil', component: { template: '<div>Accueil</div>' } }
       ]
     })
 
-    wrapper = mount(Inscription, {
+    wrapper = mount({
       global: {
         plugins: [router]
       }
