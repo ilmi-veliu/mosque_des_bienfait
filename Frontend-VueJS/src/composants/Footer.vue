@@ -51,6 +51,11 @@
               Horaires des Prières
             </router-link>
           </li>
+          <li class="mb-2">
+            <router-link to="/benevole" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
+              Devenir Bénévole
+            </router-link>
+          </li>
         </ul>
       </div>
       

@@ -64,9 +64,6 @@
             <h2 class="text-xl font-semibold text-gray-900 mb-2">Formulaire d'inscription</h2>
             <p class="text-sm text-gray-500 mb-6">Remplissez vos informations pour rejoindre notre communauté.</p>
 
-            <div v-if="successMsg" class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm mb-6">
-              {{ successMsg }}
-            </div>
             <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
               {{ errorMsg }}
             </div>
@@ -101,19 +98,29 @@
                   required
                   placeholder="votre.email@exemple.com"
                   class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
+                  :class="emailError ? 'border-red-400' : ''"
+                  @blur="validateEmail"
                 />
+                <p v-if="emailError" class="text-xs text-red-500 mt-1">{{ emailError }}</p>
               </div>
 
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
-                <input
-                  v-model="form.password"
-                  type="password"
-                  required
-                  minlength="6"
-                  placeholder="Minimum 6 caractères"
-                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
-                />
+                <div class="relative">
+                  <input
+                    v-model="form.password"
+                    :type="showPassword ? 'text' : 'password'"
+                    required
+                    minlength="6"
+                    placeholder="Minimum 6 caractères"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors pr-12"
+                  />
+                  <button type="button" @click="showPassword = !showPassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                    <EyeOff v-if="showPassword" :size="18" />
+                    <Eye v-else :size="18" />
+                  </button>
+                </div>
               </div>
 
               <button
@@ -144,12 +151,15 @@
 
 <script setup>
 import { ref } from 'vue'
-import { UserPlus, ChevronLeft } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { UserPlus, ChevronLeft, Eye, EyeOff } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
+const router = useRouter()
 const loading = ref(false)
 const errorMsg = ref('')
-const successMsg = ref('')
+const emailError = ref('')
+const showPassword = ref(false)
 const form = ref({
   prenom: '',
   nom: '',
@@ -157,12 +167,29 @@ const form = ref({
   password: ''
 })
 
+const validateEmail = () => {
+  const email = form.value.email.trim()
+  emailError.value = ''
+  if (!email) return
+  // Regex pour un email valide (au moins 2 caractères avant @, domaine avec point)
+  const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  if (!regex.test(email)) {
+    emailError.value = 'Veuillez entrer une adresse email valide (ex: nom@exemple.com)'
+  }
+}
+
 const handleSignup = async () => {
   loading.value = true
   errorMsg.value = ''
-  successMsg.value = ''
 
-  const { error } = await supabase.auth.signUp({
+  // Validation email
+  validateEmail()
+  if (emailError.value) {
+    loading.value = false
+    return
+  }
+
+  const { data, error } = await supabase.auth.signUp({
     email: form.value.email,
     password: form.value.password,
     options: {
@@ -174,15 +201,45 @@ const handleSignup = async () => {
   })
 
   if (error) {
-    errorMsg.value = error.message === 'User already registered'
-      ? 'Cette adresse email est déjà utilisée.'
-      : 'Erreur lors de l\'inscription. Veuillez réessayer.'
+    if (error.message === 'User already registered') {
+      errorMsg.value = 'Cette adresse email est déjà utilisée. Connectez-vous plutôt.'
+    } else if (error.message.includes('password')) {
+      errorMsg.value = 'Le mot de passe doit contenir au moins 6 caractères.'
+    } else {
+      errorMsg.value = error.message
+    }
     loading.value = false
     return
   }
 
-  successMsg.value = 'Inscription réussie ! Vérifiez votre email pour confirmer votre compte.'
-  form.value = { prenom: '', nom: '', email: '', password: '' }
-  loading.value = false
+  // Vérifier si le compte a bien été créé (pas de doublon silencieux)
+  // Supabase retourne un user avec identities vide si l'email existe déjà (sans erreur)
+  if (data?.user?.identities?.length === 0) {
+    errorMsg.value = 'Cette adresse email est déjà utilisée. Connectez-vous plutôt.'
+    loading.value = false
+    return
+  }
+
+  // Connexion automatique après inscription
+  // Si Supabase a confirmé directement (pas de confirmation email), on a une session
+  if (data?.session) {
+    router.push('/')
+    return
+  }
+
+  // Si confirmation email requise, on connecte manuellement
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email: form.value.email,
+    password: form.value.password
+  })
+
+  if (!loginError) {
+    router.push('/')
+  } else {
+    // Si la confirmation email est obligatoire et empêche la connexion
+    errorMsg.value = 'Inscription réussie ! Vérifiez votre email pour confirmer votre compte.'
+    form.value = { prenom: '', nom: '', email: '', password: '' }
+    loading.value = false
+  }
 }
 </script>

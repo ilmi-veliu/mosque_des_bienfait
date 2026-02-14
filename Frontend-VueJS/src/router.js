@@ -7,8 +7,10 @@ import Inscription from './pages/Inscription.vue'
 import Connexion from './pages/Connexion.vue'
 import PolitiqueConfidentialite from './pages/PolitiqueConfidentialite.vue'
 import MentionsLegales from './pages/MentionsLegales.vue'
+import DevenirBenevole from './pages/DevenirBenevole.vue'
 import AdminLogin from './pages/AdminLogin.vue'
 import AdminDashboard from './pages/AdminDashboard.vue'
+import EspaceBenevole from './pages/EspaceBenevole.vue'
 
 const routes = [
   {
@@ -57,6 +59,11 @@ const routes = [
     component: MentionsLegales
   },
   {
+    path: '/benevole',
+    name: 'DevenirBenevole',
+    component: DevenirBenevole
+  },
+  {
     path: '/admin',
     name: 'AdminLogin',
     component: AdminLogin
@@ -65,12 +72,20 @@ const routes = [
     path: '/admin/dashboard',
     name: 'AdminDashboard',
     component: AdminDashboard
+  },
+  {
+    path: '/espace-benevole',
+    name: 'EspaceBenevole',
+    component: EspaceBenevole
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior() {
+    return { top: 0 }
+  }
 })
 
 export default router

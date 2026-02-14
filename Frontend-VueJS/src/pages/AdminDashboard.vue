@@ -38,6 +38,22 @@
           <BookOpen :size="18" />
           Cours Religieux
         </button>
+        <button
+          @click="activeTab = 'benevoles'"
+          :class="activeTab === 'benevoles' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+        >
+          <HandHelping :size="18" />
+          Bénévoles
+        </button>
+        <button
+          @click="activeTab = 'ramadan'; fetchRamadanData()"
+          :class="activeTab === 'ramadan' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+        >
+          <Moon :size="18" />
+          Ramadan
+        </button>
       </div>
     </div>
 
@@ -128,6 +144,233 @@
               <button @click="deleteCours(c.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
                 <Trash2 :size="18" />
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BÉNÉVOLES -->
+      <div v-if="activeTab === 'benevoles'">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Colonne gauche : Demandes -->
+          <div class="lg:col-span-2">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Demandes</h2>
+              <span class="text-sm text-gray-500">{{ demandes.length }} demande(s)</span>
+            </div>
+
+            <div v-if="benevolesLoading" class="text-center py-12">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+            </div>
+            <div v-else-if="demandes.length === 0" class="text-center py-12 text-gray-500">
+              Aucune demande pour le moment.
+            </div>
+            <div v-else class="space-y-4">
+              <div v-for="b in demandes" :key="b.id" class="bg-white rounded-xl border p-4 sm:p-5">
+                <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap mb-2">
+                      <h3 class="font-semibold text-gray-800">{{ b.prenom }} {{ b.nom }}</h3>
+                      <span
+                        :class="{
+                          'bg-blue-100 text-blue-700': b.statut === 'nouveau',
+                          'bg-yellow-100 text-yellow-700': b.statut === 'contacté',
+                          'bg-red-100 text-red-700': b.statut === 'refusé'
+                        }"
+                        class="text-xs px-2 py-0.5 rounded font-medium"
+                      >
+                        {{ b.statut }}
+                      </span>
+                    </div>
+                    <div class="space-y-1 text-sm text-gray-600">
+                      <p><strong>Email :</strong> <a :href="'mailto:' + b.email" class="text-emerald-600 hover:underline">{{ b.email }}</a></p>
+                      <p><strong>Téléphone :</strong> <a :href="'tel:' + b.telephone" class="text-emerald-600 hover:underline">{{ b.telephone }}</a></p>
+                      <p><strong>Domaine :</strong> <span class="bg-gray-100 px-2 py-0.5 rounded">{{ b.domaine }}</span></p>
+                      <p v-if="b.message" class="mt-2 text-gray-500 italic">"{{ b.message }}"</p>
+                      <p class="text-xs text-gray-400 mt-2">Reçu le {{ new Date(b.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) }}</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2 flex-shrink-0">
+                    <select
+                      :value="b.statut"
+                      @change="updateBenevoleStatut(b.id, $event.target.value)"
+                      class="text-xs border rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-600"
+                    >
+                      <option value="nouveau">Nouveau</option>
+                      <option value="contacté">Contacté</option>
+                      <option value="accepté">Accepté</option>
+                      <option value="refusé">Refusé</option>
+                    </select>
+                    <button @click="deleteBenevole(b.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                      <Trash2 :size="18" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colonne droite : Bénévoles actuels -->
+          <div>
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Nos bénévoles</h2>
+              <span class="text-sm text-gray-500">{{ benevolesActuels.length }}</span>
+            </div>
+
+            <div v-if="benevolesLoading" class="text-center py-12">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+            </div>
+            <div v-else-if="benevolesActuels.length === 0" class="text-center py-12 text-gray-500 bg-white rounded-xl border">
+              Aucun bénévole accepté pour le moment.
+            </div>
+            <div v-else class="space-y-3">
+              <div v-for="b in benevolesActuels" :key="b.id" class="bg-white rounded-xl border p-4 flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <UserCheck :size="18" class="text-emerald-600" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-gray-800 text-sm">{{ b.prenom }} {{ b.nom }}</h3>
+                  <p class="text-xs text-emerald-600">{{ b.domaine }}</p>
+                  <p class="text-xs text-gray-400">{{ b.email }}</p>
+                </div>
+                <div class="flex gap-1 flex-shrink-0">
+                  <select
+                    :value="b.statut"
+                    @change="updateBenevoleStatut(b.id, $event.target.value)"
+                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600"
+                  >
+                    <option value="nouveau">Nouveau</option>
+                    <option value="contacté">Contacté</option>
+                    <option value="accepté">Accepté</option>
+                    <option value="refusé">Refusé</option>
+                  </select>
+                  <button @click="deleteBenevole(b.id)" class="p-1.5 text-gray-400 hover:text-red-600 transition-colors">
+                    <Trash2 :size="16" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RAMADAN -->
+      <div v-if="activeTab === 'ramadan'">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Calendrier + Détails -->
+          <div class="lg:col-span-2">
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Planning Ramadan 2026</h2>
+            <p class="text-sm text-gray-500 mb-6">18 février - 19 mars | Cliquez sur un jour pour voir les détails</p>
+
+            <!-- Grille des 30 jours -->
+            <div class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-10 gap-2 mb-8">
+              <button v-for="(day, i) in ramadanDays" :key="i" @click="selectedRamadanDay = day"
+                :class="[
+                  selectedRamadanDay && ramadanDateStr(selectedRamadanDay) === ramadanDateStr(day) ? 'ring-2 ring-emerald-600 shadow-md' : '',
+                  getRamadanPresentsCount(day) === 0 ? 'bg-red-50 text-red-700 border-red-200' :
+                  getRamadanPresentsCount(day) < 3 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                ]"
+                class="rounded-xl p-2 text-center transition-all hover:shadow border">
+                <span class="text-[10px] font-bold block">J{{ i + 1 }}</span>
+                <span class="text-lg font-bold block leading-tight">{{ day.getDate() }}</span>
+                <span class="text-[10px] block">{{ getRamadanPresentsCount(day) }} ben.</span>
+              </button>
+            </div>
+
+            <!-- Détails du jour sélectionné -->
+            <div v-if="selectedRamadanDay" class="bg-white rounded-xl border p-5">
+              <h3 class="font-semibold text-gray-800 mb-4 text-lg">{{ formatRamadanDate(selectedRamadanDay) }}</h3>
+
+              <!-- Bénévoles présents -->
+              <div class="mb-6">
+                <h4 class="text-sm font-medium text-gray-600 mb-3">
+                  Bénévoles présents ({{ getRamadanPresents(selectedRamadanDay).length }})
+                </h4>
+                <div v-if="getRamadanPresents(selectedRamadanDay).length === 0" class="text-sm text-gray-400 italic">
+                  Aucun bénévole inscrit pour ce jour.
+                </div>
+                <div v-else class="flex flex-wrap gap-2">
+                  <span v-for="p in getRamadanPresents(selectedRamadanDay)" :key="p.id"
+                    class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-medium">
+                    {{ getBenevoleNom(p.benevole_id) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Tâches -->
+              <div>
+                <h4 class="text-sm font-medium text-gray-600 mb-3">Tâches</h4>
+                <div v-if="getRamadanTaches(selectedRamadanDay).length === 0" class="text-sm text-gray-400 italic mb-3">
+                  Aucune tâche pour ce jour.
+                </div>
+                <div v-else class="space-y-2 mb-4">
+                  <div v-for="t in getRamadanTaches(selectedRamadanDay)" :key="t.id"
+                    class="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
+                    <span class="text-sm flex-1 font-medium text-gray-700">{{ t.nom }}</span>
+                    <select :value="t.benevole_id || ''" @change="assignRamadanTache(t.id, $event.target.value)"
+                      class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600 max-w-[140px]">
+                      <option value="">Non assignée</option>
+                      <option v-for="p in getRamadanPresents(selectedRamadanDay)" :key="p.benevole_id" :value="p.benevole_id">
+                        {{ getBenevoleNom(p.benevole_id) }}
+                      </option>
+                    </select>
+                    <button @click="deleteRamadanTache(t.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors">
+                      <Trash2 :size="14" />
+                    </button>
+                  </div>
+                </div>
+                <form @submit.prevent="addRamadanTache" class="flex gap-2">
+                  <input v-model="newRamadanTache" required placeholder="Nouvelle tâche (ex: Cuisson riz, Service...)"
+                    class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+                  <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 text-sm font-medium">
+                    Ajouter
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div v-else class="bg-white rounded-xl border p-8 text-center text-gray-400">
+              Sélectionnez un jour pour voir les détails et gérer les tâches.
+            </div>
+          </div>
+
+          <!-- Colonne droite : Produits -->
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-semibold text-gray-800">Courses</h2>
+              <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+                {{ ramadanProduitsManquants }} manquant(s)
+              </span>
+            </div>
+
+            <!-- Ajouter produit -->
+            <form @submit.prevent="addRamadanProduit" class="bg-white rounded-xl border p-3 mb-4">
+              <div class="flex gap-2">
+                <input v-model="newRamadanProduit.nom" required placeholder="Produit"
+                  class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-emerald-600 text-sm" />
+                <input v-model="newRamadanProduit.quantite" placeholder="Qté"
+                  class="w-20 px-3 py-2 border rounded-lg focus:outline-none focus:border-emerald-600 text-sm" />
+                <button type="submit" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-bold">+</button>
+              </div>
+            </form>
+
+            <div v-if="ramadanProduits.length === 0" class="text-center py-8 text-gray-400 text-sm">
+              Aucun produit ajouté.
+            </div>
+            <div v-else class="space-y-2">
+              <div v-for="p in ramadanProduits" :key="p.id" class="bg-white rounded-xl border p-3 flex items-center gap-2">
+                <button @click="toggleRamadanStock(p)"
+                  :class="p.en_stock ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors">
+                  {{ p.en_stock ? '\u2713' : '\u2717' }}
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium" :class="p.en_stock ? 'line-through text-gray-400' : 'text-gray-800'">{{ p.nom }}</p>
+                  <p class="text-xs text-gray-400">{{ p.quantite || '' }} {{ p.responsable_nom ? '\u00B7 ' + p.responsable_nom : '' }}</p>
+                </div>
+                <button @click="deleteRamadanProduit(p.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors">
+                  <Trash2 :size="14" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -326,9 +569,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, Plus, Pencil, Trash2, X, Upload, Image, Music } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Image, Music, UserCheck } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -505,6 +748,117 @@ const deleteCours = async (id) => {
   fetchCours()
 }
 
+// --- BÉNÉVOLES ---
+const benevoles = ref([])
+const benevolesLoading = ref(true)
+
+const demandes = computed(() => benevoles.value.filter(b => b.statut !== 'accepté'))
+const benevolesActuels = computed(() => benevoles.value.filter(b => b.statut === 'accepté'))
+
+const fetchBenevoles = async () => {
+  benevolesLoading.value = true
+  const { data } = await supabase.from('benevoles').select('*').order('created_at', { ascending: false })
+  benevoles.value = data || []
+  benevolesLoading.value = false
+}
+
+const updateBenevoleStatut = async (id, statut) => {
+  await supabase.from('benevoles').update({ statut }).eq('id', id)
+  fetchBenevoles()
+}
+
+const deleteBenevole = async (id) => {
+  if (!confirm('Supprimer cette candidature ?')) return
+  await supabase.from('benevoles').delete().eq('id', id)
+  fetchBenevoles()
+}
+
+// --- RAMADAN ---
+const ramadanPresences = ref([])
+const ramadanTaches = ref([])
+const ramadanProduits = ref([])
+const selectedRamadanDay = ref(null)
+const newRamadanTache = ref('')
+const newRamadanProduit = ref({ nom: '', quantite: '' })
+
+const ramadanDays = []
+const ramadanStart = new Date(2026, 1, 18)
+for (let i = 0; i < 30; i++) {
+  const d = new Date(ramadanStart)
+  d.setDate(d.getDate() + i)
+  ramadanDays.push(d)
+}
+
+const ramadanDateStr = (d) => {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const formatRamadanDate = (d) => d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+const ramadanProduitsManquants = computed(() => ramadanProduits.value.filter(p => !p.en_stock).length)
+
+const fetchRamadanData = async () => {
+  const [presRes, tachesRes, produitsRes] = await Promise.all([
+    supabase.from('ramadan_presences').select('*'),
+    supabase.from('ramadan_taches').select('*'),
+    supabase.from('ramadan_produits').select('*').order('created_at')
+  ])
+  ramadanPresences.value = presRes.data || []
+  ramadanTaches.value = tachesRes.data || []
+  ramadanProduits.value = produitsRes.data || []
+}
+
+const getRamadanPresentsCount = (day) => ramadanPresences.value.filter(p => p.jour === ramadanDateStr(day)).length
+
+const getRamadanPresents = (day) => ramadanPresences.value.filter(p => p.jour === ramadanDateStr(day))
+
+const getRamadanTaches = (day) => ramadanTaches.value.filter(t => t.jour === ramadanDateStr(day))
+
+const getBenevoleNom = (id) => {
+  const b = benevoles.value.find(b => b.id === id)
+  return b ? `${b.prenom} ${b.nom}` : 'Inconnu'
+}
+
+const addRamadanTache = async () => {
+  if (!selectedRamadanDay.value || !newRamadanTache.value) return
+  await supabase.from('ramadan_taches').insert({ jour: ramadanDateStr(selectedRamadanDay.value), nom: newRamadanTache.value })
+  newRamadanTache.value = ''
+  fetchRamadanData()
+}
+
+const assignRamadanTache = async (tacheId, benevoleId) => {
+  await supabase.from('ramadan_taches').update({ benevole_id: benevoleId || null }).eq('id', tacheId)
+  fetchRamadanData()
+}
+
+const deleteRamadanTache = async (id) => {
+  await supabase.from('ramadan_taches').delete().eq('id', id)
+  fetchRamadanData()
+}
+
+const addRamadanProduit = async () => {
+  await supabase.from('ramadan_produits').insert({
+    nom: newRamadanProduit.value.nom,
+    quantite: newRamadanProduit.value.quantite || null
+  })
+  newRamadanProduit.value = { nom: '', quantite: '' }
+  fetchRamadanData()
+}
+
+const toggleRamadanStock = async (p) => {
+  await supabase.from('ramadan_produits').update({ en_stock: !p.en_stock }).eq('id', p.id)
+  fetchRamadanData()
+}
+
+const deleteRamadanProduit = async (id) => {
+  if (!confirm('Supprimer ce produit ?')) return
+  await supabase.from('ramadan_produits').delete().eq('id', id)
+  fetchRamadanData()
+}
+
 // --- AUTH ---
 const handleLogout = async () => {
   await supabase.auth.signOut()
@@ -519,5 +873,6 @@ onMounted(async () => {
   }
   fetchEvents()
   fetchCours()
+  fetchBenevoles()
 })
 </script>

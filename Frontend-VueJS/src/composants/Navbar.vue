@@ -31,6 +31,16 @@
             Contact Imam
           </router-link>
 
+          <router-link to="/benevole" class="hover:text-gray-600 transition-colors flex items-center gap-2">
+            <HandHelping :size="18" />
+            Bénévolat
+          </router-link>
+
+          <router-link v-if="isBenevole" to="/espace-benevole" class="hover:text-gray-600 transition-colors flex items-center gap-2">
+            <Moon :size="18" />
+            Ramadan
+          </router-link>
+
           <template v-if="isLoggedIn">
             <router-link
               v-if="isAdmin"
@@ -87,6 +97,16 @@
           Contact Imam
         </router-link>
 
+        <router-link @click="mobileOpen = false" to="/benevole" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <HandHelping :size="18" class="text-gray-400" />
+          Bénévolat
+        </router-link>
+
+        <router-link v-if="isBenevole" @click="mobileOpen = false" to="/espace-benevole" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <Moon :size="18" class="text-gray-400" />
+          Ramadan
+        </router-link>
+
         <template v-if="isLoggedIn">
           <router-link
             v-if="isAdmin"
@@ -119,7 +139,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Building2, Home, Video, Calendar, MessageSquare, UserPlus, LogOut, Shield, Menu as MenuIcon, X } from 'lucide-vue-next'
+import { Building2, Home, Video, Calendar, MessageSquare, HandHelping, Moon, UserPlus, LogOut, Shield, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const ADMIN_EMAIL = 'panda@gmail.com'
@@ -127,25 +147,54 @@ const ADMIN_EMAIL = 'panda@gmail.com'
 const router = useRouter()
 const isLoggedIn = ref(false)
 const isAdmin = ref(false)
+const isBenevole = ref(false)
 const mobileOpen = ref(false)
 
-const checkAuth = async () => {
-  const { data: { session } } = await supabase.auth.getSession()
+const checkBenevole = async (email) => {
+  if (!email) {
+    isBenevole.value = false
+    return
+  }
+  try {
+    const { data } = await supabase
+      .from('benevoles')
+      .select('id')
+      .eq('email', email)
+      .eq('statut', 'accepté')
+      .single()
+    isBenevole.value = !!data
+  } catch {
+    isBenevole.value = false
+  }
+}
+
+const updateAuthState = async (session) => {
   isLoggedIn.value = !!session
   isAdmin.value = session?.user?.email === ADMIN_EMAIL
+  if (session) {
+    await checkBenevole(session.user.email)
+  } else {
+    isBenevole.value = false
+  }
 }
 
 const handleLogout = async () => {
-  await supabase.auth.signOut()
+  try {
+    await supabase.auth.signOut()
+  } catch {
+    // Force logout même si erreur
+  }
   isLoggedIn.value = false
+  isAdmin.value = false
+  isBenevole.value = false
   router.push('/')
 }
 
-onMounted(() => {
-  checkAuth()
-  supabase.auth.onAuthStateChange((_event, session) => {
-    isLoggedIn.value = !!session
-    isAdmin.value = session?.user?.email === ADMIN_EMAIL
+onMounted(async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  await updateAuthState(session)
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    await updateAuthState(session)
   })
 })
 </script>
