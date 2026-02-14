@@ -18,11 +18,17 @@
   
               <!-- Content -->
               <div class="flex-1 text-center md:text-left">
-                <h3 class="text-lg font-semibold mb-1">🍪 Cookies et confidentialité</h3>
+                <h3 class="text-lg font-semibold mb-1">Cookies et confidentialité</h3>
                 <p class="text-emerald-100 text-sm">
-                  Ce site utilise des cookies pour le chat en ligne afin de vous permettre de contacter la mosquée. 
+                  Ce site utilise des cookies pour le chat en ligne (Tawk.to), un service tiers qui peut traiter des données en dehors de l'Union Européenne. En acceptant, vous consentez au chargement de ce service.
+                </p>
+                <p class="text-emerald-200 text-xs mt-2">
                   <router-link to="/politique-confidentialite" class="underline hover:text-white">
-                    En savoir plus
+                    Politique de confidentialité
+                  </router-link>
+                  &nbsp;·&nbsp;
+                  <router-link to="/mentions-legales" class="underline hover:text-white">
+                    Mentions légales
                   </router-link>
                 </p>
               </div>

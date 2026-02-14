@@ -19,9 +19,9 @@
 
     <!-- Filters -->
 <section class="bg-white py-10 px-4 border-b border-gray-200">
-  <div class="max-w-6xl mx-auto flex flex-wrap gap-5 items-center">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-5 items-stretch sm:items-center">
     <!-- Barre de recherche -->
-    <div class="flex-1 min-w-[300px] relative">
+    <div class="flex-1 min-w-0 sm:min-w-[300px] relative">
       <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" :size="20" />
       <input 
         v-model="searchQuery"
@@ -165,74 +165,68 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ChevronLeft, ChevronDown, Search, Filter, Calendar, Clock, MapPin, Users } from 'lucide-vue-next'
+import { supabase } from '../supabase'
 
-// Variables réactives
-const searchQuery = ref('') // Requête de recherche
-const selectedCategory = ref(null) // Catégorie sélectionnée pour le filtrage
-const dropdownOpen = ref(false) // État d'ouverture du menu déroulant
-const events = ref([]) // Liste des événements
-const loading = ref(true) // Indicateur de chargement
-const error = ref(null) // Message d'erreur
+const searchQuery = ref('')
+const selectedCategory = ref(null)
+const dropdownOpen = ref(false)
+const events = ref([])
+const loading = ref(true)
+const error = ref(null)
 
-// Calculer l'étiquette de la catégorie sélectionnée
 const selectedCategoryLabel = computed(() => {
-  return selectedCategory.value || 'Toutes les catégories' // Si aucune catégorie n'est sélectionnée, afficher "Toutes les catégories"
+  return selectedCategory.value || 'Toutes les catégories'
 })
 
-// Fonction pour sélectionner une catégorie
 const selectCategory = (category) => {
-  selectedCategory.value = category // Met à jour la catégorie sélectionnée
-  dropdownOpen.value = false // Ferme le menu déroulant
+  selectedCategory.value = category
+  dropdownOpen.value = false
 }
 
-// Fonction pour filtrer les événements en fonction de la recherche et de la catégorie
 const filteredEvents = computed(() => {
-  let filtered = events.value // Commence avec tous les événements
-  
-  // Filtrer par recherche
+  let filtered = events.value
+
   if (searchQuery.value) {
-    filtered = filtered.filter(event => 
-      event.titre.toLowerCase().includes(searchQuery.value.toLowerCase()) || // Vérifie si le titre contient la requête
-      event.description.toLowerCase().includes(searchQuery.value.toLowerCase()) // Vérifie si la description contient la requête
+    filtered = filtered.filter(event =>
+      event.titre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      (event.description && event.description.toLowerCase().includes(searchQuery.value.toLowerCase()))
     )
   }
-  
-  // Filtrer par catégorie
+
   if (selectedCategory.value) {
-    filtered = filtered.filter(event => event.categorie === selectedCategory.value) // Garde uniquement les événements de la catégorie sélectionnée
+    filtered = filtered.filter(event => event.categorie === selectedCategory.value)
   }
-  
-  return filtered // Retourne la liste filtrée
+
+  return filtered
 })
 
-// Fonction pour formater une date pour l'affichage
 const formatDate = (dateString) => {
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' } // Options pour le formatage
-  return new Date(dateString).toLocaleDateString('fr-FR', options) // Retourne la date formatée en français
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+  return new Date(dateString).toLocaleDateString('fr-FR', options)
 }
 
-// Fonction pour formater une heure pour l'affichage
 const formatTime = (timeString) => {
-  return timeString.substring(0, 5) // Retourne uniquement les heures et minutes (HH:mm)
+  if (!timeString) return ''
+  return timeString.substring(0, 5)
 }
 
-// Fonction pour récupérer les événements depuis le backend
 const fetchEvents = async () => {
   try {
-    const response = await fetch('http://localhost:3001/api/evenements') // Appel à l'API pour récupérer les événements
-    if (!response.ok) throw new Error('Erreur lors du chargement des événements') // Gère les erreurs HTTP
-    
-    const data = await response.json() // Parse les données JSON
-    events.value = data // Met à jour la liste des événements
+    const { data, error: err } = await supabase
+      .from('evenements')
+      .select('*')
+      .order('date', { ascending: true })
+
+    if (err) throw err
+    events.value = data
   } catch (err) {
-    console.error('Erreur:', err) // Affiche l'erreur dans la console
-    error.value = 'Impossible de charger les événements. Vérifiez que le serveur backend est démarré.' // Définit un message d'erreur
+    console.error('Erreur:', err)
+    error.value = 'Impossible de charger les événements.'
   } finally {
-    loading.value = false // Désactive l'indicateur de chargement
+    loading.value = false
   }
 }
 
-// Appelle la fonction pour récupérer les événements lorsque le composant est monté
 onMounted(() => {
   fetchEvents()
 })

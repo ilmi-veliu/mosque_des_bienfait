@@ -17,7 +17,7 @@
         
         <!-- En-tête -->
         <div class="text-center max-w-2xl mx-auto mb-10">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-green-700">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-emerald-700">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           <h1 class="text-3xl md:text-4xl font-semibold text-gray-900 mb-3">Contacter l'Imam</h1>
@@ -38,7 +38,7 @@
               
               <!-- Téléphone -->
               <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">
-                <div class="w-11 h-11 bg-gradient-to-br from-green-700 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div class="w-11 h-11 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Phone :size="20" class="text-white" />
                 </div>
                 <div>
@@ -49,7 +49,7 @@
 
               <!-- Email -->
               <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">
-                <div class="w-11 h-11 bg-gradient-to-br from-green-700 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div class="w-11 h-11 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Mail :size="20" class="text-white" />
                 </div>
                 <div>
@@ -60,7 +60,7 @@
 
               <!-- Horaires -->
               <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">
-                <div class="w-11 h-11 bg-gradient-to-br from-green-700 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div class="w-11 h-11 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Clock :size="20" class="text-white" />
                 </div>
                 <div>
@@ -75,27 +75,27 @@
             </div>
 
             <!-- Types demandes -->
-            <div class="bg-green-50 p-5 rounded-xl border-l-4 border-green-700">
+            <div class="bg-emerald-50 p-5 rounded-xl border-l-4 border-emerald-600">
               <h3 class="text-lg font-semibold text-gray-900 mb-3">Types de Demandes</h3>
               <ul class="space-y-2">
                 <li class="flex items-start gap-2 text-gray-700 text-sm">
-                  <span class="text-green-700 font-bold mt-0.5">✓</span>
+                  <span class="text-emerald-700 font-bold mt-0.5">✓</span>
                   <span>Questions religieuses et spirituelles</span>
                 </li>
                 <li class="flex items-start gap-2 text-gray-700 text-sm">
-                  <span class="text-green-700 font-bold mt-0.5">✓</span>
+                  <span class="text-emerald-700 font-bold mt-0.5">✓</span>
                   <span>Conseil religieux</span>
                 </li>
                 <li class="flex items-start gap-2 text-gray-700 text-sm">
-                  <span class="text-green-700 font-bold mt-0.5">✓</span>
+                  <span class="text-emerald-700 font-bold mt-0.5">✓</span>
                   <span>Organisation de mariages (Nikah)</span>
                 </li>
                 <li class="flex items-start gap-2 text-gray-700 text-sm">
-                  <span class="text-green-700 font-bold mt-0.5">✓</span>
+                  <span class="text-emerald-700 font-bold mt-0.5">✓</span>
                   <span>Cours et enseignements islamiques</span>
                 </li>
                 <li class="flex items-start gap-2 text-gray-700 text-sm">
-                  <span class="text-green-700 font-bold mt-0.5">✓</span>
+                  <span class="text-emerald-700 font-bold mt-0.5">✓</span>
                   <span>Soutien communautaire</span>
                 </li>
               </ul>
@@ -103,7 +103,7 @@
           </div>
 
           <!-- Chat Direct -->
-          <div class="bg-gradient-to-br from-green-700 to-green-600 text-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-center justify-center">
+          <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-center justify-center">
             <div class="mb-4 opacity-90">
               <MessageSquare :size="64" />
             </div>
@@ -121,7 +121,7 @@
 
             <button 
               @click="openChat"
-              class="bg-white text-green-700 px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all"
+              class="bg-white text-emerald-700 px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all"
             >
               <MessageSquare :size="20" />
               Bouton de chat "Imam"

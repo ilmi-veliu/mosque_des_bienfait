@@ -58,8 +58,16 @@
     
     <!-- Footer Bottom -->
     <div class="text-center mt-10 text-[0.8125rem] border-t border-white/10 pt-5 text-[#717182]">
+      <div class="flex justify-center gap-4 mb-3">
+        <router-link to="/politique-confidentialite" class="text-[#717182] no-underline hover:text-white transition-colors duration-200">
+          Politique de confidentialité
+        </router-link>
+        <span class="text-white/20">|</span>
+        <router-link to="/mentions-legales" class="text-[#717182] no-underline hover:text-white transition-colors duration-200">
+          Mentions légales
+        </router-link>
+      </div>
       <p>&copy; 2025 Mosquée des Bienfaisants. Tous droits réservés.</p>
-      <p>Site créé avec respect et dévouement pour servir notre communauté</p>
     </div>
   </footer>
 </template>

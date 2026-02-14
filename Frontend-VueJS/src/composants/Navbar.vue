@@ -3,40 +3,114 @@
     <div class="max-w-7xl mx-auto px-4">
       <div class="flex justify-between items-center h-16">
         <!-- Logo -->
-        <router-link to="/" class="flex items-center gap-2 text-xl font-semibold">
+        <router-link to="/" class="flex items-center gap-2 text-lg sm:text-xl font-semibold">
           <Building2 :size="24" />
-          <span>Mosquée des Bienfaisants</span>
+          <span class="hidden sm:inline">Mosquée des Bienfaisants</span>
+          <span class="sm:hidden">Mosquée</span>
         </router-link>
 
-        <!-- Navigation -->
-        <div class="flex items-center gap-6">
+        <!-- Navigation Desktop -->
+        <div class="hidden lg:flex items-center gap-6">
           <router-link to="/" class="hover:text-gray-600 transition-colors flex items-center gap-2">
             <Home :size="18" />
             Accueil
           </router-link>
-          
-          <!-- Suppression du lien vers Inscription -->
-          <!-- <router-link to="/inscription">Inscription</router-link> -->
 
-          <button 
-            v-if="isLoggedIn"
-            @click="logout" 
-            class="hover:text-gray-600 transition-colors flex items-center gap-2"
-          >
-            <LogOut :size="18" />
-            Se déconnecter
-          </button>
+          <router-link to="/cours" class="hover:text-gray-600 transition-colors flex items-center gap-2">
+            <Video :size="18" />
+            Cours Vidéo
+          </router-link>
+
+          <router-link to="/evenements" class="hover:text-gray-600 transition-colors flex items-center gap-2">
+            <Calendar :size="18" />
+            Événements
+          </router-link>
 
           <router-link to="/contact" class="hover:text-gray-600 transition-colors flex items-center gap-2">
             <MessageSquare :size="18" />
             Contact Imam
           </router-link>
-          
-          <router-link to="/evenements" class="hover:text-gray-600 transition-colors flex items-center gap-2">
-            <Calendar :size="18" />
-            Événements
-          </router-link>
+
+          <template v-if="isLoggedIn">
+            <router-link
+              v-if="isAdmin"
+              to="/admin/dashboard"
+              class="hover:text-emerald-700 transition-colors flex items-center gap-2 text-emerald-600 font-medium"
+            >
+              <Shield :size="18" />
+              Admin
+            </router-link>
+            <button
+              @click="handleLogout"
+              class="hover:text-gray-600 transition-colors flex items-center gap-2"
+            >
+              <LogOut :size="18" />
+              Déconnexion
+            </button>
+          </template>
+          <template v-else>
+            <router-link to="/inscription" class="hover:text-gray-600 transition-colors flex items-center gap-2">
+              <UserPlus :size="18" />
+              S'inscrire
+            </router-link>
+          </template>
         </div>
+
+        <!-- Bouton Menu Mobile -->
+        <button @click="mobileOpen = !mobileOpen" class="lg:hidden p-2 -mr-2 text-gray-700">
+          <X v-if="mobileOpen" :size="24" />
+          <MenuIcon v-else :size="24" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Menu Mobile -->
+    <div v-if="mobileOpen" class="lg:hidden border-t bg-white">
+      <div class="px-4 py-3 space-y-1">
+        <router-link @click="mobileOpen = false" to="/" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <Home :size="18" class="text-gray-400" />
+          Accueil
+        </router-link>
+
+        <router-link @click="mobileOpen = false" to="/cours" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <Video :size="18" class="text-gray-400" />
+          Cours Vidéo
+        </router-link>
+
+        <router-link @click="mobileOpen = false" to="/evenements" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <Calendar :size="18" class="text-gray-400" />
+          Événements
+        </router-link>
+
+        <router-link @click="mobileOpen = false" to="/contact" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <MessageSquare :size="18" class="text-gray-400" />
+          Contact Imam
+        </router-link>
+
+        <template v-if="isLoggedIn">
+          <router-link
+            v-if="isAdmin"
+            @click="mobileOpen = false"
+            to="/admin/dashboard"
+            class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-emerald-600 font-medium"
+          >
+            <Shield :size="18" />
+            Admin
+          </router-link>
+          <button
+            @click="handleLogout(); mobileOpen = false"
+            class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors w-full text-left"
+          >
+            <LogOut :size="18" class="text-gray-400" />
+            Déconnexion
+          </button>
+        </template>
+        <template v-else>
+          <router-link @click="mobileOpen = false" to="/inscription" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+            <UserPlus :size="18" class="text-gray-400" />
+            S'inscrire
+          </router-link>
+        </template>
       </div>
     </div>
   </nav>
@@ -45,26 +119,33 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Building2, Home, UserPlus, LogOut, MessageSquare, Calendar } from 'lucide-vue-next'
+import { Building2, Home, Video, Calendar, MessageSquare, UserPlus, LogOut, Shield, Menu as MenuIcon, X } from 'lucide-vue-next'
+import { supabase } from '../supabase'
+
+const ADMIN_EMAIL = 'panda@gmail.com'
 
 const router = useRouter()
 const isLoggedIn = ref(false)
+const isAdmin = ref(false)
+const mobileOpen = ref(false)
 
-// Vérifier si l'utilisateur est connecté
-const checkAuth = () => {
-  isLoggedIn.value = localStorage.getItem('token') !== null
+const checkAuth = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  isLoggedIn.value = !!session
+  isAdmin.value = session?.user?.email === ADMIN_EMAIL
 }
 
-// Déconnexion
-const logout = () => {
-  localStorage.removeItem('token')
+const handleLogout = async () => {
+  await supabase.auth.signOut()
   isLoggedIn.value = false
   router.push('/')
 }
 
 onMounted(() => {
   checkAuth()
-  // Écouter les changements d'authentification
-  window.addEventListener('auth-change', checkAuth)
+  supabase.auth.onAuthStateChange((_event, session) => {
+    isLoggedIn.value = !!session
+    isAdmin.value = session?.user?.email === ADMIN_EMAIL
+  })
 })
 </script>
