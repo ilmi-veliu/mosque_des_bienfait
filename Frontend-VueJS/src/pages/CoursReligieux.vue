@@ -145,6 +145,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { ChevronLeft, Search, Calendar, MapPin, User, RotateCcw } from 'lucide-vue-next'
 import { supabase } from '../supabase'
+import { store, preloadCours } from '../store'
 
 const searchQuery = ref('')
 const selectedCategorie = ref('')
@@ -262,14 +263,8 @@ const getYoutubeId = (url) => {
 
 const fetchCours = async () => {
   try {
-    const { data, error: err } = await supabase
-      .from('cours_religieux')
-      .select('*')
-      .eq('actif', true)
-      .order('created_at', { ascending: false })
-
-    if (err) throw err
-    coursList.value = data
+    await preloadCours()
+    coursList.value = store.cours
   } catch (err) {
     console.error('Erreur:', err)
     error.value = 'Impossible de charger les cours.'
@@ -279,8 +274,15 @@ const fetchCours = async () => {
 }
 
 onMounted(async () => {
-  await fetchProgress()
-  await fetchCours()
+  // Charger cours et progression en parallèle pour ne pas bloquer l'affichage
+  const coursPromise = store.coursLoaded
+    ? Promise.resolve().then(() => { coursList.value = store.cours; loading.value = false })
+    : fetchCours()
+
+  // fetchProgress en parallèle (ne bloque pas l'affichage des cours)
+  fetchProgress()
+
+  await coursPromise
   // Sauvegarde auto toutes les 30 secondes
   saveTimer = setInterval(saveAllProgress, 30000)
 })

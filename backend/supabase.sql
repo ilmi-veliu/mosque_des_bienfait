@@ -199,8 +199,11 @@ CREATE TABLE IF NOT EXISTS ramadan_taches (
   nom TEXT NOT NULL,
   benevole_id UUID REFERENCES benevoles(id) ON DELETE SET NULL,
   fait BOOLEAN DEFAULT FALSE,
+  created_by UUID REFERENCES benevoles(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE ramadan_taches ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES benevoles(id) ON DELETE SET NULL;
 
 -- Liste des courses / produits
 CREATE TABLE IF NOT EXISTS ramadan_produits (
@@ -211,6 +214,9 @@ CREATE TABLE IF NOT EXISTS ramadan_produits (
   responsable_nom TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ajout colonne jour aux produits (optionnel, pour associer à un jour)
+ALTER TABLE ramadan_produits ADD COLUMN IF NOT EXISTS jour DATE;
 
 ALTER TABLE ramadan_presences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ramadan_taches ENABLE ROW LEVEL SECURITY;
@@ -245,10 +251,38 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 
 -- ============================================
+-- TABLE NOTES RAMADAN
+-- ============================================
+CREATE TABLE IF NOT EXISTS ramadan_notes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  jour DATE NOT NULL,
+  contenu TEXT NOT NULL,
+  auteur_nom TEXT NOT NULL,
+  benevole_id UUID REFERENCES benevoles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE ramadan_notes ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "ramadan_notes_all_public" ON ramadan_notes FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+
+-- ============================================
+-- RÔLES UTILISATEURS
+-- ============================================
+ALTER TABLE benevoles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'benevole';
+
+-- Mettre le super admin
+UPDATE benevoles SET role = 'superadmin' WHERE email = 'panda@gmail.com';
+
+
+-- ============================================
 -- COMPTE ADMIN
 -- ============================================
 -- À créer manuellement dans :
 -- Supabase Dashboard > Authentication > Users > Add user
 -- Email : panda@gmail.com
--- Mot de passe : pandalademin45
+-- Mot de passe : pandalademin
 -- ============================================

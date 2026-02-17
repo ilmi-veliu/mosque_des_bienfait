@@ -19,13 +19,19 @@
       </div>
     </div>
 
+    <!-- Loading -->
+    <div v-if="pageLoading" class="min-h-screen flex items-center justify-center">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+    </div>
+
+    <div v-else>
     <!-- Tabs -->
     <div class="bg-white border-b">
-      <div class="max-w-7xl mx-auto flex">
+      <div class="max-w-7xl mx-auto flex overflow-x-auto">
         <button
           @click="activeTab = 'evenements'"
           :class="activeTab === 'evenements' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <Calendar :size="18" />
           Événements
@@ -33,15 +39,15 @@
         <button
           @click="activeTab = 'cours'"
           :class="activeTab === 'cours' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <BookOpen :size="18" />
-          Cours Religieux
+          Cours
         </button>
-        <button
+        <button v-if="isSuperAdmin"
           @click="activeTab = 'benevoles'"
           :class="activeTab === 'benevoles' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <HandHelping :size="18" />
           Bénévoles
@@ -49,10 +55,18 @@
         <button
           @click="activeTab = 'ramadan'; fetchRamadanData()"
           :class="activeTab === 'ramadan' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <Moon :size="18" />
           Ramadan
+        </button>
+        <button v-if="isSuperAdmin"
+          @click="activeTab = 'gestion'; fetchAllBenevoles()"
+          :class="activeTab === 'gestion' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+        >
+          <Crown :size="18" />
+          Gestion
         </button>
       </div>
     </div>
@@ -298,7 +312,7 @@
               </div>
 
               <!-- Tâches -->
-              <div>
+              <div class="mb-6">
                 <h4 class="text-sm font-medium text-gray-600 mb-3">Tâches</h4>
                 <div v-if="getRamadanTaches(selectedRamadanDay).length === 0" class="text-sm text-gray-400 italic mb-3">
                   Aucune tâche pour ce jour.
@@ -306,7 +320,14 @@
                 <div v-else class="space-y-2 mb-4">
                   <div v-for="t in getRamadanTaches(selectedRamadanDay)" :key="t.id"
                     class="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
-                    <span class="text-sm flex-1 font-medium text-gray-700">{{ t.nom }}</span>
+                    <span :class="t.fait ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-400'"
+                      class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                      {{ t.fait ? '\u2713' : '' }}
+                    </span>
+                    <span class="text-sm flex-1 font-medium" :class="t.fait ? 'line-through text-gray-400' : 'text-gray-700'">{{ t.nom }}</span>
+                    <span v-if="getBenevoleNom(t.benevole_id) !== 'Inconnu'" class="text-[11px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                      {{ getBenevoleNom(t.benevole_id) }}
+                    </span>
                     <select :value="t.benevole_id || ''" @change="assignRamadanTache(t.id, $event.target.value)"
                       class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600 max-w-[140px]">
                       <option value="">Non assignée</option>
@@ -326,6 +347,26 @@
                     Ajouter
                   </button>
                 </form>
+              </div>
+
+              <!-- Notes -->
+              <div>
+                <h4 class="text-sm font-medium text-gray-600 mb-3">Notes partagées</h4>
+                <div v-if="getRamadanNotes(selectedRamadanDay).length === 0" class="text-sm text-gray-400 italic">
+                  Aucune note pour ce jour.
+                </div>
+                <div v-else class="space-y-2">
+                  <div v-for="n in getRamadanNotes(selectedRamadanDay)" :key="n.id"
+                    class="flex items-start gap-2 bg-yellow-50/50 rounded-lg px-3 py-2">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm text-gray-800">{{ n.contenu }}</p>
+                      <p class="text-[11px] text-gray-400 mt-0.5">{{ n.auteur_nom }}</p>
+                    </div>
+                    <button @click="deleteRamadanNote(n.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0">
+                      <Trash2 :size="14" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
             <div v-else class="bg-white rounded-xl border p-8 text-center text-gray-400">
@@ -371,6 +412,59 @@
                   <Trash2 :size="14" />
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <!-- GESTION DES RÔLES (Super Admin only) -->
+      <div v-if="activeTab === 'gestion' && isSuperAdmin">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion des rôles</h2>
+        <p class="text-sm text-gray-500 mb-6">Recherchez un bénévole par prénom pour modifier son rôle.</p>
+
+        <!-- Barre de recherche -->
+        <div class="relative mb-6">
+          <Search :size="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input v-model="roleSearch" type="text" placeholder="Rechercher par prénom..."
+            class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+        </div>
+
+        <div v-if="allBenevolesLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+        </div>
+        <div v-else-if="filteredRoleBenevoles.length === 0" class="text-center py-12 text-gray-500">
+          {{ roleSearch ? 'Aucun résultat pour cette recherche.' : 'Aucun bénévole accepté.' }}
+        </div>
+        <div v-else class="space-y-3">
+          <div v-for="b in filteredRoleBenevoles" :key="b.id"
+            class="bg-white rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                :class="b.role === 'superadmin' ? 'bg-amber-100 text-amber-700' : b.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'">
+                {{ b.prenom[0] }}{{ b.nom[0] }}
+              </div>
+              <div class="min-w-0">
+                <p class="font-semibold text-gray-800">{{ b.prenom }} {{ b.nom }}</p>
+                <p class="text-xs text-gray-400">{{ b.email }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 self-end sm:self-center">
+              <span :class="{
+                'bg-amber-100 text-amber-700': b.role === 'superadmin',
+                'bg-purple-100 text-purple-700': b.role === 'admin',
+                'bg-gray-100 text-gray-500': !b.role || b.role === 'benevole'
+              }" class="text-xs px-2.5 py-1 rounded-lg font-medium">
+                {{ b.role === 'superadmin' ? 'Super Admin' : b.role === 'admin' ? 'Admin' : 'Bénévole' }}
+              </span>
+              <select v-if="b.id !== adminUser.id"
+                :value="b.role || 'benevole'"
+                @change="updateRole(b, $event.target.value)"
+                class="text-xs border rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-600">
+                <option value="benevole">Bénévole</option>
+                <option value="admin">Admin</option>
+              </select>
+              <span v-else class="text-xs text-gray-400 italic">C'est vous</span>
             </div>
           </div>
         </div>
@@ -571,13 +665,16 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Image, Music, UserCheck } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Image, Music, UserCheck, Crown, Search } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
 const activeTab = ref('evenements')
 const saving = ref(false)
 const uploading = ref(false)
+const adminUser = ref(null)
+const isSuperAdmin = computed(() => adminUser.value?.role === 'superadmin')
+const pageLoading = ref(true)
 
 // --- UPLOAD FICHIER ---
 const uploadFile = async (file, forceAudio = false) => {
@@ -777,6 +874,7 @@ const deleteBenevole = async (id) => {
 const ramadanPresences = ref([])
 const ramadanTaches = ref([])
 const ramadanProduits = ref([])
+const ramadanNotes = ref([])
 const selectedRamadanDay = ref(null)
 const newRamadanTache = ref('')
 const newRamadanProduit = ref({ nom: '', quantite: '' })
@@ -801,14 +899,16 @@ const formatRamadanDate = (d) => d.toLocaleDateString('fr-FR', { weekday: 'long'
 const ramadanProduitsManquants = computed(() => ramadanProduits.value.filter(p => !p.en_stock).length)
 
 const fetchRamadanData = async () => {
-  const [presRes, tachesRes, produitsRes] = await Promise.all([
+  const [presRes, tachesRes, produitsRes, notesRes] = await Promise.all([
     supabase.from('ramadan_presences').select('*'),
     supabase.from('ramadan_taches').select('*'),
-    supabase.from('ramadan_produits').select('*').order('created_at')
+    supabase.from('ramadan_produits').select('*').order('created_at'),
+    supabase.from('ramadan_notes').select('*').order('created_at')
   ])
   ramadanPresences.value = presRes.data || []
   ramadanTaches.value = tachesRes.data || []
   ramadanProduits.value = produitsRes.data || []
+  ramadanNotes.value = notesRes.data || []
 }
 
 const getRamadanPresentsCount = (day) => ramadanPresences.value.filter(p => p.jour === ramadanDateStr(day)).length
@@ -839,6 +939,13 @@ const deleteRamadanTache = async (id) => {
   fetchRamadanData()
 }
 
+const getRamadanNotes = (day) => ramadanNotes.value.filter(n => n.jour === ramadanDateStr(day))
+
+const deleteRamadanNote = async (id) => {
+  await supabase.from('ramadan_notes').delete().eq('id', id)
+  fetchRamadanData()
+}
+
 const addRamadanProduit = async () => {
   await supabase.from('ramadan_produits').insert({
     nom: newRamadanProduit.value.nom,
@@ -859,6 +966,31 @@ const deleteRamadanProduit = async (id) => {
   fetchRamadanData()
 }
 
+// --- GESTION DES RÔLES ---
+const allBenevolesForRole = ref([])
+const allBenevolesLoading = ref(false)
+const roleSearch = ref('')
+
+const fetchAllBenevoles = async () => {
+  allBenevolesLoading.value = true
+  const { data } = await supabase.from('benevoles').select('*').eq('statut', 'accepté').order('prenom')
+  allBenevolesForRole.value = data || []
+  allBenevolesLoading.value = false
+}
+
+const filteredRoleBenevoles = computed(() => {
+  if (!roleSearch.value.trim()) return allBenevolesForRole.value
+  const search = roleSearch.value.trim().toLowerCase()
+  return allBenevolesForRole.value.filter(b =>
+    b.prenom.toLowerCase().includes(search) || b.nom.toLowerCase().includes(search)
+  )
+})
+
+const updateRole = async (b, newRole) => {
+  b.role = newRole
+  await supabase.from('benevoles').update({ role: newRole }).eq('id', b.id)
+}
+
 // --- AUTH ---
 const handleLogout = async () => {
   await supabase.auth.signOut()
@@ -871,6 +1003,19 @@ onMounted(async () => {
     router.push('/admin')
     return
   }
+
+  const { data } = await supabase.from('benevoles')
+    .select('*')
+    .eq('email', session.user.email)
+    .single()
+
+  if (!data || !['admin', 'superadmin'].includes(data.role)) {
+    router.push('/')
+    return
+  }
+
+  adminUser.value = data
+  pageLoading.value = false
   fetchEvents()
   fetchCours()
   fetchBenevoles()

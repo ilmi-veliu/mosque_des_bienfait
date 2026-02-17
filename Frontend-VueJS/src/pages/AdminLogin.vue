@@ -93,6 +93,19 @@ const handleLogin = async () => {
     return
   }
 
+  // Vérifier que l'utilisateur a un rôle admin
+  const { data: benevoleData } = await supabase.from('benevoles')
+    .select('role')
+    .eq('email', email.value)
+    .single()
+
+  if (!benevoleData || !['admin', 'superadmin'].includes(benevoleData.role)) {
+    errorMsg.value = "Vous n'avez pas les droits d'administration."
+    await supabase.auth.signOut()
+    loading.value = false
+    return
+  }
+
   router.push('/admin/dashboard')
 }
 </script>

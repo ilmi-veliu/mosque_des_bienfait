@@ -97,7 +97,14 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { Heart, ExternalLink } from 'lucide-vue-next'
+import { preloadAll } from '../store'
+
+// Précharger les données des autres pages en arrière-plan
+onMounted(() => {
+  preloadAll()
+})
 
 // Gestion du don
 const handleDonation = () => {

@@ -165,7 +165,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ChevronLeft, ChevronDown, Search, Filter, Calendar, Clock, MapPin, Users } from 'lucide-vue-next'
-import { supabase } from '../supabase'
+import { store, preloadEvenements } from '../store'
 
 const searchQuery = ref('')
 const selectedCategory = ref(null)
@@ -212,13 +212,8 @@ const formatTime = (timeString) => {
 
 const fetchEvents = async () => {
   try {
-    const { data, error: err } = await supabase
-      .from('evenements')
-      .select('*')
-      .order('date', { ascending: true })
-
-    if (err) throw err
-    events.value = data
+    await preloadEvenements()
+    events.value = store.evenements
   } catch (err) {
     console.error('Erreur:', err)
     error.value = 'Impossible de charger les événements.'
@@ -228,6 +223,11 @@ const fetchEvents = async () => {
 }
 
 onMounted(() => {
-  fetchEvents()
+  if (store.evenementsLoaded) {
+    events.value = store.evenements
+    loading.value = false
+  } else {
+    fetchEvents()
+  }
 })
 </script>
