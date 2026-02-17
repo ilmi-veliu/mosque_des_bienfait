@@ -274,7 +274,12 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 -- ============================================
 ALTER TABLE benevoles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'benevole';
 
--- Mettre le super admin
+-- Créer le super admin s'il n'existe pas encore
+INSERT INTO benevoles (prenom, nom, email, telephone, domaine, statut, role)
+SELECT 'Admin', 'Admin', 'panda@gmail.com', '0000000000', 'Administration', 'accepté', 'superadmin'
+WHERE NOT EXISTS (SELECT 1 FROM benevoles WHERE email = 'panda@gmail.com');
+
+-- Mettre le super admin (si la ligne existe déjà)
 UPDATE benevoles SET role = 'superadmin' WHERE email = 'panda@gmail.com';
 
 

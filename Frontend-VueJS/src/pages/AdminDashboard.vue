@@ -1004,17 +1004,25 @@ onMounted(async () => {
     return
   }
 
-  const { data } = await supabase.from('benevoles')
-    .select('*')
-    .eq('email', session.user.email)
-    .single()
+  const SUPERADMIN_EMAIL = 'panda@gmail.com'
+  const email = session.user.email
 
-  if (!data || !['admin', 'superadmin'].includes(data.role)) {
+  // Chercher dans benevoles si une entrée avec rôle admin existe
+  const { data: rows } = await supabase.from('benevoles')
+    .select('*')
+    .eq('email', email)
+
+  const benevoleAdmin = rows?.find(r => ['admin', 'superadmin'].includes(r.role))
+
+  if (email === SUPERADMIN_EMAIL) {
+    // Super admin par email - créer une entrée fictive si pas dans benevoles
+    adminUser.value = benevoleAdmin || { id: 'superadmin', email, role: 'superadmin', prenom: 'Admin', nom: 'Admin' }
+  } else if (benevoleAdmin) {
+    adminUser.value = benevoleAdmin
+  } else {
     router.push('/')
     return
   }
-
-  adminUser.value = data
   pageLoading.value = false
   fetchEvents()
   fetchCours()
