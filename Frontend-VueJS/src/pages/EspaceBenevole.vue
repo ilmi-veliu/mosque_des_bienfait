@@ -636,6 +636,49 @@
                         </span>
                       </div>
                     </div>
+
+                    <!-- Notes / Commentaires d'équipe -->
+                    <div class="mt-3 pt-3 border-t">
+                      <button @click="toggleEquipeNotes(eq.id)"
+                        class="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-700 transition-colors mb-2">
+                        <MessageCircle :size="14" />
+                        <span>{{ getEquipeNotes(eq.id).length }} commentaire(s)</span>
+                        <span class="text-[10px]">{{ expandedEquipeNotes.includes(eq.id) ? '▲' : '▼' }}</span>
+                      </button>
+
+                      <div v-if="expandedEquipeNotes.includes(eq.id)">
+                        <div v-if="getEquipeNotes(eq.id).length > 0" class="space-y-2 mb-3">
+                          <div v-for="note in getEquipeNotes(eq.id)" :key="note.id"
+                            class="bg-gray-50 rounded-lg px-3 py-2">
+                            <div class="flex items-start justify-between gap-2">
+                              <div class="min-w-0 flex-1">
+                                <p class="text-sm text-gray-800">{{ note.contenu }}</p>
+                                <p class="text-[11px] text-gray-400 mt-1">
+                                  {{ note.auteur_nom }} &middot; {{ formatNoteTime(note.created_at) }}
+                                </p>
+                              </div>
+                              <button v-if="isAdmin || note.benevole_id === benevole.id || eq.created_by === benevole.id"
+                                @click="deleteEquipeNote(note.id)"
+                                class="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 p-0.5">
+                                <X :size="12" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <p v-else class="text-xs text-gray-400 mb-3">Aucun commentaire pour le moment.</p>
+
+                        <!-- Ajouter un commentaire (seulement si membre de l'équipe) -->
+                        <form v-if="isEquipeMembre(eq.id)" @submit.prevent="addEquipeNote(eq.id)" class="flex gap-2">
+                          <input v-model="equipeNoteText[eq.id]" placeholder="Objectif, note, commentaire..."
+                            class="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-emerald-600" />
+                          <button type="submit" :disabled="!equipeNoteText[eq.id]?.trim()"
+                            class="bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 text-sm disabled:opacity-40">
+                            <Send :size="14" />
+                          </button>
+                        </form>
+                        <p v-else class="text-xs text-gray-400 italic">Rejoignez l'équipe pour commenter.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -824,7 +867,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, ChevronRight, UserCheck, Clock, LogOut, Calendar as CalendarIcon, ShoppingCart, ClipboardList, ListChecks, Users, Plus, X, Eye, BookOpen, Heart, Calendar, Wrench, Monitor, HandHelping, UtensilsCrossed, CalendarCheck, CalendarX } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, UserCheck, Clock, LogOut, Calendar as CalendarIcon, ShoppingCart, ClipboardList, ListChecks, Users, Plus, X, Eye, BookOpen, Heart, Calendar, Wrench, Monitor, HandHelping, UtensilsCrossed, CalendarCheck, CalendarX, MessageCircle, Send } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -1108,14 +1151,15 @@ const openDay = (date) => {
 
 const loadData = async () => {
   dataLoading.value = true
-  const [presRes, benevRes, tachesRes, produitsRes, notesRes, equipesRes, membresRes] = await Promise.all([
+  const [presRes, benevRes, tachesRes, produitsRes, notesRes, equipesRes, membresRes, eqNotesRes] = await Promise.all([
     supabase.from('ramadan_presences').select('*'),
     supabase.from('benevoles').select('id, prenom, nom').eq('statut', 'accepté'),
     supabase.from('ramadan_taches').select('*'),
     supabase.from('ramadan_produits').select('*').order('created_at'),
     supabase.from('ramadan_notes').select('*').order('created_at'),
     supabase.from('equipes').select('*').order('created_at'),
-    supabase.from('equipe_membres').select('*')
+    supabase.from('equipe_membres').select('*'),
+    supabase.from('equipe_notes').select('*').order('created_at')
   ])
   presences.value = presRes.data || []
   allBenevoles.value = benevRes.data || []
@@ -1124,6 +1168,7 @@ const loadData = async () => {
   notes.value = notesRes.data || []
   equipes.value = equipesRes.data || []
   equipeMembres.value = membresRes.data || []
+  equipeNotes.value = eqNotesRes.data || []
   dataLoading.value = false
 }
 
@@ -1415,6 +1460,60 @@ const deleteEquipe = async (equipeId) => {
   equipes.value = equipes.value.filter(e => e.id !== equipeId)
   equipeMembres.value = equipeMembres.value.filter(m => m.equipe_id !== equipeId)
   await supabase.from('equipes').delete().eq('id', equipeId)
+}
+
+// --- EQUIPE NOTES ---
+const equipeNotes = ref([])
+const expandedEquipeNotes = ref([])
+const equipeNoteText = ref({})
+
+const toggleEquipeNotes = (equipeId) => {
+  const idx = expandedEquipeNotes.value.indexOf(equipeId)
+  if (idx >= 0) {
+    expandedEquipeNotes.value.splice(idx, 1)
+  } else {
+    expandedEquipeNotes.value.push(equipeId)
+  }
+}
+
+const getEquipeNotes = (equipeId) => {
+  return equipeNotes.value.filter(n => n.equipe_id === equipeId)
+}
+
+const isEquipeMembre = (equipeId) => {
+  return equipeMembres.value.some(m => m.equipe_id === equipeId && m.benevole_id === benevole.value.id)
+}
+
+const addEquipeNote = async (equipeId) => {
+  const text = equipeNoteText.value[equipeId]?.trim()
+  if (!text) return
+
+  const temp = {
+    id: Date.now(),
+    equipe_id: equipeId,
+    contenu: text,
+    auteur_nom: monNom.value,
+    benevole_id: benevole.value.id,
+    created_at: new Date().toISOString()
+  }
+  equipeNotes.value.push(temp)
+  equipeNoteText.value[equipeId] = ''
+
+  const { data } = await supabase.from('equipe_notes').insert({
+    equipe_id: equipeId,
+    contenu: temp.contenu,
+    auteur_nom: temp.auteur_nom,
+    benevole_id: benevole.value.id
+  }).select()
+  if (data && data[0]) {
+    const idx = equipeNotes.value.findIndex(n => n.id === temp.id)
+    if (idx !== -1) equipeNotes.value[idx] = data[0]
+  }
+}
+
+const deleteEquipeNote = async (noteId) => {
+  equipeNotes.value = equipeNotes.value.filter(n => n.id !== noteId)
+  await supabase.from('equipe_notes').delete().eq('id', noteId)
 }
 
 // --- EQUIPE STATS ---

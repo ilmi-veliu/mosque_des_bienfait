@@ -547,6 +547,44 @@ CREATE POLICY "em_delete" ON equipe_membres FOR DELETE TO authenticated USING (
 
 
 -- ============================================
+-- NOTES / COMMENTAIRES D'ÉQUIPE
+-- ============================================
+
+-- Notes et objectifs partagés au sein d'une équipe
+CREATE TABLE IF NOT EXISTS equipe_notes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  equipe_id UUID REFERENCES equipes(id) ON DELETE CASCADE NOT NULL,
+  contenu TEXT NOT NULL,
+  auteur_nom TEXT NOT NULL,
+  benevole_id UUID REFERENCES benevoles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE equipe_notes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "en_select" ON equipe_notes;
+DROP POLICY IF EXISTS "en_insert" ON equipe_notes;
+DROP POLICY IF EXISTS "en_delete" ON equipe_notes;
+
+-- Lecture : bénévoles acceptés (tous les membres voient les notes de toutes les équipes)
+CREATE POLICY "en_select" ON equipe_notes FOR SELECT TO authenticated USING (is_accepted_benevole());
+-- Création : bénévoles acceptés (membre de l'équipe)
+CREATE POLICY "en_insert" ON equipe_notes FOR INSERT TO authenticated WITH CHECK (
+  is_accepted_benevole() AND EXISTS (
+    SELECT 1 FROM equipe_membres WHERE equipe_id = equipe_notes.equipe_id AND benevole_id = get_my_benevole_id()
+  )
+);
+-- Suppression : auteur de la note, créateur de l'équipe ou admin
+CREATE POLICY "en_delete" ON equipe_notes FOR DELETE TO authenticated USING (
+  benevole_id = get_my_benevole_id()
+  OR is_admin_or_superadmin()
+  OR EXISTS (
+    SELECT 1 FROM equipes WHERE id = equipe_id AND created_by = get_my_benevole_id()
+  )
+);
+
+
+-- ============================================
 -- COMPTE ADMIN
 -- ============================================
 -- À créer manuellement dans :
