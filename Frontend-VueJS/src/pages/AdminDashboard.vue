@@ -8,6 +8,48 @@
           <h1 class="text-lg sm:text-xl font-semibold">Administration</h1>
         </div>
         <div class="flex items-center gap-3 sm:gap-4">
+          <!-- Notifications -->
+          <div class="relative">
+            <button @click="showNotifPanel = !showNotifPanel" class="text-gray-400 hover:text-white transition-colors relative p-1">
+              <Bell :size="18" />
+              <span v-if="unreadNotifCount > 0"
+                class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {{ unreadNotifCount > 9 ? '9+' : unreadNotifCount }}
+              </span>
+            </button>
+            <!-- Panel notifications -->
+            <div v-if="showNotifPanel" class="absolute right-0 top-10 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border z-50 max-h-[70vh] overflow-hidden">
+              <div class="px-4 py-3 border-b flex items-center justify-between">
+                <h4 class="font-semibold text-gray-800 text-sm">Notifications</h4>
+                <button v-if="notifications.length > 0" @click="markAllRead" class="text-xs text-emerald-600 hover:underline">
+                  Tout marquer lu
+                </button>
+              </div>
+              <div class="overflow-y-auto max-h-[50vh]">
+                <div v-if="notifications.length === 0" class="px-4 py-8 text-center text-gray-400 text-sm">
+                  Aucune notification.
+                </div>
+                <div v-for="n in notifications" :key="n.id"
+                  class="px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
+                  :class="!n.lu ? 'bg-emerald-50/40' : ''">
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                      :class="n.type === 'disponibilite' ? 'bg-amber-100' : 'bg-blue-100'">
+                      <CalendarX v-if="n.message?.includes('indisponible')" :size="14" class="text-red-600" />
+                      <CalendarCheck v-else :size="14" class="text-emerald-600" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm text-gray-800">{{ n.message }}</p>
+                      <p class="text-[11px] text-gray-400 mt-1">{{ formatNotifDate(n.created_at) }}</p>
+                    </div>
+                    <button v-if="!n.lu" @click.stop="markRead(n)" class="text-[10px] text-emerald-600 hover:underline flex-shrink-0 mt-1">
+                      Lu
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <router-link to="/" class="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm">
             Voir le site
           </router-link>
@@ -418,15 +460,15 @@
       </div>
     </div>
 
-      <!-- GESTION DES RÔLES (Super Admin only) -->
+      <!-- GESTION DES BÉNÉVOLES (Super Admin only) -->
       <div v-if="activeTab === 'gestion' && isSuperAdmin">
-        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion des rôles</h2>
-        <p class="text-sm text-gray-500 mb-6">Recherchez un bénévole par prénom pour modifier son rôle.</p>
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion des bénévoles</h2>
+        <p class="text-sm text-gray-500 mb-6">Gérez les rôles, la disponibilité et supprimez des bénévoles.</p>
 
         <!-- Barre de recherche -->
         <div class="relative mb-6">
           <Search :size="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input v-model="roleSearch" type="text" placeholder="Rechercher par prénom..."
+          <input v-model="roleSearch" type="text" placeholder="Rechercher par nom ou prénom..."
             class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
         </div>
 
@@ -434,37 +476,62 @@
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
         </div>
         <div v-else-if="filteredRoleBenevoles.length === 0" class="text-center py-12 text-gray-500">
-          {{ roleSearch ? 'Aucun résultat pour cette recherche.' : 'Aucun bénévole accepté.' }}
+          {{ roleSearch ? 'Aucun résultat pour cette recherche.' : 'Aucun bénévole trouvé.' }}
         </div>
         <div v-else class="space-y-3">
           <div v-for="b in filteredRoleBenevoles" :key="b.id"
-            class="bg-white rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div class="flex items-center gap-3 flex-1 min-w-0">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                :class="b.role === 'superadmin' ? 'bg-amber-100 text-amber-700' : b.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'">
-                {{ b.prenom[0] }}{{ b.nom[0] }}
+            class="bg-white rounded-xl border p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                  :class="b.role === 'superadmin' ? 'bg-amber-100 text-amber-700' : b.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'">
+                  {{ b.prenom[0] }}{{ b.nom[0] }}
+                </div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-gray-800">{{ b.prenom }} {{ b.nom }}</p>
+                  <p class="text-xs text-gray-400">{{ b.email }}</p>
+                </div>
               </div>
-              <div class="min-w-0">
-                <p class="font-semibold text-gray-800">{{ b.prenom }} {{ b.nom }}</p>
-                <p class="text-xs text-gray-400">{{ b.email }}</p>
+              <div class="flex items-center gap-3 self-end sm:self-center">
+                <span :class="{
+                  'bg-amber-100 text-amber-700': b.role === 'superadmin',
+                  'bg-purple-100 text-purple-700': b.role === 'admin',
+                  'bg-gray-100 text-gray-500': !b.role || b.role === 'benevole'
+                }" class="text-xs px-2.5 py-1 rounded-lg font-medium">
+                  {{ b.role === 'superadmin' ? 'Super Admin' : b.role === 'admin' ? 'Admin' : 'Bénévole' }}
+                </span>
+                <select v-if="b.id !== adminUser.id"
+                  :value="b.role || 'benevole'"
+                  @change="updateRole(b, $event.target.value)"
+                  class="text-xs border rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-600">
+                  <option value="benevole">Bénévole</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <span v-else class="text-xs text-gray-400 italic">C'est vous</span>
+                <button v-if="b.id !== adminUser.id" @click="deleteGestionBenevole(b.id)" class="p-1.5 text-gray-400 hover:text-red-600 transition-colors">
+                  <Trash2 :size="16" />
+                </button>
               </div>
             </div>
-            <div class="flex items-center gap-3 self-end sm:self-center">
-              <span :class="{
-                'bg-amber-100 text-amber-700': b.role === 'superadmin',
-                'bg-purple-100 text-purple-700': b.role === 'admin',
-                'bg-gray-100 text-gray-500': !b.role || b.role === 'benevole'
-              }" class="text-xs px-2.5 py-1 rounded-lg font-medium">
-                {{ b.role === 'superadmin' ? 'Super Admin' : b.role === 'admin' ? 'Admin' : 'Bénévole' }}
-              </span>
-              <select v-if="b.id !== adminUser.id"
-                :value="b.role || 'benevole'"
-                @change="updateRole(b, $event.target.value)"
-                class="text-xs border rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-600">
-                <option value="benevole">Bénévole</option>
-                <option value="admin">Admin</option>
-              </select>
-              <span v-else class="text-xs text-gray-400 italic">C'est vous</span>
+            <!-- Disponibilité -->
+            <div class="flex flex-wrap items-center gap-3 pl-13 text-sm border-t pt-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" :checked="b.disponible !== false" @change="toggleDispo(b)"
+                  class="w-4 h-4 accent-emerald-600" />
+                <span :class="b.disponible !== false ? 'text-emerald-600 font-medium' : 'text-red-500 font-medium'">
+                  {{ b.disponible !== false ? 'Disponible' : 'Indisponible' }}
+                </span>
+              </label>
+              <template v-if="b.disponible === false">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-500">Du</span>
+                  <input type="date" :value="b.dispo_debut || ''" @change="updateDispoDates(b, 'dispo_debut', $event.target.value)"
+                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600" />
+                  <span class="text-xs text-gray-500">au</span>
+                  <input type="date" :value="b.dispo_fin || ''" @change="updateDispoDates(b, 'dispo_fin', $event.target.value)"
+                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600" />
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -507,11 +574,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-              <input v-model="eventForm.date" type="date" required class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="eventForm.date" type="date" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Heure *</label>
-              <input v-model="eventForm.heure" type="time" required class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="eventForm.heure" type="time" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -526,7 +593,7 @@
               <label class="flex-1 cursor-pointer">
                 <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 transition-colors bg-gray-50">
                   <Upload :size="18" class="text-gray-400" />
-                  <span class="text-sm text-gray-500">{{ uploading ? 'Upload...' : 'Choisir un fichier' }}</span>
+                  <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un fichier' }}</span>
                 </div>
                 <input type="file" accept="image/*" class="hidden" @change="handleEventImageUpload" :disabled="uploading" />
               </label>
@@ -616,7 +683,7 @@
               <label class="flex-1 cursor-pointer">
                 <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 transition-colors bg-gray-50">
                   <Upload :size="18" class="text-gray-400" />
-                  <span class="text-sm text-gray-500">{{ uploading ? 'Upload...' : 'Choisir un fichier' }}</span>
+                  <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un fichier' }}</span>
                 </div>
                 <input type="file" accept="image/*" class="hidden" @change="handleCoursImageUpload" :disabled="uploading" />
               </label>
@@ -634,9 +701,9 @@
               <label class="flex-1 cursor-pointer">
                 <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 transition-colors bg-gray-50">
                   <Music :size="18" class="text-gray-400" />
-                  <span class="text-sm text-gray-500">{{ uploading ? 'Upload...' : 'Choisir un audio' }}</span>
+                  <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un audio' }}</span>
                 </div>
-                <input type="file" accept="audio/*,.opus,.ogg,.m4a,.amr,.wav,.mp3,.aac,.wma,image/*" class="hidden" @change="handleCoursAudioUpload" :disabled="uploading" />
+                <input type="file" accept="audio/*,image/*,.opus,.ogg,.m4a,.amr,.wav,.mp3,.aac,.wma" class="hidden" @change="handleCoursAudioUpload" :disabled="uploading" />
               </label>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
               <input v-model="coursForm.audio_url" type="text" placeholder="Coller une URL audio..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
@@ -665,7 +732,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Image, Music, UserCheck, Crown, Search } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Image, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -677,14 +744,57 @@ const isSuperAdmin = computed(() => adminUser.value?.role === 'superadmin')
 const pageLoading = ref(true)
 
 // --- UPLOAD FICHIER ---
+const uploadProgress = ref('')
+
+const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
+  return new Promise((resolve) => {
+    // Si c'est pas une image, retourner tel quel
+    if (!file.type.startsWith('image/')) { resolve(file); return }
+    // Si déjà petit (< 500KB), pas besoin de compresser
+    if (file.size < 500 * 1024) { resolve(file); return }
+
+    const img = new window.Image()
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const url = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      let w = img.width, h = img.height
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth }
+      canvas.width = w
+      canvas.height = h
+      ctx.drawImage(img, 0, 0, w, h)
+      canvas.toBlob((blob) => {
+        resolve(blob || file)
+      }, 'image/jpeg', quality)
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+    img.src = url
+  })
+}
+
 const uploadFile = async (file, forceAudio = false) => {
   if (!file) return null
   uploading.value = true
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1)
+  uploadProgress.value = `${sizeMB} MB`
 
+  let uploadBlob = file
   let ext = file.name.split('.').pop().toLowerCase()
   let contentType = file.type
 
-  // Si c'est un upload audio mais que le fichier a une mauvaise extension (ex: WhatsApp audio sauvegardé en .jpeg)
+  // Compresser les images
+  if (file.type.startsWith('image/') && !forceAudio) {
+    uploadProgress.value = `Compression (${sizeMB} MB)...`
+    uploadBlob = await compressImage(file)
+    ext = 'jpg'
+    contentType = 'image/jpeg'
+    const newSizeMB = (uploadBlob.size / 1024 / 1024).toFixed(1)
+    uploadProgress.value = `Upload (${newSizeMB} MB)...`
+  }
+
+  // Si c'est un upload audio mais que le fichier a une mauvaise extension
   if (forceAudio && (!contentType || !contentType.startsWith('audio/'))) {
     ext = 'ogg'
     contentType = 'audio/ogg'
@@ -693,18 +803,34 @@ const uploadFile = async (file, forceAudio = false) => {
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`
   const filePath = `uploads/${fileName}`
 
-  const { error } = await supabase.storage.from('images').upload(filePath, file, {
-    contentType: contentType || undefined
-  })
-  uploading.value = false
+  try {
+    const uploadPromise = supabase.storage.from('images').upload(filePath, uploadBlob, {
+      contentType: contentType || undefined
+    })
+    // Timeout : 5 min pour audio, 30s pour images
+    const timeoutMs = forceAudio ? 300000 : 30000
+    const timeoutLabel = forceAudio ? '5 min' : '30s'
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Upload trop long (> ${timeoutLabel}). Vérifie ta connexion.`)), timeoutMs)
+    )
+    const { error } = await Promise.race([uploadPromise, timeoutPromise])
 
-  if (error) {
-    alert('Erreur upload: ' + error.message)
+    uploading.value = false
+    uploadProgress.value = ''
+
+    if (error) {
+      alert('Erreur upload: ' + error.message)
+      return null
+    }
+
+    const { data } = supabase.storage.from('images').getPublicUrl(filePath)
+    return data.publicUrl
+  } catch (e) {
+    uploading.value = false
+    uploadProgress.value = ''
+    alert(e.message || 'Erreur upload')
     return null
   }
-
-  const { data } = supabase.storage.from('images').getPublicUrl(filePath)
-  return data.publicUrl
 }
 
 const handleEventImageUpload = async (event) => {
@@ -735,7 +861,7 @@ const showEventModal = ref(false)
 const editingEvent = ref(null)
 const eventForm = ref({
   titre: '', description: '', categorie: 'Religieux', date: '', heure: '',
-  lieu: '', participants_max: null, image_url: '', video_url: ''
+  lieu: 'Mosquée des Bienfaisants', participants_max: null, image_url: '', video_url: ''
 })
 
 const fetchEvents = async () => {
@@ -750,7 +876,7 @@ const openEventForm = (event = null) => {
   if (event) {
     eventForm.value = { ...event }
   } else {
-    eventForm.value = { titre: '', description: '', categorie: 'Religieux', date: '', heure: '', lieu: '', participants_max: null, image_url: '', video_url: '' }
+    eventForm.value = { titre: '', description: '', categorie: 'Religieux', date: '', heure: '', lieu: 'Mosquée des Bienfaisants', participants_max: null, image_url: '', video_url: '' }
   }
   showEventModal.value = true
 }
@@ -762,6 +888,8 @@ const saveEvent = async () => {
   if (!payload.image_url) delete payload.image_url
   if (!payload.video_url) delete payload.video_url
   if (!payload.participants_max) delete payload.participants_max
+  if (!payload.date) payload.date = null
+  if (!payload.heure) payload.heure = null
 
   if (editingEvent.value) {
     const { id, created_at, ...updateData } = payload
@@ -790,7 +918,7 @@ const editingCours = ref(null)
 const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const coursForm = ref({
   titre: '', description: '', enseignant: '', jour: '', heure: '',
-  lieu: '', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true
+  lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true
 })
 
 const fetchCours = async () => {
@@ -805,7 +933,7 @@ const openCoursForm = (c = null) => {
   if (c) {
     coursForm.value = { ...c }
   } else {
-    coursForm.value = { titre: '', description: '', enseignant: '', jour: '', heure: '', lieu: '', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true }
+    coursForm.value = { titre: '', description: '', enseignant: '', jour: '', heure: '', lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true }
   }
   showCoursModal.value = true
 }
@@ -820,23 +948,28 @@ const saveCours = async () => {
   if (!payload.categorie) delete payload.categorie
   if (!payload.heure) delete payload.heure
 
-  let result
-  if (editingCours.value) {
-    const { id, created_at, ...updateData } = payload
-    result = await supabase.from('cours_religieux').update(updateData).eq('id', editingCours.value.id)
-  } else {
-    delete payload.id
-    delete payload.created_at
-    result = await supabase.from('cours_religieux').insert(payload)
-  }
-  if (result.error) {
-    alert('Erreur: ' + result.error.message)
+  try {
+    let result
+    if (editingCours.value) {
+      const { id, created_at, ...updateData } = payload
+      result = await supabase.from('cours_religieux').update(updateData).eq('id', editingCours.value.id)
+    } else {
+      delete payload.id
+      delete payload.created_at
+      result = await supabase.from('cours_religieux').insert(payload)
+    }
+    if (result.error) {
+      alert('Erreur: ' + result.error.message)
+      saving.value = false
+      return
+    }
     saving.value = false
-    return
+    showCoursModal.value = false
+    fetchCours()
+  } catch (e) {
+    alert('Erreur réseau: ' + (e.message || 'Vérifie ta connexion.'))
+    saving.value = false
   }
-  saving.value = false
-  showCoursModal.value = false
-  fetchCours()
 }
 
 const deleteCours = async (id) => {
@@ -966,6 +1099,33 @@ const deleteRamadanProduit = async (id) => {
   fetchRamadanData()
 }
 
+// --- NOTIFICATIONS ---
+const notifications = ref([])
+const showNotifPanel = ref(false)
+
+const unreadNotifCount = computed(() => notifications.value.filter(n => !n.lu).length)
+
+const fetchNotifications = async () => {
+  const { data } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30)
+  notifications.value = data || []
+}
+
+const markRead = async (n) => {
+  n.lu = true
+  await supabase.from('notifications').update({ lu: true }).eq('id', n.id)
+}
+
+const markAllRead = async () => {
+  notifications.value.forEach(n => n.lu = true)
+  await supabase.from('notifications').update({ lu: true }).eq('lu', false)
+}
+
+const formatNotifDate = (ds) => {
+  if (!ds) return ''
+  const d = new Date(ds)
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+}
+
 // --- GESTION DES RÔLES ---
 const allBenevolesForRole = ref([])
 const allBenevolesLoading = ref(false)
@@ -973,8 +1133,12 @@ const roleSearch = ref('')
 
 const fetchAllBenevoles = async () => {
   allBenevolesLoading.value = true
-  const { data } = await supabase.from('benevoles').select('*').eq('statut', 'accepté').order('prenom')
-  allBenevolesForRole.value = data || []
+  try {
+    const { data } = await supabase.from('benevoles').select('*').order('prenom')
+    allBenevolesForRole.value = data || []
+  } catch (e) {
+    allBenevolesForRole.value = []
+  }
   allBenevolesLoading.value = false
 }
 
@@ -991,41 +1155,78 @@ const updateRole = async (b, newRole) => {
   await supabase.from('benevoles').update({ role: newRole }).eq('id', b.id)
 }
 
+const deleteGestionBenevole = async (id) => {
+  if (!confirm('Supprimer ce bénévole définitivement ?')) return
+  await supabase.from('benevoles').delete().eq('id', id)
+  allBenevolesForRole.value = allBenevolesForRole.value.filter(b => b.id !== id)
+  fetchBenevoles()
+}
+
+const toggleDispo = async (b) => {
+  const newVal = b.disponible === false ? true : false
+  b.disponible = newVal
+  const update = { disponible: newVal }
+  if (newVal) {
+    update.dispo_debut = null
+    update.dispo_fin = null
+    b.dispo_debut = null
+    b.dispo_fin = null
+  }
+  await supabase.from('benevoles').update(update).eq('id', b.id)
+}
+
+const updateDispoDates = async (b, field, value) => {
+  b[field] = value || null
+  await supabase.from('benevoles').update({ [field]: value || null }).eq('id', b.id)
+}
+
 // --- AUTH ---
 const handleLogout = async () => {
-  await supabase.auth.signOut()
+  try {
+    await supabase.auth.signOut()
+  } catch (e) {
+    console.error('Erreur déconnexion:', e)
+  }
   router.push('/admin')
 }
 
 onMounted(async () => {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    router.push('/admin')
-    return
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      router.push('/admin')
+      return
+    }
+
+    const email = session.user.email
+
+    // Vérifier le rôle admin dans la base de données
+    const { data: rows, error } = await supabase.from('benevoles')
+      .select('*')
+      .eq('email', email)
+      .eq('statut', 'accepté')
+
+    if (error) {
+      console.error('Erreur chargement benevoles:', error)
+    }
+
+    const benevoleAdmin = (rows || []).find(r => ['admin', 'superadmin'].includes(r.role))
+
+    if (benevoleAdmin) {
+      adminUser.value = benevoleAdmin
+    } else {
+      router.push('/')
+      return
+    }
+
+    pageLoading.value = false
+    fetchEvents()
+    fetchCours()
+    fetchBenevoles()
+    fetchNotifications()
+  } catch (e) {
+    console.error('Erreur admin mount:', e)
+    pageLoading.value = false
   }
-
-  const SUPERADMIN_EMAIL = 'panda@gmail.com'
-  const email = session.user.email
-
-  // Chercher dans benevoles si une entrée avec rôle admin existe
-  const { data: rows } = await supabase.from('benevoles')
-    .select('*')
-    .eq('email', email)
-
-  const benevoleAdmin = rows?.find(r => ['admin', 'superadmin'].includes(r.role))
-
-  if (email === SUPERADMIN_EMAIL) {
-    // Super admin par email - créer une entrée fictive si pas dans benevoles
-    adminUser.value = benevoleAdmin || { id: 'superadmin', email, role: 'superadmin', prenom: 'Admin', nom: 'Admin' }
-  } else if (benevoleAdmin) {
-    adminUser.value = benevoleAdmin
-  } else {
-    router.push('/')
-    return
-  }
-  pageLoading.value = false
-  fetchEvents()
-  fetchCours()
-  fetchBenevoles()
 })
 </script>

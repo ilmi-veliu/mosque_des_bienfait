@@ -114,10 +114,10 @@
               </div>
               <!-- Lecteur audio avec reprise -->
               <div v-if="c.audio_url" class="mt-4 pt-4 border-t border-gray-100">
-                <div v-if="currentUserId && getAudioStart(c.id) > 0" class="flex items-center gap-2 mb-2">
+                <button v-if="currentUserId && getAudioStart(c.id) > 0" @click="resumeAudio(c.id)" class="flex items-center gap-2 mb-2 hover:opacity-70 transition-opacity cursor-pointer">
                   <RotateCcw :size="14" class="text-emerald-600" />
                   <span class="text-xs text-emerald-600 font-medium">Reprendre à {{ formatTime(getAudioStart(c.id)) }}</span>
-                </div>
+                </button>
                 <audio
                   :ref="el => { if (el) audioRefs[c.id] = el }"
                   :src="c.audio_url"
@@ -177,6 +177,14 @@ const onAudioLoaded = (coursId) => {
   if (audio && saved > 0) {
     audio.currentTime = saved
   }
+}
+
+const resumeAudio = (coursId) => {
+  const audio = audioRefs.value[coursId]
+  if (!audio) return
+  const saved = getAudioStart(coursId)
+  if (saved > 0) audio.currentTime = saved
+  audio.play()
 }
 
 const onAudioTimeUpdate = (coursId) => {
@@ -263,23 +271,27 @@ const getYoutubeId = (url) => {
 
 const fetchCours = async () => {
   try {
-    await preloadCours()
+    // Afficher le cache immédiatement si dispo
+    if (store.cours.length > 0) {
+      coursList.value = store.cours
+      loading.value = false
+    }
+    // Toujours chercher les données fraîches
+    await preloadCours(true)
     coursList.value = store.cours
   } catch (err) {
     console.error('Erreur:', err)
-    error.value = 'Impossible de charger les cours.'
+    if (coursList.value.length === 0) {
+      error.value = 'Impossible de charger les cours.'
+    }
   } finally {
     loading.value = false
   }
 }
 
 onMounted(async () => {
-  // Charger cours et progression en parallèle pour ne pas bloquer l'affichage
-  const coursPromise = store.coursLoaded
-    ? Promise.resolve().then(() => { coursList.value = store.cours; loading.value = false })
-    : fetchCours()
-
-  // fetchProgress en parallèle (ne bloque pas l'affichage des cours)
+  // Charger cours et progression en parallèle
+  const coursPromise = fetchCours()
   fetchProgress()
 
   await coursPromise

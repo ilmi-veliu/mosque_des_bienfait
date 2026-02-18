@@ -65,61 +65,6 @@ CREATE TABLE IF NOT EXISTS user_progress (
 
 
 -- ============================================
--- ROW LEVEL SECURITY (RLS)
--- ============================================
-ALTER TABLE evenements ENABLE ROW LEVEL SECURITY;
-ALTER TABLE cours_religieux ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
-
--- Evenements : tout le monde peut voir, seuls les connectés peuvent modifier
-DO $$ BEGIN
-  CREATE POLICY "evenements_select_public" ON evenements FOR SELECT TO anon, authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "evenements_insert_authenticated" ON evenements FOR INSERT TO authenticated WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "evenements_update_authenticated" ON evenements FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "evenements_delete_authenticated" ON evenements FOR DELETE TO authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- Cours religieux : tout le monde peut voir, seuls les connectés peuvent modifier
-DO $$ BEGIN
-  CREATE POLICY "cours_select_public" ON cours_religieux FOR SELECT TO anon, authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "cours_insert_authenticated" ON cours_religieux FOR INSERT TO authenticated WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "cours_update_authenticated" ON cours_religieux FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "cours_delete_authenticated" ON cours_religieux FOR DELETE TO authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- Progression : chaque utilisateur voit/modifie seulement SA progression
-DO $$ BEGIN
-  CREATE POLICY "progress_select_own" ON user_progress FOR SELECT TO authenticated USING (auth.uid() = user_id);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "progress_insert_own" ON user_progress FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "progress_update_own" ON user_progress FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-
--- ============================================
 -- TABLE BENEVOLES
 -- ============================================
 CREATE TABLE IF NOT EXISTS benevoles (
@@ -134,31 +79,6 @@ CREATE TABLE IF NOT EXISTS benevoles (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE benevoles ENABLE ROW LEVEL SECURITY;
-
--- Tout le monde peut envoyer une candidature (INSERT)
-DO $$ BEGIN
-  CREATE POLICY "benevoles_insert_public" ON benevoles FOR INSERT TO anon, authenticated WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- Tout le monde peut voir les bénévoles acceptés (page publique)
-DO $$ BEGIN
-  CREATE POLICY "benevoles_select_accepted_public" ON benevoles FOR SELECT TO anon USING (statut = 'accepté');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- Les connectés (admin) peuvent voir toutes les candidatures
-DO $$ BEGIN
-  CREATE POLICY "benevoles_select_authenticated" ON benevoles FOR SELECT TO authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "benevoles_update_authenticated" ON benevoles FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "benevoles_delete_authenticated" ON benevoles FOR DELETE TO authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
 
 -- ============================================
 -- STORAGE - BUCKET IMAGES
@@ -166,18 +86,6 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('images', 'images', true)
 ON CONFLICT (id) DO NOTHING;
-
-DO $$ BEGIN
-  CREATE POLICY "images_select_public" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'images');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "images_insert_authenticated" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'images');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "images_delete_authenticated" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'images');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 
 -- ============================================
@@ -218,37 +126,6 @@ CREATE TABLE IF NOT EXISTS ramadan_produits (
 -- Ajout colonne jour aux produits (optionnel, pour associer à un jour)
 ALTER TABLE ramadan_produits ADD COLUMN IF NOT EXISTS jour DATE;
 
-ALTER TABLE ramadan_presences ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ramadan_taches ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ramadan_produits ENABLE ROW LEVEL SECURITY;
-
--- Présences : tout le monde peut lire/écrire (bénévoles = anon)
-DO $$ BEGIN
-  CREATE POLICY "ramadan_presences_all_public" ON ramadan_presences FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- Tâches : tout le monde peut lire, admin (authenticated) gère
-DO $$ BEGIN
-  CREATE POLICY "ramadan_taches_select_public" ON ramadan_taches FOR SELECT TO anon, authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "ramadan_taches_insert_auth" ON ramadan_taches FOR INSERT TO authenticated WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "ramadan_taches_update_all" ON ramadan_taches FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "ramadan_taches_delete_auth" ON ramadan_taches FOR DELETE TO authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- Produits : tout le monde peut lire/écrire
-DO $$ BEGIN
-  CREATE POLICY "ramadan_produits_all_public" ON ramadan_produits FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
 
 -- ============================================
 -- TABLE NOTES RAMADAN
@@ -261,12 +138,6 @@ CREATE TABLE IF NOT EXISTS ramadan_notes (
   benevole_id UUID REFERENCES benevoles(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
-ALTER TABLE ramadan_notes ENABLE ROW LEVEL SECURITY;
-
-DO $$ BEGIN
-  CREATE POLICY "ramadan_notes_all_public" ON ramadan_notes FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 
 -- ============================================
@@ -284,10 +155,331 @@ UPDATE benevoles SET role = 'superadmin' WHERE email = 'panda@gmail.com';
 
 
 -- ============================================
+-- DISPONIBILITÉ DES BÉNÉVOLES
+-- ============================================
+ALTER TABLE benevoles ADD COLUMN IF NOT EXISTS disponible BOOLEAN DEFAULT TRUE;
+ALTER TABLE benevoles ADD COLUMN IF NOT EXISTS dispo_debut DATE;
+ALTER TABLE benevoles ADD COLUMN IF NOT EXISTS dispo_fin DATE;
+
+
+-- ============================================
+-- MOTIF INDISPONIBILITÉ
+-- ============================================
+ALTER TABLE benevoles ADD COLUMN IF NOT EXISTS dispo_motif TEXT;
+
+
+-- ============================================
+-- TABLE NOTIFICATIONS ADMIN
+-- ============================================
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  type TEXT NOT NULL,
+  message TEXT NOT NULL,
+  benevole_id UUID REFERENCES benevoles(id) ON DELETE CASCADE,
+  lu BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+-- ============================================
+-- DATE/HEURE OPTIONNELLES POUR ÉVÉNEMENTS
+-- ============================================
+ALTER TABLE evenements ALTER COLUMN date DROP NOT NULL;
+ALTER TABLE evenements ALTER COLUMN heure DROP NOT NULL;
+
+
+-- ============================================
+-- FONCTIONS HELPER POUR RLS (sécurité)
+-- ============================================
+
+-- TRIGGER : empêche un non-admin de modifier role, statut, email, nom, prénom
+-- Même si le RLS laisse passer l'UPDATE, le trigger bloque les champs sensibles
+CREATE OR REPLACE FUNCTION protect_benevole_fields() RETURNS TRIGGER AS $$
+BEGIN
+  -- Si l'utilisateur n'est PAS admin/superadmin, on verrouille les champs sensibles
+  IF NOT is_admin_or_superadmin() THEN
+    NEW.role := OLD.role;
+    NEW.statut := OLD.statut;
+    NEW.email := OLD.email;
+    NEW.prenom := OLD.prenom;
+    NEW.nom := OLD.nom;
+    NEW.telephone := OLD.telephone;
+    NEW.domaine := OLD.domaine;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS protect_benevole_fields_trigger ON benevoles;
+CREATE TRIGGER protect_benevole_fields_trigger
+  BEFORE UPDATE ON benevoles
+  FOR EACH ROW
+  EXECUTE FUNCTION protect_benevole_fields();
+
+
+-- Vérifie si l'utilisateur connecté est admin ou superadmin
+CREATE OR REPLACE FUNCTION is_admin_or_superadmin() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM benevoles
+    WHERE email = (SELECT auth.jwt()->>'email')
+    AND role IN ('admin', 'superadmin')
+    AND statut = 'accepté'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Vérifie si l'utilisateur connecté est un bénévole accepté
+CREATE OR REPLACE FUNCTION is_accepted_benevole() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM benevoles
+    WHERE email = (SELECT auth.jwt()->>'email')
+    AND statut = 'accepté'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Récupère l'ID du bénévole connecté
+CREATE OR REPLACE FUNCTION get_my_benevole_id() RETURNS UUID AS $$
+  SELECT id FROM benevoles
+  WHERE email = (SELECT auth.jwt()->>'email')
+  AND statut = 'accepté'
+  LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Vérifie si l'utilisateur connecté est superadmin
+CREATE OR REPLACE FUNCTION is_superadmin() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM benevoles
+    WHERE email = (SELECT auth.jwt()->>'email')
+    AND role = 'superadmin'
+    AND statut = 'accepté'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+
+-- ============================================
+-- ACTIVER RLS SUR TOUTES LES TABLES
+-- ============================================
+ALTER TABLE evenements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cours_religieux ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE benevoles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ramadan_presences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ramadan_taches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ramadan_produits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ramadan_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+
+-- ============================================
+-- SUPPRIMER LES ANCIENNES POLICIES TROP PERMISSIVES
+-- ============================================
+DROP POLICY IF EXISTS "evenements_select_public" ON evenements;
+DROP POLICY IF EXISTS "evenements_insert_authenticated" ON evenements;
+DROP POLICY IF EXISTS "evenements_update_authenticated" ON evenements;
+DROP POLICY IF EXISTS "evenements_delete_authenticated" ON evenements;
+DROP POLICY IF EXISTS "evt_select" ON evenements;
+DROP POLICY IF EXISTS "evt_insert" ON evenements;
+DROP POLICY IF EXISTS "evt_update" ON evenements;
+DROP POLICY IF EXISTS "evt_delete" ON evenements;
+
+DROP POLICY IF EXISTS "cours_select_public" ON cours_religieux;
+DROP POLICY IF EXISTS "cours_insert_authenticated" ON cours_religieux;
+DROP POLICY IF EXISTS "cours_update_authenticated" ON cours_religieux;
+DROP POLICY IF EXISTS "cours_delete_authenticated" ON cours_religieux;
+DROP POLICY IF EXISTS "cours_select" ON cours_religieux;
+DROP POLICY IF EXISTS "cours_insert" ON cours_religieux;
+DROP POLICY IF EXISTS "cours_update" ON cours_religieux;
+DROP POLICY IF EXISTS "cours_delete" ON cours_religieux;
+
+DROP POLICY IF EXISTS "progress_select_own" ON user_progress;
+DROP POLICY IF EXISTS "progress_insert_own" ON user_progress;
+DROP POLICY IF EXISTS "progress_update_own" ON user_progress;
+DROP POLICY IF EXISTS "prog_select" ON user_progress;
+DROP POLICY IF EXISTS "prog_insert" ON user_progress;
+DROP POLICY IF EXISTS "prog_update" ON user_progress;
+
+DROP POLICY IF EXISTS "benevoles_insert_public" ON benevoles;
+DROP POLICY IF EXISTS "benevoles_select_accepted_public" ON benevoles;
+DROP POLICY IF EXISTS "benevoles_select_authenticated" ON benevoles;
+DROP POLICY IF EXISTS "benevoles_update_authenticated" ON benevoles;
+DROP POLICY IF EXISTS "benevoles_delete_authenticated" ON benevoles;
+DROP POLICY IF EXISTS "ben_select_anon" ON benevoles;
+DROP POLICY IF EXISTS "ben_select_auth" ON benevoles;
+DROP POLICY IF EXISTS "ben_insert" ON benevoles;
+DROP POLICY IF EXISTS "ben_update" ON benevoles;
+DROP POLICY IF EXISTS "ben_update_admin" ON benevoles;
+DROP POLICY IF EXISTS "ben_update_self" ON benevoles;
+DROP POLICY IF EXISTS "ben_delete" ON benevoles;
+
+DROP POLICY IF EXISTS "images_select_public" ON storage.objects;
+DROP POLICY IF EXISTS "images_insert_authenticated" ON storage.objects;
+DROP POLICY IF EXISTS "images_delete_authenticated" ON storage.objects;
+DROP POLICY IF EXISTS "img_select" ON storage.objects;
+DROP POLICY IF EXISTS "img_insert" ON storage.objects;
+DROP POLICY IF EXISTS "img_delete" ON storage.objects;
+
+DROP POLICY IF EXISTS "ramadan_presences_all_public" ON ramadan_presences;
+DROP POLICY IF EXISTS "rp_select" ON ramadan_presences;
+DROP POLICY IF EXISTS "rp_insert" ON ramadan_presences;
+DROP POLICY IF EXISTS "rp_delete" ON ramadan_presences;
+
+DROP POLICY IF EXISTS "ramadan_taches_select_public" ON ramadan_taches;
+DROP POLICY IF EXISTS "ramadan_taches_insert_auth" ON ramadan_taches;
+DROP POLICY IF EXISTS "ramadan_taches_update_all" ON ramadan_taches;
+DROP POLICY IF EXISTS "ramadan_taches_delete_auth" ON ramadan_taches;
+DROP POLICY IF EXISTS "rt_select" ON ramadan_taches;
+DROP POLICY IF EXISTS "rt_insert" ON ramadan_taches;
+DROP POLICY IF EXISTS "rt_update" ON ramadan_taches;
+DROP POLICY IF EXISTS "rt_delete" ON ramadan_taches;
+
+DROP POLICY IF EXISTS "ramadan_produits_all_public" ON ramadan_produits;
+DROP POLICY IF EXISTS "rprod_select" ON ramadan_produits;
+DROP POLICY IF EXISTS "rprod_insert" ON ramadan_produits;
+DROP POLICY IF EXISTS "rprod_update" ON ramadan_produits;
+DROP POLICY IF EXISTS "rprod_delete" ON ramadan_produits;
+
+DROP POLICY IF EXISTS "ramadan_notes_all_public" ON ramadan_notes;
+DROP POLICY IF EXISTS "rn_select" ON ramadan_notes;
+DROP POLICY IF EXISTS "rn_insert" ON ramadan_notes;
+DROP POLICY IF EXISTS "rn_update" ON ramadan_notes;
+DROP POLICY IF EXISTS "rn_delete" ON ramadan_notes;
+
+DROP POLICY IF EXISTS "notifications_select_authenticated" ON notifications;
+DROP POLICY IF EXISTS "notifications_insert_public" ON notifications;
+DROP POLICY IF EXISTS "notifications_update_authenticated" ON notifications;
+DROP POLICY IF EXISTS "notifications_delete_authenticated" ON notifications;
+DROP POLICY IF EXISTS "notif_select" ON notifications;
+DROP POLICY IF EXISTS "notif_insert" ON notifications;
+DROP POLICY IF EXISTS "notif_update" ON notifications;
+DROP POLICY IF EXISTS "notif_delete" ON notifications;
+
+
+-- ============================================
+-- NOUVELLES POLICIES SÉCURISÉES
+-- ============================================
+
+
+-- ---- EVENEMENTS ----
+-- Lecture : public (tout le monde voit les événements)
+CREATE POLICY "evt_select" ON evenements FOR SELECT TO anon, authenticated USING (true);
+-- Écriture : admin/superadmin uniquement
+CREATE POLICY "evt_insert" ON evenements FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "evt_update" ON evenements FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "evt_delete" ON evenements FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+
+-- ---- COURS RELIGIEUX ----
+-- Lecture : public (tout le monde voit les cours)
+CREATE POLICY "cours_select" ON cours_religieux FOR SELECT TO anon, authenticated USING (true);
+-- Écriture : admin/superadmin uniquement
+CREATE POLICY "cours_insert" ON cours_religieux FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "cours_update" ON cours_religieux FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "cours_delete" ON cours_religieux FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+
+-- ---- USER PROGRESS ----
+-- Chaque utilisateur gère uniquement SA progression
+CREATE POLICY "prog_select" ON user_progress FOR SELECT TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "prog_insert" ON user_progress FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "prog_update" ON user_progress FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+
+-- ---- BENEVOLES ----
+-- Lecture anon : AUCUNE donnée personnelle exposée publiquement
+-- (pas de SELECT anon = les visiteurs ne voient rien)
+-- Lecture authenticated : sa propre ligne + bénévoles acceptés entre eux + admin voit tout
+CREATE POLICY "ben_select_auth" ON benevoles FOR SELECT TO authenticated USING (
+  email = (auth.jwt()->>'email')
+  OR is_admin_or_superadmin()
+  OR (statut = 'accepté' AND is_accepted_benevole())
+);
+-- INSERT candidature : public, mais max 1/jour par email + force statut=nouveau + role=benevole
+CREATE POLICY "ben_insert" ON benevoles FOR INSERT TO anon, authenticated WITH CHECK (
+  (statut IS NULL OR statut = 'nouveau')
+  AND (role IS NULL OR role = 'benevole')
+  AND NOT EXISTS (
+    SELECT 1 FROM benevoles b
+    WHERE b.email = email
+    AND b.created_at > NOW() - INTERVAL '1 day'
+  )
+);
+-- UPDATE admin : peut tout modifier
+CREATE POLICY "ben_update_admin" ON benevoles FOR UPDATE TO authenticated
+  USING (is_admin_or_superadmin())
+  WITH CHECK (is_admin_or_superadmin());
+-- UPDATE self : bénévole modifie UNIQUEMENT sa disponibilité (trigger empêche de changer role/statut)
+CREATE POLICY "ben_update_self" ON benevoles FOR UPDATE TO authenticated
+  USING (email = (auth.jwt()->>'email') AND statut = 'accepté')
+  WITH CHECK (email = (auth.jwt()->>'email'));
+-- DELETE : superadmin uniquement
+CREATE POLICY "ben_delete" ON benevoles FOR DELETE TO authenticated USING (is_superadmin());
+
+
+-- ---- STORAGE (images) ----
+-- Lecture : public (les images doivent s'afficher pour tout le monde)
+CREATE POLICY "img_select" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'images');
+-- Upload/suppression : admin/superadmin uniquement
+CREATE POLICY "img_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'images' AND is_admin_or_superadmin());
+CREATE POLICY "img_delete" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'images' AND is_admin_or_superadmin());
+
+
+-- ---- RAMADAN PRESENCES ----
+-- Lecture : bénévoles acceptés ou admin
+CREATE POLICY "rp_select" ON ramadan_presences FOR SELECT TO authenticated USING (is_accepted_benevole());
+-- INSERT : sa propre présence ou admin
+CREATE POLICY "rp_insert" ON ramadan_presences FOR INSERT TO authenticated WITH CHECK (
+  benevole_id = get_my_benevole_id() OR is_admin_or_superadmin()
+);
+-- DELETE : sa propre présence ou admin
+CREATE POLICY "rp_delete" ON ramadan_presences FOR DELETE TO authenticated USING (
+  benevole_id = get_my_benevole_id() OR is_admin_or_superadmin()
+);
+
+
+-- ---- RAMADAN TACHES ----
+-- Lecture : bénévoles acceptés
+CREATE POLICY "rt_select" ON ramadan_taches FOR SELECT TO authenticated USING (is_accepted_benevole());
+-- Création/suppression : admin uniquement
+CREATE POLICY "rt_insert" ON ramadan_taches FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "rt_delete" ON ramadan_taches FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+-- Mise à jour : bénévoles acceptés (marquer fait) ou admin
+CREATE POLICY "rt_update" ON ramadan_taches FOR UPDATE TO authenticated USING (is_accepted_benevole()) WITH CHECK (is_accepted_benevole());
+
+
+-- ---- RAMADAN PRODUITS ----
+-- Lecture : bénévoles acceptés
+CREATE POLICY "rprod_select" ON ramadan_produits FOR SELECT TO authenticated USING (is_accepted_benevole());
+-- Écriture : bénévoles acceptés (gestion collective de la cuisine)
+CREATE POLICY "rprod_insert" ON ramadan_produits FOR INSERT TO authenticated WITH CHECK (is_accepted_benevole());
+CREATE POLICY "rprod_update" ON ramadan_produits FOR UPDATE TO authenticated USING (is_accepted_benevole()) WITH CHECK (is_accepted_benevole());
+CREATE POLICY "rprod_delete" ON ramadan_produits FOR DELETE TO authenticated USING (is_accepted_benevole());
+
+
+-- ---- RAMADAN NOTES ----
+-- Lecture : bénévoles acceptés
+CREATE POLICY "rn_select" ON ramadan_notes FOR SELECT TO authenticated USING (is_accepted_benevole());
+-- Création : bénévoles acceptés
+CREATE POLICY "rn_insert" ON ramadan_notes FOR INSERT TO authenticated WITH CHECK (is_accepted_benevole());
+-- Modif/suppression : ses propres notes ou admin
+CREATE POLICY "rn_update" ON ramadan_notes FOR UPDATE TO authenticated
+  USING (benevole_id = get_my_benevole_id() OR is_admin_or_superadmin())
+  WITH CHECK (benevole_id = get_my_benevole_id() OR is_admin_or_superadmin());
+CREATE POLICY "rn_delete" ON ramadan_notes FOR DELETE TO authenticated
+  USING (benevole_id = get_my_benevole_id() OR is_admin_or_superadmin());
+
+
+-- ---- NOTIFICATIONS ----
+-- Lecture : admin/superadmin uniquement
+CREATE POLICY "notif_select" ON notifications FOR SELECT TO authenticated USING (is_admin_or_superadmin());
+-- Création : bénévoles acceptés (ex: notification dispo) ou admin
+CREATE POLICY "notif_insert" ON notifications FOR INSERT TO authenticated WITH CHECK (is_accepted_benevole());
+-- Marquer lu / supprimer : admin/superadmin
+CREATE POLICY "notif_update" ON notifications FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "notif_delete" ON notifications FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+
+-- ============================================
 -- COMPTE ADMIN
 -- ============================================
 -- À créer manuellement dans :
 -- Supabase Dashboard > Authentication > Users > Add user
--- Email : panda@gmail.com
--- Mot de passe : pandalademin
 -- ============================================

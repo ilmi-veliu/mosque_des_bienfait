@@ -212,22 +212,25 @@ const formatTime = (timeString) => {
 
 const fetchEvents = async () => {
   try {
-    await preloadEvenements()
+    // Afficher le cache immédiatement si dispo
+    if (store.evenements.length > 0) {
+      events.value = store.evenements
+      loading.value = false
+    }
+    // Toujours chercher les données fraîches
+    await preloadEvenements(true)
     events.value = store.evenements
   } catch (err) {
     console.error('Erreur:', err)
-    error.value = 'Impossible de charger les événements.'
+    if (events.value.length === 0) {
+      error.value = 'Impossible de charger les événements.'
+    }
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
-  if (store.evenementsLoaded) {
-    events.value = store.evenements
-    loading.value = false
-  } else {
-    fetchEvents()
-  }
+  fetchEvents()
 })
 </script>

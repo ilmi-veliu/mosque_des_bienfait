@@ -79,6 +79,13 @@
             </div>
           </div>
           <div class="flex items-center gap-3 sm:gap-4">
+            <!-- Toggle vue super admin -->
+            <button v-if="isSuperAdmin" @click="previewMode = previewMode === 'benevole' ? 'visiteur' : 'benevole'"
+              class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
+              :class="previewMode === 'visiteur' ? 'bg-amber-500 text-white' : 'bg-white/10 text-gray-300 hover:text-white'">
+              <Eye :size="14" />
+              {{ previewMode === 'visiteur' ? 'Vue visiteur' : 'Vue bénévole' }}
+            </button>
             <router-link to="/" class="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm">
               Voir le site
             </router-link>
@@ -90,8 +97,132 @@
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="bg-white border-b">
+      <!-- CARTE DISPONIBILITÉ -->
+      <div class="max-w-7xl mx-auto px-4 pt-6">
+        <div class="rounded-xl border p-4 sm:p-5"
+          :class="benevole.disponible !== false ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="flex items-center gap-3 flex-1">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                :class="benevole.disponible !== false ? 'bg-emerald-100' : 'bg-red-100'">
+                <CalendarCheck v-if="benevole.disponible !== false" :size="20" class="text-emerald-600" />
+                <CalendarX v-else :size="20" class="text-red-600" />
+              </div>
+              <div>
+                <p class="font-semibold" :class="benevole.disponible !== false ? 'text-emerald-800' : 'text-red-800'">
+                  {{ benevole.disponible !== false ? 'Vous êtes disponible' : 'Vous êtes indisponible' }}
+                </p>
+                <p v-if="benevole.dispo_debut || benevole.dispo_fin" class="text-xs"
+                  :class="benevole.disponible !== false ? 'text-emerald-600' : 'text-red-600'">
+                  {{ benevole.dispo_debut ? 'Du ' + formatDateShort(benevole.dispo_debut) : '' }}
+                  {{ benevole.dispo_fin ? ' au ' + formatDateShort(benevole.dispo_fin) : '' }}
+                </p>
+                <p v-else class="text-xs" :class="benevole.disponible !== false ? 'text-emerald-600' : 'text-red-600'">
+                  Indéfini
+                </p>
+                <p v-if="benevole.dispo_motif" class="text-xs italic mt-0.5"
+                  :class="benevole.disponible !== false ? 'text-emerald-500' : 'text-red-500'">
+                  {{ benevole.dispo_motif }}
+                </p>
+              </div>
+            </div>
+            <button @click="openDispoModal()"
+              class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+              :class="benevole.disponible !== false
+                ? 'bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                : 'bg-white text-red-700 border border-red-300 hover:bg-red-100'">
+              Modifier ma disponibilité
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DISPONIBILITÉ -->
+      <div v-if="showDispoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDispoModal = false">
+        <div class="absolute inset-0 bg-black/40" @click="showDispoModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+          <div class="border-b px-6 py-4 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Ma disponibilité</h3>
+            <button @click="showDispoModal = false" class="text-gray-400 hover:text-gray-600 p-1">
+              <X :size="20" />
+            </button>
+          </div>
+          <div class="px-6 py-5 space-y-5">
+            <div class="flex gap-3">
+              <button @click="dispoForm.disponible = true"
+                :class="dispoForm.disponible ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                class="flex-1 py-3 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2">
+                <CalendarCheck :size="18" />
+                Disponible
+              </button>
+              <button @click="dispoForm.disponible = false"
+                :class="!dispoForm.disponible ? 'bg-red-600 text-white ring-2 ring-red-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                class="flex-1 py-3 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2">
+                <CalendarX :size="18" />
+                Indisponible
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              <p class="text-xs text-gray-500">
+                {{ dispoForm.disponible ? 'Précisez vos dates de disponibilité ou laissez vide pour indéfini.' : 'Précisez vos dates d\'indisponibilité ou laissez vide pour indéfini.' }}
+              </p>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Du (optionnel)</label>
+                  <input v-model="dispoForm.dispo_debut" type="date"
+                    class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-emerald-600" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Au (optionnel)</label>
+                  <input v-model="dispoForm.dispo_fin" type="date"
+                    class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-emerald-600" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Commentaire (optionnel)</label>
+                <input v-model="dispoForm.dispo_motif" type="text"
+                  :placeholder="dispoForm.disponible ? 'Ex: Tous les week-ends, après 18h...' : 'Ex: Voyage, maladie, travail...'"
+                  class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-emerald-600" />
+              </div>
+            </div>
+
+            <button @click="saveDisponibilite" :disabled="savingDispo"
+              class="w-full bg-emerald-600 text-white py-3 rounded-xl font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50">
+              {{ savingDispo ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VUE VISITEUR (preview super admin) -->
+      <div v-if="previewMode === 'visiteur'" class="max-w-7xl mx-auto px-4 py-8">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+          <Eye :size="18" class="text-amber-600 flex-shrink-0" />
+          <p class="text-sm text-amber-800">Vous voyez la page telle qu'un <strong>visiteur non-bénévole</strong> la voit. Cliquez sur "Vue bénévole" pour revenir.</p>
+        </div>
+        <!-- Contenu visiteur : domaines + formulaire -->
+        <h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Nos domaines de bénévolat</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          <div v-for="d in domaines" :key="d.titre" class="bg-white rounded-xl p-6 shadow-sm border">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
+              <component :is="d.icon" :size="24" class="text-emerald-600" />
+            </div>
+            <h3 class="font-semibold text-gray-800 mb-2">{{ d.titre }}</h3>
+            <p class="text-sm text-gray-600">{{ d.desc }}</p>
+          </div>
+        </div>
+        <div class="max-w-2xl mx-auto text-center">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-2">Formulaire de candidature</h2>
+          <p class="text-gray-500 text-sm mb-6">Les visiteurs voient ici le formulaire pour envoyer leur candidature bénévole.</p>
+          <div class="bg-gray-100 rounded-xl p-8 text-gray-400 text-sm italic">
+            Formulaire de candidature (prénom, nom, email, téléphone, domaine, message)
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs (vue bénévole) -->
+      <div v-if="previewMode === 'benevole'" class="bg-white border-b">
         <div class="max-w-7xl mx-auto flex">
           <button @click="tab = 'planning'"
             :class="tab === 'planning' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -108,7 +239,7 @@
         </div>
       </div>
 
-      <div class="max-w-7xl mx-auto px-4 py-8">
+      <div v-if="previewMode === 'benevole'" class="max-w-7xl mx-auto px-4 py-8">
         <!-- PLANNING RAMADAN - CALENDRIER -->
         <div v-if="tab === 'planning'">
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
@@ -560,9 +691,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, ChevronRight, UserCheck, Clock, LogOut, Calendar as CalendarIcon, ShoppingCart, ClipboardList, ListChecks, Users, Plus, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, UserCheck, Clock, LogOut, Calendar as CalendarIcon, ShoppingCart, ClipboardList, ListChecks, Users, Plus, X, Eye, BookOpen, Heart, Calendar, Wrench, Monitor, HandHelping, UtensilsCrossed, CalendarCheck, CalendarX } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -573,6 +704,18 @@ const session = ref(null)
 const benevole = ref(null)
 
 const isAdmin = computed(() => ['admin', 'superadmin'].includes(benevole.value?.role))
+const isSuperAdmin = computed(() => benevole.value?.role === 'superadmin')
+const previewMode = ref('benevole')
+let statusPollInterval = null
+
+const domaines = [
+  { titre: 'Enseignement', desc: 'Cours de Coran, langue arabe, soutien scolaire.', icon: BookOpen },
+  { titre: 'Social & Entraide', desc: 'Distribution alimentaire, aide aux familles.', icon: Heart },
+  { titre: 'Événements', desc: 'Organisation, accueil des visiteurs, logistique.', icon: Calendar },
+  { titre: 'Entretien & Travaux', desc: 'Nettoyage, petits travaux, maintenance.', icon: Wrench },
+  { titre: 'Communication', desc: 'Réseaux sociaux, site web, graphisme.', icon: Monitor },
+  { titre: 'Cuisine Ramadan', desc: 'Préparation des repas d\'iftar.', icon: UtensilsCrossed },
+]
 
 onMounted(async () => {
   const { data: { session: s } } = await supabase.auth.getSession()
@@ -596,6 +739,27 @@ onMounted(async () => {
 
   loading.value = false
 
+  // Polling : vérifier toutes les 30s si le bénévole a été accepté
+  if (s && !benevole.value) {
+    statusPollInterval = setInterval(async () => {
+      if (benevole.value) {
+        clearInterval(statusPollInterval)
+        return
+      }
+      const { data } = await supabase
+        .from('benevoles')
+        .select('*')
+        .eq('email', session.value?.user?.email)
+        .eq('statut', 'accepté')
+        .single()
+      if (data) {
+        benevole.value = data
+        clearInterval(statusPollInterval)
+        await loadData()
+      }
+    }, 30000)
+  }
+
   supabase.auth.onAuthStateChange(async (_event, s) => {
     session.value = s
     if (s) {
@@ -618,6 +782,10 @@ onMounted(async () => {
   })
 })
 
+onUnmounted(() => {
+  if (statusPollInterval) clearInterval(statusPollInterval)
+})
+
 const handleLogout = async () => {
   await supabase.auth.signOut()
   session.value = null
@@ -626,6 +794,66 @@ const handleLogout = async () => {
 }
 
 const monNom = computed(() => benevole.value ? `${benevole.value.prenom} ${benevole.value.nom}` : '')
+
+// --- DISPONIBILITÉ ---
+const showDispoModal = ref(false)
+const savingDispo = ref(false)
+const dispoForm = ref({ disponible: true, dispo_debut: '', dispo_fin: '', dispo_motif: '' })
+
+const openDispoModal = () => {
+  dispoForm.value = {
+    disponible: benevole.value.disponible !== false,
+    dispo_debut: benevole.value.dispo_debut || '',
+    dispo_fin: benevole.value.dispo_fin || '',
+    dispo_motif: benevole.value.dispo_motif || ''
+  }
+  showDispoModal.value = true
+}
+
+const saveDisponibilite = async () => {
+  savingDispo.value = true
+  const update = {
+    disponible: dispoForm.value.disponible,
+    dispo_debut: dispoForm.value.dispo_debut || null,
+    dispo_fin: dispoForm.value.dispo_fin || null,
+    dispo_motif: dispoForm.value.dispo_motif || null
+  }
+
+  await supabase.from('benevoles').update(update).eq('id', benevole.value.id)
+
+  // Mettre à jour localement
+  benevole.value.disponible = update.disponible
+  benevole.value.dispo_debut = update.dispo_debut
+  benevole.value.dispo_fin = update.dispo_fin
+  benevole.value.dispo_motif = update.dispo_motif
+
+  // Envoyer une notification aux admins
+  let message = `${monNom.value} est maintenant `
+  if (update.disponible) {
+    message += 'disponible'
+  } else {
+    message += 'indisponible'
+  }
+  if (update.dispo_debut || update.dispo_fin) {
+    message += ' du ' + (update.dispo_debut ? formatDateShort(update.dispo_debut) : '?')
+    message += ' au ' + (update.dispo_fin ? formatDateShort(update.dispo_fin) : '?')
+  } else {
+    message += ' (indéfini)'
+  }
+  if (update.dispo_motif) {
+    message += ` — ${update.dispo_motif}`
+  }
+  message += '.'
+
+  await supabase.from('notifications').insert({
+    type: 'disponibilite',
+    message,
+    benevole_id: benevole.value.id
+  })
+
+  savingDispo.value = false
+  showDispoModal.value = false
+}
 
 // --- DATA ---
 const tab = ref('planning')

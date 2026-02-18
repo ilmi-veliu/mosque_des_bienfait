@@ -93,22 +93,19 @@ const handleLogin = async () => {
     return
   }
 
-  // Vérifier que l'utilisateur a un rôle admin
-  const SUPERADMIN_EMAIL = 'panda@gmail.com'
+  // Vérifier que l'utilisateur a un rôle admin dans la base de données
+  const { data: benevoleRows } = await supabase.from('benevoles')
+    .select('role')
+    .eq('email', email.value)
+    .eq('statut', 'accepté')
 
-  if (email.value !== SUPERADMIN_EMAIL) {
-    const { data: benevoleRows } = await supabase.from('benevoles')
-      .select('role')
-      .eq('email', email.value)
+  const benevoleData = benevoleRows?.find(r => ['admin', 'superadmin'].includes(r.role))
 
-    const benevoleData = benevoleRows?.find(r => ['admin', 'superadmin'].includes(r.role))
-
-    if (!benevoleData) {
-      errorMsg.value = "Vous n'avez pas les droits d'administration."
-      await supabase.auth.signOut()
-      loading.value = false
-      return
-    }
+  if (!benevoleData) {
+    errorMsg.value = "Vous n'avez pas les droits d'administration."
+    await supabase.auth.signOut()
+    loading.value = false
+    return
   }
 
   router.push('/admin/dashboard')

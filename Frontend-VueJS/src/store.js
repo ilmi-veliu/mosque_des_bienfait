@@ -1,15 +1,19 @@
 import { reactive } from 'vue'
 import { supabase } from './supabase'
 
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
 export const store = reactive({
   evenements: [],
-  evenementsLoaded: false,
+  evenementsLoadedAt: 0,
   cours: [],
-  coursLoaded: false
+  coursLoadedAt: 0
 })
 
-export const preloadEvenements = async () => {
-  if (store.evenementsLoaded) return
+const isFresh = (loadedAt) => loadedAt > 0 && (Date.now() - loadedAt) < CACHE_TTL
+
+export const preloadEvenements = async (force = false) => {
+  if (!force && isFresh(store.evenementsLoadedAt)) return
   try {
     const { data, error } = await supabase
       .from('evenements')
@@ -21,11 +25,11 @@ export const preloadEvenements = async () => {
   } catch {
     // silencieux
   }
-  store.evenementsLoaded = true
+  store.evenementsLoadedAt = Date.now()
 }
 
-export const preloadCours = async () => {
-  if (store.coursLoaded) return
+export const preloadCours = async (force = false) => {
+  if (!force && isFresh(store.coursLoadedAt)) return
   try {
     const { data, error } = await supabase
       .from('cours_religieux')
@@ -38,7 +42,7 @@ export const preloadCours = async () => {
   } catch {
     // silencieux
   }
-  store.coursLoaded = true
+  store.coursLoadedAt = Date.now()
 }
 
 export const preloadAll = () => {
