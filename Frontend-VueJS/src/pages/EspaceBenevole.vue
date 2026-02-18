@@ -401,7 +401,7 @@
               <div v-if="showAddTache" class="bg-white rounded-xl border p-4 mb-6">
                 <form @submit.prevent="addTache" class="space-y-3">
                   <div class="flex flex-col sm:flex-row gap-3">
-                    <input v-model="newTache.nom" required placeholder="Nom de la tâche"
+                    <input v-model="newTache.nom" required maxlength="500" placeholder="Nom de la tâche"
                       class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
                     <input v-model="newTache.jour" type="date" required min="2026-02-18" max="2026-03-19"
                       class="sm:w-44 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
@@ -519,7 +519,7 @@
                       class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors font-medium">
                       Je m'en charge
                     </button>
-                    <button v-else-if="p.responsable_nom === monNom" @click="relacherProduit(p)"
+                    <button v-else-if="p.responsable_id === benevole.id" @click="relacherProduit(p)"
                       class="text-xs text-gray-400 hover:text-red-600 transition-colors">
                       Annuler
                     </button>
@@ -669,7 +669,7 @@
 
                         <!-- Ajouter un commentaire (seulement si membre de l'équipe) -->
                         <form v-if="isEquipeMembre(eq.id)" @submit.prevent="addEquipeNote(eq.id)" class="flex gap-2">
-                          <input v-model="equipeNoteText[eq.id]" placeholder="Objectif, note, commentaire..."
+                          <input v-model="equipeNoteText[eq.id]" maxlength="2000" placeholder="Objectif, note, commentaire..."
                             class="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-emerald-600" />
                           <button type="submit" :disabled="!equipeNoteText[eq.id]?.trim()"
                             class="bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 text-sm disabled:opacity-40">
@@ -798,7 +798,7 @@
             <p v-else class="text-sm text-gray-400 mb-3">Aucune tâche pour ce jour.</p>
             <!-- Ajout rapide de tâche -->
             <form @submit.prevent="addTacheFromPopup" class="flex gap-2">
-              <input v-model="newPopupTache" placeholder="Ajouter une tâche..."
+              <input v-model="newPopupTache" maxlength="500" placeholder="Ajouter une tâche..."
                 class="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-emerald-600" />
               <button type="submit" :disabled="!newPopupTache.trim()"
                 class="bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 text-sm disabled:opacity-40">
@@ -850,7 +850,7 @@
             <p v-else class="text-sm text-gray-400 mb-4">Aucune note pour ce jour.</p>
 
             <form @submit.prevent="addNote" class="flex gap-2">
-              <input v-model="newNote" placeholder="Écrire une note..."
+              <input v-model="newNote" maxlength="2000" placeholder="Écrire une note..."
                 class="flex-1 px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 transition-colors" />
               <button type="submit" :disabled="!newNote.trim()"
                 class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-40">
@@ -922,22 +922,27 @@ onMounted(async () => {
       }
       const { data } = await supabase
         .from('benevoles')
-        .select('*')
+        .select('id, statut')
         .eq('email', session.value?.user?.email)
         .eq('statut', 'accepté')
         .single()
       if (data) {
-        benevole.value = data
+        // Recharger le profil complet
+        const { data: full } = await supabase
+          .from('benevoles')
+          .select('*')
+          .eq('id', data.id)
+          .single()
+        if (full) benevole.value = full
         clearInterval(statusPollInterval)
         await loadData()
       }
     }, 30000)
   }
 
-  supabase.auth.onAuthStateChange(async (_event, s) => {
+  const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
     session.value = s
     if (s) {
-      const dataPromise = loadData()
       const { data } = await supabase
         .from('benevoles')
         .select('*')
@@ -946,7 +951,7 @@ onMounted(async () => {
         .single()
       if (data) {
         benevole.value = data
-        await dataPromise
+        await loadData()
       } else {
         benevole.value = null
       }
@@ -954,10 +959,15 @@ onMounted(async () => {
       benevole.value = null
     }
   })
+
+  authSub = authSubscription
 })
+
+let authSub = null
 
 onUnmounted(() => {
   if (statusPollInterval) clearInterval(statusPollInterval)
+  if (authSub) authSub.unsubscribe()
 })
 
 const handleLogout = async () => {
@@ -1371,7 +1381,8 @@ const addProduit = async () => {
   const { data } = await supabase.from('ramadan_produits').insert({
     nom: nouveau.nom,
     quantite: nouveau.quantite,
-    jour: nouveau.jour
+    jour: nouveau.jour,
+    created_by: benevole.value.id
   }).select()
   if (data && data[0]) {
     const idx = produits.value.findIndex(p => p.id === nouveau.id)
@@ -1385,13 +1396,15 @@ const toggleStock = async (p) => {
 }
 
 const prendreEnCharge = async (p) => {
+  p.responsable_id = benevole.value.id
   p.responsable_nom = monNom.value
-  await supabase.from('ramadan_produits').update({ responsable_nom: monNom.value }).eq('id', p.id)
+  await supabase.from('ramadan_produits').update({ responsable_id: benevole.value.id, responsable_nom: monNom.value }).eq('id', p.id)
 }
 
 const relacherProduit = async (p) => {
+  p.responsable_id = null
   p.responsable_nom = null
-  await supabase.from('ramadan_produits').update({ responsable_nom: null }).eq('id', p.id)
+  await supabase.from('ramadan_produits').update({ responsable_id: null, responsable_nom: null }).eq('id', p.id)
 }
 
 // --- EQUIPES ---

@@ -129,7 +129,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Building2, Home, Video, Calendar, MessageSquare, HandHelping, Moon, UserPlus, LogOut, Shield, Menu as MenuIcon, X } from 'lucide-vue-next'
+import { Building2, Home, Video, Calendar, MessageSquare, HandHelping, UserPlus, LogOut, Shield, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()

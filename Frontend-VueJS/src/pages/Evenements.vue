@@ -143,7 +143,7 @@
                   <MapPin :size="18" class="text-gray-400" />
                   <span>{{ event.lieu }}</span>
                 </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
+                <div v-if="event.participants_max" class="flex items-center gap-2.5 text-sm text-gray-700">
                   <Users :size="18" class="text-gray-400" />
                   <span>{{ event.participants_max }} participants attendus</span>
                 </div>
@@ -221,7 +221,6 @@ const fetchEvents = async () => {
     await preloadEvenements(true)
     events.value = store.evenements
   } catch (err) {
-    console.error('Erreur:', err)
     if (events.value.length === 0) {
       error.value = 'Impossible de charger les événements.'
     }

@@ -57,18 +57,20 @@ const routes = [
   {
     path: '/admin',
     name: 'AdminLogin',
-    component: () => import('./pages/AdminLogin.vue')
+    component: () => import('./pages/AdminLogin.vue'),
+    meta: { hideNavbar: true, hideFooter: true }
   },
   {
     path: '/admin/dashboard',
     name: 'AdminDashboard',
     component: () => import('./pages/AdminDashboard.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, hideNavbar: true, hideFooter: true }
   },
   {
     path: '/espace-benevole',
     name: 'EspaceBenevole',
-    component: () => import('./pages/EspaceBenevole.vue')
+    component: () => import('./pages/EspaceBenevole.vue'),
+    meta: { requiresAuth: true, hideNavbar: true, hideFooter: true }
   }
 ]
 

@@ -75,6 +75,7 @@
                   <input
                     v-model="form.prenom"
                     required
+                    maxlength="100"
                     placeholder="Votre prénom"
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
                   />
@@ -84,6 +85,7 @@
                   <input
                     v-model="form.nom"
                     required
+                    maxlength="100"
                     placeholder="Votre nom de famille"
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
                   />
@@ -111,9 +113,11 @@
                     v-model="form.password"
                     :type="showPassword ? 'text' : 'password'"
                     required
-                    minlength="6"
-                    placeholder="Minimum 6 caractères"
+                    minlength="8"
+                    placeholder="Minimum 8 caractères"
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors pr-12"
+                    :class="passwordError ? 'border-red-400' : ''"
+                    @blur="validatePassword"
                   />
                   <button type="button" @click="showPassword = !showPassword"
                     class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -121,6 +125,7 @@
                     <Eye v-else :size="18" />
                   </button>
                 </div>
+                <p v-if="passwordError" class="text-xs text-red-500 mt-1">{{ passwordError }}</p>
               </div>
 
               <button
@@ -159,6 +164,7 @@ const router = useRouter()
 const loading = ref(false)
 const errorMsg = ref('')
 const emailError = ref('')
+const passwordError = ref('')
 const showPassword = ref(false)
 const form = ref({
   prenom: '',
@@ -178,13 +184,23 @@ const validateEmail = () => {
   }
 }
 
+const validatePassword = () => {
+  const pw = form.value.password
+  passwordError.value = ''
+  if (!pw) return
+  if (pw.length < 8) { passwordError.value = 'Minimum 8 caractères'; return }
+  if (!/[A-Z]/.test(pw)) { passwordError.value = 'Au moins une lettre majuscule'; return }
+  if (!/[0-9]/.test(pw)) { passwordError.value = 'Au moins un chiffre'; return }
+}
+
 const handleSignup = async () => {
   loading.value = true
   errorMsg.value = ''
 
-  // Validation email
+  // Validation email + mot de passe
   validateEmail()
-  if (emailError.value) {
+  validatePassword()
+  if (emailError.value || passwordError.value) {
     loading.value = false
     return
   }
@@ -201,21 +217,20 @@ const handleSignup = async () => {
   })
 
   if (error) {
-    if (error.message === 'User already registered') {
-      errorMsg.value = 'Cette adresse email est déjà utilisée. Connectez-vous plutôt.'
-    } else if (error.message.includes('password')) {
-      errorMsg.value = 'Le mot de passe doit contenir au moins 6 caractères.'
+    if (error.message.includes('password')) {
+      errorMsg.value = 'Le mot de passe doit contenir au moins 8 caractères.'
     } else {
-      errorMsg.value = error.message
+      // Message générique pour ne pas révéler si l'email existe
+      errorMsg.value = 'Si cette adresse est disponible, votre compte a été créé. Vérifiez votre email ou connectez-vous.'
     }
     loading.value = false
     return
   }
 
-  // Vérifier si le compte a bien été créé (pas de doublon silencieux)
   // Supabase retourne un user avec identities vide si l'email existe déjà (sans erreur)
   if (data?.user?.identities?.length === 0) {
-    errorMsg.value = 'Cette adresse email est déjà utilisée. Connectez-vous plutôt.'
+    // Message identique au succès pour ne pas révéler l'existence du compte
+    errorMsg.value = 'Si cette adresse est disponible, votre compte a été créé. Vérifiez votre email ou connectez-vous.'
     loading.value = false
     return
   }
@@ -223,6 +238,7 @@ const handleSignup = async () => {
   // Connexion automatique après inscription
   // Si Supabase a confirmé directement (pas de confirmation email), on a une session
   if (data?.session) {
+    loading.value = false
     router.push('/')
     return
   }
@@ -234,6 +250,7 @@ const handleSignup = async () => {
   })
 
   if (!loginError) {
+    loading.value = false
     router.push('/')
   } else {
     // Si la confirmation email est obligatoire et empêche la connexion

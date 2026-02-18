@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <Navbar />
+    <Navbar v-if="!$route.meta.hideNavbar" />
     <router-view />
-    <Footer />
+    <Footer v-if="!$route.meta.hideFooter" />
     <CookieBanner />
   </div>
 </template>

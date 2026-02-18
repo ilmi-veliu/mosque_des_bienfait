@@ -119,6 +119,7 @@ const handleLogin = async () => {
     return
   }
 
+  loading.value = false
   router.push('/')
 }
 </script>

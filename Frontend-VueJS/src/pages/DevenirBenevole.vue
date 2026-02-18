@@ -122,17 +122,17 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
-              <input v-model="form.prenom" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors" />
+              <input v-model="form.prenom" required maxlength="100" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-              <input v-model="form.nom" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors" />
+              <input v-model="form.nom" required maxlength="100" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors" />
             </div>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
-            <input v-model="form.telephone" type="tel" required placeholder="06 12 34 56 78"
+            <input v-model="form.telephone" type="tel" required maxlength="20" placeholder="06 12 34 56 78"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
               :class="telError ? 'border-red-400' : ''"
               @blur="validateTel" />
@@ -155,7 +155,7 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Message (optionnel)</label>
-            <textarea v-model="form.message" rows="4" placeholder="Décrivez vos motivations, disponibilités, compétences..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"></textarea>
+            <textarea v-model="form.message" rows="4" maxlength="2000" placeholder="Décrivez vos motivations, disponibilités, compétences..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"></textarea>
           </div>
 
           <div v-if="errorMsg" class="bg-red-50 text-red-700 px-4 py-3 rounded-xl text-sm">

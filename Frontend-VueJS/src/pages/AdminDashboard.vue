@@ -390,7 +390,7 @@
                   </div>
                 </div>
                 <form @submit.prevent="addRamadanTache" class="flex gap-2">
-                  <input v-model="newRamadanTache" required placeholder="Nouvelle tâche (ex: Cuisson riz, Service...)"
+                  <input v-model="newRamadanTache" required maxlength="500" placeholder="Nouvelle tâche (ex: Cuisson riz, Service...)"
                     class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
                   <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 text-sm font-medium">
                     Ajouter
@@ -435,9 +435,9 @@
             <!-- Ajouter produit -->
             <form @submit.prevent="addRamadanProduit" class="bg-white rounded-xl border p-3 mb-4">
               <div class="flex gap-2">
-                <input v-model="newRamadanProduit.nom" required placeholder="Produit"
+                <input v-model="newRamadanProduit.nom" required maxlength="300" placeholder="Produit"
                   class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-emerald-600 text-sm" />
-                <input v-model="newRamadanProduit.quantite" placeholder="Qté"
+                <input v-model="newRamadanProduit.quantite" maxlength="100" placeholder="Qté"
                   class="w-20 px-3 py-2 border rounded-lg focus:outline-none focus:border-emerald-600 text-sm" />
                 <button type="submit" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-bold">+</button>
               </div>
@@ -461,6 +461,7 @@
                   <Trash2 :size="14" />
                 </button>
               </div>
+            </div>
             <!-- Section Équipes -->
             <div class="mt-6">
               <h2 class="text-xl font-semibold text-gray-800 mb-4">Équipes</h2>
@@ -488,7 +489,6 @@
                   </div>
                 </div>
               </div>
-            </div>
             </div>
           </div>
         </div>
@@ -585,11 +585,11 @@
         <form @submit.prevent="saveEvent" class="p-6 space-y-5">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-            <input v-model="eventForm.titre" required class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+            <input v-model="eventForm.titre" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea v-model="eventForm.description" rows="3" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600"></textarea>
+            <textarea v-model="eventForm.description" rows="3" maxlength="5000" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600"></textarea>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -603,7 +603,7 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Lieu *</label>
-              <input v-model="eventForm.lieu" required class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="eventForm.lieu" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -669,20 +669,20 @@
         <form @submit.prevent="saveCours" class="p-6 space-y-5">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-            <input v-model="coursForm.titre" required class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+            <input v-model="coursForm.titre" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea v-model="coursForm.description" rows="3" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600"></textarea>
+            <textarea v-model="coursForm.description" rows="3" maxlength="5000" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600"></textarea>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Enseignant</label>
-              <input v-model="coursForm.enseignant" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="coursForm.enseignant" maxlength="200" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Lieu</label>
-              <input v-model="coursForm.lieu" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="coursForm.lieu" maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -767,7 +767,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Image, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -811,6 +811,11 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
 
 const uploadFile = async (file, forceAudio = false) => {
   if (!file) return null
+  const maxSize = forceAudio ? 50 * 1024 * 1024 : 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    alert(`Fichier trop volumineux (max ${forceAudio ? '50' : '10'} MB)`)
+    return null
+  }
   uploading.value = true
   const sizeMB = (file.size / 1024 / 1024).toFixed(1)
   uploadProgress.value = `${sizeMB} MB`
@@ -854,7 +859,7 @@ const uploadFile = async (file, forceAudio = false) => {
     uploadProgress.value = ''
 
     if (error) {
-      alert('Erreur upload: ' + error.message)
+      alert('Erreur lors de l\'upload. Réessayez.')
       return null
     }
 
@@ -922,7 +927,7 @@ const saveEvent = async () => {
   // Nettoyer les champs vides
   if (!payload.image_url) delete payload.image_url
   if (!payload.video_url) delete payload.video_url
-  if (!payload.participants_max) delete payload.participants_max
+  if (payload.participants_max === null || payload.participants_max === undefined || payload.participants_max === '') delete payload.participants_max
   if (!payload.date) payload.date = null
   if (!payload.heure) payload.heure = null
 
@@ -994,7 +999,7 @@ const saveCours = async () => {
       result = await supabase.from('cours_religieux').insert(payload)
     }
     if (result.error) {
-      alert('Erreur: ' + result.error.message)
+      alert('Erreur lors de l\'enregistrement. Réessayez.')
       saving.value = false
       return
     }
@@ -1115,7 +1120,7 @@ const getBenevoleNom = (id) => {
 
 const addRamadanTache = async () => {
   if (!selectedRamadanDay.value || !newRamadanTache.value) return
-  await supabase.from('ramadan_taches').insert({ jour: ramadanDateStr(selectedRamadanDay.value), nom: newRamadanTache.value })
+  await supabase.from('ramadan_taches').insert({ jour: ramadanDateStr(selectedRamadanDay.value), nom: newRamadanTache.value, created_by: adminUser.value.id })
   newRamadanTache.value = ''
   fetchRamadanData()
 }
@@ -1147,7 +1152,8 @@ const deleteRamadanNote = async (id) => {
 const addRamadanProduit = async () => {
   await supabase.from('ramadan_produits').insert({
     nom: newRamadanProduit.value.nom,
-    quantite: newRamadanProduit.value.quantite || null
+    quantite: newRamadanProduit.value.quantite || null,
+    created_by: adminUser.value.id
   })
   newRamadanProduit.value = { nom: '', quantite: '' }
   fetchRamadanData()
@@ -1250,7 +1256,7 @@ const handleLogout = async () => {
   try {
     await supabase.auth.signOut()
   } catch (e) {
-    console.error('Erreur déconnexion:', e)
+    // erreur silencieuse
   }
   router.push('/admin')
 }
@@ -1272,7 +1278,7 @@ onMounted(async () => {
       .eq('statut', 'accepté')
 
     if (error) {
-      console.error('Erreur chargement benevoles:', error)
+      // erreur silencieuse
     }
 
     const benevoleAdmin = (rows || []).find(r => ['admin', 'superadmin'].includes(r.role))
@@ -1280,6 +1286,7 @@ onMounted(async () => {
     if (benevoleAdmin) {
       adminUser.value = benevoleAdmin
     } else {
+      pageLoading.value = false
       router.push('/')
       return
     }
@@ -1290,7 +1297,7 @@ onMounted(async () => {
     fetchBenevoles()
     fetchNotifications()
   } catch (e) {
-    console.error('Erreur admin mount:', e)
+    // erreur silencieuse
     pageLoading.value = false
   }
 })

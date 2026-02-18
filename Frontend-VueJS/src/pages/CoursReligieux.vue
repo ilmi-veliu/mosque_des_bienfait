@@ -280,7 +280,6 @@ const fetchCours = async () => {
     await preloadCours(true)
     coursList.value = store.cours
   } catch (err) {
-    console.error('Erreur:', err)
     if (coursList.value.length === 0) {
       error.value = 'Impossible de charger les cours.'
     }

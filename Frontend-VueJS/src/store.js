@@ -21,11 +21,11 @@ export const preloadEvenements = async (force = false) => {
       .order('date', { ascending: true })
     if (!error) {
       store.evenements = data || []
+      store.evenementsLoadedAt = Date.now()
     }
   } catch {
     // silencieux
   }
-  store.evenementsLoadedAt = Date.now()
 }
 
 export const preloadCours = async (force = false) => {
@@ -38,11 +38,11 @@ export const preloadCours = async (force = false) => {
       .order('created_at', { ascending: false })
     if (!error) {
       store.cours = data || []
+      store.coursLoadedAt = Date.now()
     }
   } catch {
     // silencieux
   }
-  store.coursLoadedAt = Date.now()
 }
 
 export const preloadAll = () => {

@@ -1,1 +1,7 @@
+Frontend-VueJS/node_modules/
 Frontend-VueJS/node_modules/.vue-global-types/vue_3.5_0.d.ts
+Frontend-VueJS/dist/
+Frontend-VueJS/.env
+.env
+*.env
+.env.*
