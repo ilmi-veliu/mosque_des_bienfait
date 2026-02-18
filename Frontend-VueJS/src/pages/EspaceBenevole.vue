@@ -399,14 +399,26 @@
 
               <!-- Formulaire ajout tâche -->
               <div v-if="showAddTache" class="bg-white rounded-xl border p-4 mb-6">
-                <form @submit.prevent="addTache" class="flex flex-col sm:flex-row gap-3">
-                  <input v-model="newTache.nom" required placeholder="Nom de la tâche"
-                    class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
-                  <input v-model="newTache.jour" type="date" required min="2026-02-18" max="2026-03-19"
-                    class="sm:w-44 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
-                  <button type="submit" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 text-sm font-medium">
-                    Ajouter
-                  </button>
+                <form @submit.prevent="addTache" class="space-y-3">
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <input v-model="newTache.nom" required placeholder="Nom de la tâche"
+                      class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+                    <input v-model="newTache.jour" type="date" required min="2026-02-18" max="2026-03-19"
+                      class="sm:w-44 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+                  </div>
+                  <div class="flex flex-col sm:flex-row gap-3 items-end">
+                    <div class="flex-1">
+                      <label class="block text-xs text-gray-500 mb-1">Assigner à une équipe (optionnel)</label>
+                      <select v-model="newTache.equipe_id"
+                        class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm">
+                        <option value="">Aucune équipe</option>
+                        <option v-for="eq in equipes" :key="eq.id" :value="eq.id">{{ eq.nom }}</option>
+                      </select>
+                    </div>
+                    <button type="submit" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 text-sm font-medium">
+                      Ajouter
+                    </button>
+                  </div>
                 </form>
               </div>
 
@@ -427,11 +439,14 @@
                       <p class="text-xs text-gray-400">{{ formatDateShort(t.jour) }}</p>
                     </div>
                   </div>
-                  <div class="flex items-center gap-2 self-end sm:self-center">
+                  <div class="flex items-center gap-2 self-end sm:self-center flex-wrap">
+                    <span v-if="getEquipeNom(t.equipe_id)" class="text-xs bg-violet-50 text-violet-700 px-2 py-1 rounded font-medium">
+                      {{ getEquipeNom(t.equipe_id) }}
+                    </span>
                     <span v-if="getBenevoleNom(t.benevole_id)" class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-medium">
                       {{ getBenevoleNom(t.benevole_id) }}
                     </span>
-                    <button v-if="!t.benevole_id" @click="prendreTache(t)"
+                    <button v-if="!t.benevole_id && !t.equipe_id" @click="prendreTache(t)"
                       class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors font-medium">
                       Je m'en charge
                     </button>
@@ -515,30 +530,143 @@
 
             <!-- ÉQUIPE -->
             <div v-if="orgTab === 'equipe'">
-              <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Équipe de bénévoles</h2>
-              <p class="text-sm text-gray-500 mb-6">{{ allBenevoles.length }} bénévole(s) accepté(s)</p>
+              <!-- Section : Équipes -->
+              <div class="mb-10">
+                <div class="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Équipes</h2>
+                    <p class="text-sm text-gray-500">{{ equipes.length }} équipe(s) créée(s)</p>
+                  </div>
+                  <button @click="showCreateEquipe = !showCreateEquipe"
+                    class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors text-sm flex items-center gap-2">
+                    <Plus :size="16" />
+                    Créer une équipe
+                  </button>
+                </div>
 
-              <div v-if="allBenevoles.length === 0" class="text-center py-12 text-gray-500">
-                Aucun bénévole accepté pour le moment.
-              </div>
-              <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div v-for="b in allBenevoles" :key="b.id"
-                  class="bg-white rounded-xl border p-4">
-                  <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                      :class="b.id === benevole.id ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'">
-                      {{ b.prenom[0] }}{{ b.nom[0] }}
+                <!-- Formulaire création équipe -->
+                <div v-if="showCreateEquipe" class="bg-white rounded-xl border p-5 mb-6">
+                  <form @submit.prevent="createEquipe" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Nom de l'équipe *</label>
+                      <input v-model="newEquipe.nom" required placeholder="Ex: Équipe Cuisine, Équipe Service..."
+                        class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
                     </div>
                     <div>
-                      <p class="font-medium text-gray-800">
-                        {{ b.prenom }} {{ b.nom }}
-                        <span v-if="b.id === benevole.id" class="text-xs text-emerald-600">(vous)</span>
-                      </p>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Membres *</label>
+                      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                        <label v-for="b in allBenevoles.filter(b => b.id !== benevole.id)" :key="b.id"
+                          class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors">
+                          <input type="checkbox" :value="b.id" v-model="newEquipe.membres"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                          <span class="text-sm text-gray-700">{{ b.prenom }} {{ b.nom }}</span>
+                        </label>
+                      </div>
+                      <p class="text-xs text-gray-400 mt-1">Vous serez automatiquement ajouté à l'équipe.</p>
+                    </div>
+                    <div class="flex gap-3">
+                      <button type="submit" :disabled="!newEquipe.nom.trim() || newEquipe.membres.length === 0"
+                        class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 text-sm font-medium disabled:opacity-50">
+                        Créer
+                      </button>
+                      <button type="button" @click="showCreateEquipe = false"
+                        class="text-gray-500 hover:text-gray-700 text-sm">
+                        Annuler
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Liste des équipes -->
+                <div v-if="equipes.length === 0 && !showCreateEquipe" class="text-center py-8 text-gray-500 text-sm">
+                  Aucune équipe pour le moment. Créez-en une !
+                </div>
+                <div v-else class="space-y-4">
+                  <div v-for="eq in equipes" :key="eq.id"
+                    class="bg-white rounded-xl border p-4">
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-violet-100 text-violet-700 rounded-lg flex items-center justify-center text-sm font-bold">
+                          {{ eq.nom.substring(0, 2).toUpperCase() }}
+                        </div>
+                        <div>
+                          <p class="font-semibold text-gray-800">{{ eq.nom }}</p>
+                          <p class="text-xs text-gray-400">{{ getEquipeMembres(eq.id).length }} membre(s)</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button v-if="eq.created_by === benevole.id || isAdmin"
+                          @click="editingEquipe = editingEquipe === eq.id ? null : eq.id"
+                          class="text-xs text-gray-400 hover:text-emerald-600 transition-colors px-2 py-1">
+                          {{ editingEquipe === eq.id ? 'Fermer' : 'Modifier' }}
+                        </button>
+                        <button v-if="eq.created_by === benevole.id || isSuperAdmin"
+                          @click="deleteEquipe(eq.id)"
+                          class="text-gray-300 hover:text-red-500 transition-colors p-1">
+                          <X :size="14" />
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Membres badges -->
+                    <div class="flex flex-wrap gap-2">
+                      <span v-for="m in getEquipeMembres(eq.id)" :key="m.id"
+                        class="inline-flex items-center gap-1.5 text-xs bg-violet-50 text-violet-700 px-2.5 py-1 rounded-lg font-medium">
+                        <span class="w-5 h-5 bg-violet-200 rounded-full flex items-center justify-center text-[10px] font-bold">
+                          {{ getBenevoleById(m.benevole_id)?.prenom?.[0] || '?' }}
+                        </span>
+                        {{ getBenevoleById(m.benevole_id)?.prenom }} {{ getBenevoleById(m.benevole_id)?.nom }}
+                        <button v-if="(eq.created_by === benevole.id || isAdmin) && editingEquipe === eq.id && m.benevole_id !== benevole.id"
+                          @click="removeFromEquipe(eq.id, m.id)"
+                          class="text-violet-400 hover:text-red-500 transition-colors ml-0.5">
+                          <X :size="12" />
+                        </button>
+                      </span>
+                    </div>
+                    <!-- Zone ajout membre (si en édition) -->
+                    <div v-if="editingEquipe === eq.id" class="mt-3 pt-3 border-t">
+                      <p class="text-xs text-gray-500 mb-2">Ajouter un membre :</p>
+                      <div class="flex flex-wrap gap-2">
+                        <button v-for="b in getAvailableForEquipe(eq.id)" :key="b.id"
+                          @click="addToEquipe(eq.id, b.id)"
+                          class="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                          + {{ b.prenom }} {{ b.nom }}
+                        </button>
+                        <span v-if="getAvailableForEquipe(eq.id).length === 0" class="text-xs text-gray-400 italic">
+                          Tous les bénévoles sont déjà dans l'équipe
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div class="text-xs text-gray-500 space-y-1">
-                    <p>{{ getBenevolePresences(b.id) }} jour(s) de présence</p>
-                    <p>{{ getBenevoleTaches(b.id) }} tâche(s) assignée(s)</p>
+                </div>
+              </div>
+
+              <!-- Section : Tous les bénévoles -->
+              <div>
+                <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Tous les bénévoles</h2>
+                <p class="text-sm text-gray-500 mb-6">{{ allBenevoles.length }} bénévole(s) accepté(s)</p>
+
+                <div v-if="allBenevoles.length === 0" class="text-center py-12 text-gray-500">
+                  Aucun bénévole accepté pour le moment.
+                </div>
+                <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div v-for="b in allBenevoles" :key="b.id"
+                    class="bg-white rounded-xl border p-4">
+                    <div class="flex items-center gap-3 mb-3">
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                        :class="b.id === benevole.id ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'">
+                        {{ b.prenom[0] }}{{ b.nom[0] }}
+                      </div>
+                      <div>
+                        <p class="font-medium text-gray-800">
+                          {{ b.prenom }} {{ b.nom }}
+                          <span v-if="b.id === benevole.id" class="text-xs text-emerald-600">(vous)</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div class="text-xs text-gray-500 space-y-1">
+                      <p>{{ getBenevolePresences(b.id) }} jour(s) de présence</p>
+                      <p>{{ getBenevoleTaches(b.id) }} tâche(s) assignée(s)</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -608,10 +736,13 @@
                   <span :class="t.fait ? 'line-through text-gray-400' : 'text-gray-700'">{{ t.nom }}</span>
                 </div>
                 <div class="flex items-center gap-1.5 flex-shrink-0">
+                  <span v-if="getEquipeNom(t.equipe_id)" class="text-[11px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded">
+                    {{ getEquipeNom(t.equipe_id) }}
+                  </span>
                   <span v-if="getBenevoleNom(t.benevole_id)" class="text-[11px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
                     {{ getBenevoleNom(t.benevole_id) }}
                   </span>
-                  <button v-if="!t.benevole_id" @click="prendreTache(t)" class="text-[11px] text-emerald-600 hover:underline">
+                  <button v-if="!t.benevole_id && !t.equipe_id" @click="prendreTache(t)" class="text-[11px] text-emerald-600 hover:underline">
                     Prendre
                   </button>
                   <button v-if="isAdmin || t.created_by === benevole.id" @click="deleteTache(t.id)"
@@ -977,18 +1108,22 @@ const openDay = (date) => {
 
 const loadData = async () => {
   dataLoading.value = true
-  const [presRes, benevRes, tachesRes, produitsRes, notesRes] = await Promise.all([
+  const [presRes, benevRes, tachesRes, produitsRes, notesRes, equipesRes, membresRes] = await Promise.all([
     supabase.from('ramadan_presences').select('*'),
     supabase.from('benevoles').select('id, prenom, nom').eq('statut', 'accepté'),
     supabase.from('ramadan_taches').select('*'),
     supabase.from('ramadan_produits').select('*').order('created_at'),
-    supabase.from('ramadan_notes').select('*').order('created_at')
+    supabase.from('ramadan_notes').select('*').order('created_at'),
+    supabase.from('equipes').select('*').order('created_at'),
+    supabase.from('equipe_membres').select('*')
   ])
   presences.value = presRes.data || []
   allBenevoles.value = benevRes.data || []
   taches.value = tachesRes.data || []
   produits.value = produitsRes.data || []
   notes.value = notesRes.data || []
+  equipes.value = equipesRes.data || []
+  equipeMembres.value = membresRes.data || []
   dataLoading.value = false
 }
 
@@ -1054,7 +1189,7 @@ const tachesRestantes = computed(() => {
 })
 
 const showAddTache = ref(false)
-const newTache = ref({ nom: '', jour: '' })
+const newTache = ref({ nom: '', jour: '', equipe_id: '' })
 
 const addTache = async () => {
   if (!newTache.value.nom.trim() || !newTache.value.jour) return
@@ -1063,18 +1198,22 @@ const addTache = async () => {
     nom: newTache.value.nom.trim(),
     jour: newTache.value.jour,
     benevole_id: null,
+    equipe_id: newTache.value.equipe_id || null,
     fait: false,
     created_by: benevole.value.id
   }
   taches.value.push(temp)
-  newTache.value = { nom: '', jour: '' }
+  newTache.value = { nom: '', jour: '', equipe_id: '' }
   showAddTache.value = false
 
-  const { data } = await supabase.from('ramadan_taches').insert({
+  const insert = {
     nom: temp.nom,
     jour: temp.jour,
     created_by: benevole.value.id
-  }).select()
+  }
+  if (temp.equipe_id) insert.equipe_id = temp.equipe_id
+
+  const { data } = await supabase.from('ramadan_taches').insert(insert).select()
   if (data && data[0]) {
     const idx = taches.value.findIndex(t => t.id === temp.id)
     if (idx !== -1) taches.value[idx] = data[0]
@@ -1208,6 +1347,74 @@ const prendreEnCharge = async (p) => {
 const relacherProduit = async (p) => {
   p.responsable_nom = null
   await supabase.from('ramadan_produits').update({ responsable_nom: null }).eq('id', p.id)
+}
+
+// --- EQUIPES ---
+const equipes = ref([])
+const equipeMembres = ref([])
+const showCreateEquipe = ref(false)
+const editingEquipe = ref(null)
+const newEquipe = ref({ nom: '', membres: [] })
+
+const getEquipeMembres = (equipeId) => {
+  return equipeMembres.value.filter(m => m.equipe_id === equipeId)
+}
+
+const getBenevoleById = (id) => {
+  return allBenevoles.value.find(b => b.id === id) || null
+}
+
+const getEquipeNom = (id) => {
+  if (!id) return null
+  const eq = equipes.value.find(e => e.id === id)
+  return eq ? eq.nom : null
+}
+
+const getAvailableForEquipe = (equipeId) => {
+  const memberIds = getEquipeMembres(equipeId).map(m => m.benevole_id)
+  return allBenevoles.value.filter(b => !memberIds.includes(b.id))
+}
+
+const createEquipe = async () => {
+  if (!newEquipe.value.nom.trim() || newEquipe.value.membres.length === 0) return
+
+  const { data } = await supabase.from('equipes').insert({
+    nom: newEquipe.value.nom.trim(),
+    created_by: benevole.value.id
+  }).select()
+
+  if (!data || !data[0]) return
+  const eq = data[0]
+  equipes.value.push(eq)
+
+  // Ajouter le créateur + les membres sélectionnés
+  const membres = [benevole.value.id, ...newEquipe.value.membres]
+  const inserts = membres.map(bid => ({ equipe_id: eq.id, benevole_id: bid }))
+  const { data: membresData } = await supabase.from('equipe_membres').insert(inserts).select()
+  if (membresData) equipeMembres.value.push(...membresData)
+
+  newEquipe.value = { nom: '', membres: [] }
+  showCreateEquipe.value = false
+}
+
+const addToEquipe = async (equipeId, benevoleId) => {
+  const { data } = await supabase.from('equipe_membres').insert({
+    equipe_id: equipeId,
+    benevole_id: benevoleId
+  }).select()
+  if (data && data[0]) equipeMembres.value.push(data[0])
+}
+
+const removeFromEquipe = async (equipeId, membreId) => {
+  equipeMembres.value = equipeMembres.value.filter(m => m.id !== membreId)
+  await supabase.from('equipe_membres').delete().eq('id', membreId)
+}
+
+const deleteEquipe = async (equipeId) => {
+  if (!confirm('Supprimer cette équipe ?')) return
+  equipes.value = equipes.value.filter(e => e.id !== equipeId)
+  equipeMembres.value = equipeMembres.value.filter(m => m.equipe_id !== equipeId)
+  await supabase.from('equipes').delete().eq('id', equipeId)
 }
 
 // --- EQUIPE STATS ---

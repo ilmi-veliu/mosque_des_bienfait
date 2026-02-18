@@ -438,9 +438,12 @@ CREATE POLICY "rp_delete" ON ramadan_presences FOR DELETE TO authenticated USING
 -- ---- RAMADAN TACHES ----
 -- Lecture : bénévoles acceptés
 CREATE POLICY "rt_select" ON ramadan_taches FOR SELECT TO authenticated USING (is_accepted_benevole());
--- Création/suppression : admin uniquement
-CREATE POLICY "rt_insert" ON ramadan_taches FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
-CREATE POLICY "rt_delete" ON ramadan_taches FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+-- Création : bénévoles acceptés (tout bénévole peut proposer une tâche)
+CREATE POLICY "rt_insert" ON ramadan_taches FOR INSERT TO authenticated WITH CHECK (is_accepted_benevole());
+-- Suppression : créateur de la tâche ou admin
+CREATE POLICY "rt_delete" ON ramadan_taches FOR DELETE TO authenticated USING (
+  created_by = get_my_benevole_id() OR is_admin_or_superadmin()
+);
 -- Mise à jour : bénévoles acceptés (marquer fait) ou admin
 CREATE POLICY "rt_update" ON ramadan_taches FOR UPDATE TO authenticated USING (is_accepted_benevole()) WITH CHECK (is_accepted_benevole());
 
@@ -475,6 +478,72 @@ CREATE POLICY "notif_insert" ON notifications FOR INSERT TO authenticated WITH C
 -- Marquer lu / supprimer : admin/superadmin
 CREATE POLICY "notif_update" ON notifications FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
 CREATE POLICY "notif_delete" ON notifications FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+
+-- ============================================
+-- TABLES ÉQUIPES
+-- ============================================
+
+-- Équipes de bénévoles (ex: "Équipe Cuisine", "Équipe Service")
+CREATE TABLE IF NOT EXISTS equipes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  nom TEXT NOT NULL,
+  created_by UUID REFERENCES benevoles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Membres d'une équipe (relation N-N)
+CREATE TABLE IF NOT EXISTS equipe_membres (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  equipe_id UUID REFERENCES equipes(id) ON DELETE CASCADE NOT NULL,
+  benevole_id UUID REFERENCES benevoles(id) ON DELETE CASCADE NOT NULL,
+  UNIQUE(equipe_id, benevole_id)
+);
+
+-- Colonne equipe_id sur les tâches (une tâche peut être assignée à une équipe)
+ALTER TABLE ramadan_taches ADD COLUMN IF NOT EXISTS equipe_id UUID REFERENCES equipes(id) ON DELETE SET NULL;
+
+-- RLS sur les nouvelles tables
+ALTER TABLE equipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE equipe_membres ENABLE ROW LEVEL SECURITY;
+
+-- ---- EQUIPES ----
+DROP POLICY IF EXISTS "eq_select" ON equipes;
+DROP POLICY IF EXISTS "eq_insert" ON equipes;
+DROP POLICY IF EXISTS "eq_update" ON equipes;
+DROP POLICY IF EXISTS "eq_delete" ON equipes;
+
+-- Lecture : bénévoles acceptés
+CREATE POLICY "eq_select" ON equipes FOR SELECT TO authenticated USING (is_accepted_benevole());
+-- Création : bénévoles acceptés
+CREATE POLICY "eq_insert" ON equipes FOR INSERT TO authenticated WITH CHECK (is_accepted_benevole());
+-- Modification : créateur de l'équipe ou admin
+CREATE POLICY "eq_update" ON equipes FOR UPDATE TO authenticated
+  USING (created_by = get_my_benevole_id() OR is_admin_or_superadmin())
+  WITH CHECK (created_by = get_my_benevole_id() OR is_admin_or_superadmin());
+-- Suppression : créateur de l'équipe ou superadmin
+CREATE POLICY "eq_delete" ON equipes FOR DELETE TO authenticated
+  USING (created_by = get_my_benevole_id() OR is_superadmin());
+
+-- ---- EQUIPE MEMBRES ----
+DROP POLICY IF EXISTS "em_select" ON equipe_membres;
+DROP POLICY IF EXISTS "em_insert" ON equipe_membres;
+DROP POLICY IF EXISTS "em_delete" ON equipe_membres;
+
+-- Lecture : bénévoles acceptés
+CREATE POLICY "em_select" ON equipe_membres FOR SELECT TO authenticated USING (is_accepted_benevole());
+-- Ajout de membre : créateur de l'équipe ou admin
+CREATE POLICY "em_insert" ON equipe_membres FOR INSERT TO authenticated WITH CHECK (
+  is_admin_or_superadmin() OR EXISTS (
+    SELECT 1 FROM equipes WHERE id = equipe_id AND created_by = get_my_benevole_id()
+  )
+);
+-- Retrait de membre : créateur de l'équipe ou admin
+CREATE POLICY "em_delete" ON equipe_membres FOR DELETE TO authenticated USING (
+  is_admin_or_superadmin() OR EXISTS (
+    SELECT 1 FROM equipes WHERE id = equipe_id AND created_by = get_my_benevole_id()
+  )
+);
 
 
 -- ============================================

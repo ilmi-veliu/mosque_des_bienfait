@@ -367,14 +367,21 @@
                       {{ t.fait ? '\u2713' : '' }}
                     </span>
                     <span class="text-sm flex-1 font-medium" :class="t.fait ? 'line-through text-gray-400' : 'text-gray-700'">{{ t.nom }}</span>
+                    <span v-if="getEquipeNomAdmin(t.equipe_id)" class="text-[11px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded">
+                      {{ getEquipeNomAdmin(t.equipe_id) }}
+                    </span>
                     <span v-if="getBenevoleNom(t.benevole_id) !== 'Inconnu'" class="text-[11px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
                       {{ getBenevoleNom(t.benevole_id) }}
                     </span>
-                    <select :value="t.benevole_id || ''" @change="assignRamadanTache(t.id, $event.target.value)"
-                      class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600 max-w-[140px]">
+                    <select :value="t.benevole_id || (t.equipe_id ? 'eq_' + t.equipe_id : '')" @change="assignRamadanTache(t.id, $event.target.value)"
+                      class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600 max-w-[160px]">
                       <option value="">Non assignée</option>
                       <option v-for="p in getRamadanPresents(selectedRamadanDay)" :key="p.benevole_id" :value="p.benevole_id">
                         {{ getBenevoleNom(p.benevole_id) }}
+                      </option>
+                      <option disabled class="font-medium">── Équipes ──</option>
+                      <option v-for="eq in allEquipes" :key="eq.id" :value="'eq_' + eq.id">
+                        {{ eq.nom }}
                       </option>
                     </select>
                     <button @click="deleteRamadanTache(t.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors">
@@ -454,6 +461,34 @@
                   <Trash2 :size="14" />
                 </button>
               </div>
+            <!-- Section Équipes -->
+            <div class="mt-6">
+              <h2 class="text-xl font-semibold text-gray-800 mb-4">Équipes</h2>
+              <div v-if="allEquipes.length === 0" class="text-center py-6 text-gray-400 text-sm">
+                Aucune équipe créée.
+              </div>
+              <div v-else class="space-y-3">
+                <div v-for="eq in allEquipes" :key="eq.id" class="bg-white rounded-xl border p-3">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 bg-violet-100 text-violet-700 rounded-lg flex items-center justify-center text-xs font-bold">
+                        {{ eq.nom.substring(0, 2).toUpperCase() }}
+                      </div>
+                      <p class="text-sm font-semibold text-gray-800">{{ eq.nom }}</p>
+                    </div>
+                    <button v-if="isSuperAdmin" @click="deleteEquipeAdmin(eq.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors">
+                      <Trash2 :size="14" />
+                    </button>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span v-for="m in getEquipeMembresAdmin(eq.id)" :key="m.id"
+                      class="text-[11px] bg-violet-50 text-violet-700 px-2 py-0.5 rounded font-medium">
+                      {{ getBenevoleNom(m.benevole_id) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
         </div>
@@ -1031,17 +1066,40 @@ const formatRamadanDate = (d) => d.toLocaleDateString('fr-FR', { weekday: 'long'
 
 const ramadanProduitsManquants = computed(() => ramadanProduits.value.filter(p => !p.en_stock).length)
 
+const allEquipes = ref([])
+const allEquipeMembres = ref([])
+
 const fetchRamadanData = async () => {
-  const [presRes, tachesRes, produitsRes, notesRes] = await Promise.all([
+  const [presRes, tachesRes, produitsRes, notesRes, equipesRes, membresRes] = await Promise.all([
     supabase.from('ramadan_presences').select('*'),
     supabase.from('ramadan_taches').select('*'),
     supabase.from('ramadan_produits').select('*').order('created_at'),
-    supabase.from('ramadan_notes').select('*').order('created_at')
+    supabase.from('ramadan_notes').select('*').order('created_at'),
+    supabase.from('equipes').select('*').order('created_at'),
+    supabase.from('equipe_membres').select('*')
   ])
   ramadanPresences.value = presRes.data || []
   ramadanTaches.value = tachesRes.data || []
   ramadanProduits.value = produitsRes.data || []
   ramadanNotes.value = notesRes.data || []
+  allEquipes.value = equipesRes.data || []
+  allEquipeMembres.value = membresRes.data || []
+}
+
+const getEquipeNomAdmin = (id) => {
+  if (!id) return null
+  const eq = allEquipes.value.find(e => e.id === id)
+  return eq ? eq.nom : null
+}
+
+const getEquipeMembresAdmin = (equipeId) => {
+  return allEquipeMembres.value.filter(m => m.equipe_id === equipeId)
+}
+
+const deleteEquipeAdmin = async (equipeId) => {
+  if (!confirm('Supprimer cette équipe ?')) return
+  await supabase.from('equipes').delete().eq('id', equipeId)
+  fetchRamadanData()
 }
 
 const getRamadanPresentsCount = (day) => ramadanPresences.value.filter(p => p.jour === ramadanDateStr(day)).length
@@ -1062,8 +1120,15 @@ const addRamadanTache = async () => {
   fetchRamadanData()
 }
 
-const assignRamadanTache = async (tacheId, benevoleId) => {
-  await supabase.from('ramadan_taches').update({ benevole_id: benevoleId || null }).eq('id', tacheId)
+const assignRamadanTache = async (tacheId, value) => {
+  if (value && value.startsWith('eq_')) {
+    // Assigner à une équipe
+    const equipeId = value.replace('eq_', '')
+    await supabase.from('ramadan_taches').update({ equipe_id: equipeId, benevole_id: null }).eq('id', tacheId)
+  } else {
+    // Assigner à un bénévole (ou désassigner)
+    await supabase.from('ramadan_taches').update({ benevole_id: value || null, equipe_id: null }).eq('id', tacheId)
+  }
   fetchRamadanData()
 }
 
