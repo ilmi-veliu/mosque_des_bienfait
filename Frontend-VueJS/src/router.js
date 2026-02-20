@@ -82,10 +82,28 @@ const router = createRouter({
   }
 })
 
+// Cache session pour éviter les requêtes répétées
+let cachedSession = null
+let cachedAdminRole = null
+let cacheTime = 0
+const CACHE_MS = 60000 // 1 minute
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedSession = session
+  cachedAdminRole = null // reset admin cache on auth change
+  cacheTime = 0
+})
+
 router.beforeEach(async (to) => {
   if (!to.meta.requiresAuth && !to.meta.requiresAdmin) return true
 
-  const { data: { session } } = await supabase.auth.getSession()
+  // Utiliser le cache si récent, sinon requêter
+  let session = cachedSession
+  if (!session) {
+    const { data } = await supabase.auth.getSession()
+    session = data.session
+    cachedSession = session
+  }
 
   if (!session) {
     if (to.meta.requiresAdmin) return '/admin'
@@ -93,12 +111,21 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.requiresAdmin) {
+    // Vérifier le cache admin
+    const now = Date.now()
+    if (cachedAdminRole !== null && (now - cacheTime) < CACHE_MS) {
+      if (!cachedAdminRole) return '/'
+      return true
+    }
+
     const { data } = await supabase.from('benevoles')
       .select('role')
-      .eq('email', session.user.email)
+      .ilike('email', session.user.email)
       .eq('statut', 'accepté')
 
     const isAdmin = (data || []).some(r => ['admin', 'superadmin'].includes(r.role))
+    cachedAdminRole = isAdmin
+    cacheTime = now
     if (!isAdmin) return '/'
   }
 

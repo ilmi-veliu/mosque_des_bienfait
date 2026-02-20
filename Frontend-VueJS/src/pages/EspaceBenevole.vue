@@ -901,7 +901,7 @@ onMounted(async () => {
     const { data } = await supabase
       .from('benevoles')
       .select('*')
-      .eq('email', s.user.email)
+      .ilike('email', s.user.email)
       .eq('statut', 'accepté')
       .single()
 
@@ -923,7 +923,7 @@ onMounted(async () => {
       const { data } = await supabase
         .from('benevoles')
         .select('id, statut')
-        .eq('email', session.value?.user?.email)
+        .ilike('email', session.value?.user?.email)
         .eq('statut', 'accepté')
         .single()
       if (data) {

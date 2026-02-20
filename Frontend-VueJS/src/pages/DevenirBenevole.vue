@@ -211,7 +211,7 @@ onMounted(async () => {
     const { data: existing } = await supabase
       .from('benevoles')
       .select('id, statut')
-      .eq('email', session.user.email)
+      .ilike('email', session.user.email)
       .limit(1)
 
     if (existing && existing.length > 0) {

@@ -1271,17 +1271,16 @@ onMounted(async () => {
 
     const email = session.user.email
 
-    // Vérifier le rôle admin dans la base de données
-    const { data: rows, error } = await supabase.from('benevoles')
-      .select('*')
-      .eq('email', email)
-      .eq('statut', 'accepté')
+    // Charger le profil admin ET les données en parallèle
+    const [adminResult] = await Promise.all([
+      supabase.from('benevoles').select('*').ilike('email', email).eq('statut', 'accepté'),
+      fetchEvents(),
+      fetchCours(),
+      fetchBenevoles(),
+      fetchNotifications()
+    ])
 
-    if (error) {
-      // erreur silencieuse
-    }
-
-    const benevoleAdmin = (rows || []).find(r => ['admin', 'superadmin'].includes(r.role))
+    const benevoleAdmin = (adminResult.data || []).find(r => ['admin', 'superadmin'].includes(r.role))
 
     if (benevoleAdmin) {
       adminUser.value = benevoleAdmin
@@ -1292,10 +1291,6 @@ onMounted(async () => {
     }
 
     pageLoading.value = false
-    fetchEvents()
-    fetchCours()
-    fetchBenevoles()
-    fetchNotifications()
   } catch (e) {
     // erreur silencieuse
     pageLoading.value = false

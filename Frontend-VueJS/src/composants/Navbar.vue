@@ -31,7 +31,7 @@
             Contact Imam
           </router-link>
 
-          <router-link :to="isBenevole ? '/espace-benevole' : '/benevole'" class="hover:text-gray-600 transition-colors flex items-center gap-2">
+          <router-link v-if="isLoggedIn" :to="isBenevole ? '/espace-benevole' : '/benevole'" class="hover:text-gray-600 transition-colors flex items-center gap-2">
             <HandHelping :size="18" />
             Bénévolat
           </router-link>
@@ -54,6 +54,10 @@
             </button>
           </template>
           <template v-else>
+            <router-link to="/connexion" class="hover:text-gray-600 transition-colors flex items-center gap-2">
+              <LogIn :size="18" />
+              Connexion
+            </router-link>
             <router-link to="/inscription" class="hover:text-gray-600 transition-colors flex items-center gap-2">
               <UserPlus :size="18" />
               S'inscrire
@@ -92,7 +96,7 @@
           Contact Imam
         </router-link>
 
-        <router-link @click="mobileOpen = false" :to="isBenevole ? '/espace-benevole' : '/benevole'" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+        <router-link v-if="isLoggedIn" @click="mobileOpen = false" :to="isBenevole ? '/espace-benevole' : '/benevole'" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
           <HandHelping :size="18" class="text-gray-400" />
           Bénévolat
         </router-link>
@@ -116,6 +120,10 @@
           </button>
         </template>
         <template v-else>
+          <router-link @click="mobileOpen = false" to="/connexion" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
+            <LogIn :size="18" class="text-gray-400" />
+            Connexion
+          </router-link>
           <router-link @click="mobileOpen = false" to="/inscription" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors">
             <UserPlus :size="18" class="text-gray-400" />
             S'inscrire
@@ -129,7 +137,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Building2, Home, Video, Calendar, MessageSquare, HandHelping, UserPlus, LogOut, Shield, Menu as MenuIcon, X } from 'lucide-vue-next'
+import { Building2, Home, Video, Calendar, MessageSquare, HandHelping, UserPlus, LogIn, LogOut, Shield, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -148,7 +156,7 @@ const checkBenevole = async (email) => {
     const { data } = await supabase
       .from('benevoles')
       .select('id, role')
-      .eq('email', email)
+      .ilike('email', email)
       .eq('statut', 'accepté')
     const row = data?.[0]
     isBenevole.value = !!row
