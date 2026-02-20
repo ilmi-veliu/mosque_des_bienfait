@@ -102,7 +102,7 @@ const handleLogin = async () => {
   const benevoleData = benevoleRows?.find(r => ['admin', 'superadmin'].includes(r.role))
 
   if (!benevoleData) {
-    errorMsg.value = "Vous n'avez pas les droits d'administration."
+    errorMsg.value = 'Email ou mot de passe incorrect.'
     await supabase.auth.signOut()
     loading.value = false
     return

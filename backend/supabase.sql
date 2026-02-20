@@ -593,8 +593,12 @@ ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_nom_max;
 ALTER TABLE benevoles ADD CONSTRAINT ben_nom_max CHECK (length(nom) <= 100);
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_email_max;
 ALTER TABLE benevoles ADD CONSTRAINT ben_email_max CHECK (length(email) <= 255);
+ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_email_format;
+ALTER TABLE benevoles ADD CONSTRAINT ben_email_format CHECK (email ~* '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_telephone_max;
 ALTER TABLE benevoles ADD CONSTRAINT ben_telephone_max CHECK (length(telephone) <= 20);
+ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_telephone_format;
+ALTER TABLE benevoles ADD CONSTRAINT ben_telephone_format CHECK (telephone ~ '^\+?[0-9\s\-\.()]{6,20}$');
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_message_max;
 ALTER TABLE benevoles ADD CONSTRAINT ben_message_max CHECK (length(message) <= 2000);
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_dispo_motif_max;
@@ -728,15 +732,22 @@ ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_message_max;
 ALTER TABLE bug_reports ADD CONSTRAINT br_message_max CHECK (length(message) <= 2000);
 ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_email_max;
 ALTER TABLE bug_reports ADD CONSTRAINT br_email_max CHECK (length(email) <= 255);
-ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_type_max;
-ALTER TABLE bug_reports ADD CONSTRAINT br_type_max CHECK (length(type) <= 50);
+ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_email_format;
+ALTER TABLE bug_reports ADD CONSTRAINT br_email_format CHECK (email IS NULL OR email ~* '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_type_allowed;
+ALTER TABLE bug_reports ADD CONSTRAINT br_type_allowed CHECK (type IN ('bug', 'affichage', 'fonctionnalite', 'suggestion', 'autre'));
 ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_page_max;
 ALTER TABLE bug_reports ADD CONSTRAINT br_page_max CHECK (length(page) <= 500);
 
--- Tout le monde peut insérer un signalement (anon + authenticated)
-CREATE POLICY "br_insert" ON bug_reports FOR INSERT TO anon, authenticated WITH CHECK (true);
+-- Tout le monde peut insérer un signalement (anon + authenticated) - max 50 par heure pour éviter le spam
+DROP POLICY IF EXISTS "br_insert" ON bug_reports;
+CREATE POLICY "br_insert" ON bug_reports FOR INSERT TO anon, authenticated WITH CHECK (
+  (SELECT count(*) FROM bug_reports WHERE created_at > NOW() - INTERVAL '1 hour') < 50
+);
 -- Seul le superadmin peut lire/supprimer les signalements
+DROP POLICY IF EXISTS "br_select" ON bug_reports;
 CREATE POLICY "br_select" ON bug_reports FOR SELECT TO authenticated USING (is_admin_or_superadmin());
+DROP POLICY IF EXISTS "br_delete" ON bug_reports;
 CREATE POLICY "br_delete" ON bug_reports FOR DELETE TO authenticated USING (is_superadmin());
 
 

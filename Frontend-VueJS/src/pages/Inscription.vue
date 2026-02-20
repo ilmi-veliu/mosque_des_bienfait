@@ -190,7 +190,9 @@ const validatePassword = () => {
   if (!pw) return
   if (pw.length < 8) { passwordError.value = 'Minimum 8 caractères'; return }
   if (!/[A-Z]/.test(pw)) { passwordError.value = 'Au moins une lettre majuscule'; return }
+  if (!/[a-z]/.test(pw)) { passwordError.value = 'Au moins une lettre minuscule'; return }
   if (!/[0-9]/.test(pw)) { passwordError.value = 'Au moins un chiffre'; return }
+  if (!/[^A-Za-z0-9]/.test(pw)) { passwordError.value = 'Au moins un caractère spécial (!@#$...)'; return }
 }
 
 const handleSignup = async () => {

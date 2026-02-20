@@ -115,16 +115,20 @@ const dismiss = () => {
   sessionStorage.setItem('betaBannerDismissed', '1')
 }
 
+const ALLOWED_REPORT_TYPES = ['bug', 'affichage', 'fonctionnalite', 'suggestion', 'autre']
+
 const submitReport = async () => {
   if (!reportMessage.value.trim()) return
   sending.value = true
 
+  const type = ALLOWED_REPORT_TYPES.includes(reportType.value) ? reportType.value : 'autre'
+
   try {
     await supabase.from('bug_reports').insert({
-      type: reportType.value,
+      type,
       message: reportMessage.value.trim().slice(0, 2000),
       email: reportEmail.value.trim().slice(0, 255) || null,
-      page: window.location.pathname
+      page: window.location.pathname.slice(0, 500)
     })
   } catch {
     // silencieux

@@ -86,7 +86,7 @@ const router = createRouter({
 let cachedSession = null
 let cachedAdminRole = null
 let cacheTime = 0
-const CACHE_MS = 60000 // 1 minute
+const CACHE_MS = 15000 // 15 secondes
 
 supabase.auth.onAuthStateChange((_event, session) => {
   cachedSession = session

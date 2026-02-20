@@ -103,6 +103,17 @@
           Ramadan
         </button>
         <button v-if="isSuperAdmin"
+          @click="activeTab = 'signalements'; fetchBugReports()"
+          :class="activeTab === 'signalements' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
+        >
+          <AlertTriangle :size="18" />
+          Signalements
+          <span v-if="bugReports.length > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            {{ bugReports.length > 9 ? '9+' : bugReports.length }}
+          </span>
+        </button>
+        <button v-if="isSuperAdmin"
           @click="activeTab = 'gestion'; fetchAllBenevoles()"
           :class="activeTab === 'gestion' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
@@ -496,6 +507,58 @@
     </div>
 
       <!-- GESTION DES BÉNÉVOLES (Super Admin only) -->
+      <!-- SIGNALEMENTS -->
+      <div v-if="activeTab === 'signalements' && isSuperAdmin">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Signalements</h2>
+            <p class="text-sm text-gray-500 mt-1">{{ bugReports.length }} signalement{{ bugReports.length > 1 ? 's' : '' }}</p>
+          </div>
+          <button v-if="bugReports.length > 0" @click="deleteAllBugReports"
+            class="text-sm text-red-500 hover:text-red-700 transition-colors flex items-center gap-1">
+            <Trash2 :size="14" />
+            Tout supprimer
+          </button>
+        </div>
+
+        <div v-if="bugReportsLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+        </div>
+        <div v-else-if="bugReports.length === 0" class="text-center py-16">
+          <AlertTriangle :size="48" class="mx-auto text-gray-300 mb-4" />
+          <p class="text-gray-500">Aucun signalement pour le moment.</p>
+        </div>
+        <div v-else class="space-y-3">
+          <div v-for="bug in bugReports" :key="bug.id" class="bg-white rounded-xl border p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs px-2 py-0.5 rounded-lg font-medium"
+                    :class="{
+                      'bg-red-100 text-red-700': bug.type === 'bug',
+                      'bg-amber-100 text-amber-700': bug.type === 'affichage',
+                      'bg-blue-100 text-blue-700': bug.type === 'fonctionnalite',
+                      'bg-emerald-100 text-emerald-700': bug.type === 'suggestion',
+                      'bg-gray-100 text-gray-600': bug.type === 'autre'
+                    }">
+                    {{ bug.type === 'bug' ? 'Bug' : bug.type === 'affichage' ? 'Affichage' : bug.type === 'fonctionnalite' ? 'Fonctionnalité' : bug.type === 'suggestion' ? 'Suggestion' : 'Autre' }}
+                  </span>
+                  <span class="text-xs text-gray-400">{{ formatNotifDate(bug.created_at) }}</span>
+                  <span v-if="bug.page" class="text-xs text-gray-400">- {{ bug.page }}</span>
+                </div>
+                <p class="text-sm text-gray-800 whitespace-pre-line">{{ bug.message }}</p>
+                <p v-if="bug.email" class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                  Contact : {{ bug.email }}
+                </p>
+              </div>
+              <button @click="deleteBugReport(bug.id)" class="p-1.5 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0">
+                <Trash2 :size="16" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div v-if="activeTab === 'gestion' && isSuperAdmin">
         <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion des bénévoles</h2>
         <p class="text-sm text-gray-500 mb-6">Gérez les rôles, la disponibilité et supprimez des bénévoles.</p>
@@ -767,7 +830,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -809,8 +872,25 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
   })
 }
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/mp4', 'audio/webm']
+
 const uploadFile = async (file, forceAudio = false) => {
   if (!file) return null
+
+  // Validation MIME type
+  if (forceAudio) {
+    if (!ALLOWED_AUDIO_TYPES.includes(file.type) && !file.type.startsWith('audio/')) {
+      alert('Format audio non supporté. Utilisez MP3, OGG, WAV ou MP4.')
+      return null
+    }
+  } else {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      alert('Format image non supporté. Utilisez JPG, PNG, WebP ou GIF.')
+      return null
+    }
+  }
+
   const maxSize = forceAudio ? 50 * 1024 * 1024 : 10 * 1024 * 1024
   if (file.size > maxSize) {
     alert(`Fichier trop volumineux (max ${forceAudio ? '50' : '10'} MB)`)
@@ -868,7 +948,7 @@ const uploadFile = async (file, forceAudio = false) => {
   } catch (e) {
     uploading.value = false
     uploadProgress.value = ''
-    alert(e.message || 'Erreur upload')
+    alert('Erreur lors de l\'upload. Vérifiez votre connexion et réessayez.')
     return null
   }
 }
@@ -1197,6 +1277,34 @@ const formatNotifDate = (ds) => {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
+// --- SIGNALEMENTS (BUG REPORTS) ---
+const bugReports = ref([])
+const bugReportsLoading = ref(false)
+
+const fetchBugReports = async () => {
+  bugReportsLoading.value = true
+  try {
+    const { data } = await supabase.from('bug_reports').select('*').order('created_at', { ascending: false })
+    bugReports.value = data || []
+  } catch {
+    bugReports.value = []
+  }
+  bugReportsLoading.value = false
+}
+
+const deleteBugReport = async (id) => {
+  await supabase.from('bug_reports').delete().eq('id', id)
+  bugReports.value = bugReports.value.filter(b => b.id !== id)
+}
+
+const deleteAllBugReports = async () => {
+  if (!confirm('Supprimer tous les signalements ?')) return
+  for (const bug of bugReports.value) {
+    await supabase.from('bug_reports').delete().eq('id', bug.id)
+  }
+  bugReports.value = []
+}
+
 // --- GESTION DES RÔLES ---
 const allBenevolesForRole = ref([])
 const allBenevolesLoading = ref(false)
@@ -1253,11 +1361,12 @@ const updateDispoDates = async (b, field, value) => {
 
 // --- AUTH ---
 const handleLogout = async () => {
-  try {
-    await supabase.auth.signOut()
-  } catch (e) {
-    // erreur silencieuse
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    // Forcer la déconnexion locale même si le serveur échoue
+    localStorage.removeItem('sb-ibisrjtnzblzfaodlzgs-auth-token')
   }
+  adminUser.value = null
   router.push('/admin')
 }
 
@@ -1277,7 +1386,8 @@ onMounted(async () => {
       fetchEvents(),
       fetchCours(),
       fetchBenevoles(),
-      fetchNotifications()
+      fetchNotifications(),
+      fetchBugReports()
     ])
 
     const benevoleAdmin = (adminResult.data || []).find(r => ['admin', 'superadmin'].includes(r.role))

@@ -971,7 +971,10 @@ onUnmounted(() => {
 })
 
 const handleLogout = async () => {
-  await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    localStorage.removeItem('sb-ibisrjtnzblzfaodlzgs-auth-token')
+  }
   session.value = null
   benevole.value = null
   router.push('/')
