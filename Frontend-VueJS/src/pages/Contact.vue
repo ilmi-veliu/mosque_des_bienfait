@@ -43,7 +43,7 @@
                 </div>
                 <div>
                   <h3 class="font-semibold text-gray-900 mb-1">Téléphone</h3>
-                  <p class="text-gray-600 text-sm">+33 5 53 45 67 89</p>
+                  <p class="text-gray-600 text-sm">06 99 02 54 72</p>
                 </div>
               </div>
 
@@ -54,7 +54,7 @@
                 </div>
                 <div>
                   <h3 class="font-semibold text-gray-900 mb-1">Email</h3>
-                  <p class="text-gray-600 text-sm">elmernissi.fr@gmail.com</p>
+                  <p class="text-gray-600 text-sm">mosquee.perigueux@gmail.com</p>
                 </div>
               </div>
 

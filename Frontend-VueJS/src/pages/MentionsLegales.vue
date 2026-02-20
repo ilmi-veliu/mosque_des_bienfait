@@ -26,8 +26,8 @@
             <p class="text-gray-700"><strong>Nom :</strong> Association des Musulmans de Périgueux</p>
             <p class="text-gray-700"><strong>Forme juridique :</strong> Association loi 1901</p>
             <p class="text-gray-700"><strong>Adresse :</strong> 18 Rue du Tennis, 24000 Périgueux, France</p>
-            <p class="text-gray-700"><strong>Téléphone :</strong> 05 53 35 14 27</p>
-            <p class="text-gray-700"><strong>Email :</strong> <a href="mailto:elmernissi.fr@gmail.com" class="text-emerald-600 hover:underline">elmernissi.fr@gmail.com</a></p>
+            <p class="text-gray-700"><strong>Téléphone :</strong> 06 99 02 54 72</p>
+            <p class="text-gray-700"><strong>Email :</strong> <a href="mailto:mosquee.perigueux@gmail.com" class="text-emerald-600 hover:underline">mosquee.perigueux@gmail.com</a></p>
           </div>
         </section>
 
@@ -37,12 +37,9 @@
             <User :size="24" class="text-emerald-600" />
             2. Directeur de la publication
           </h2>
-          <div class="bg-amber-50 border-l-4 border-amber-500 rounded-xl p-6">
+          <div class="bg-gray-50 rounded-xl p-6">
             <p class="text-gray-700">
-              <strong>[TON NOM COMPLET]</strong> - en qualité de responsable de l'association.
-            </p>
-            <p class="text-gray-500 text-sm mt-2">
-              &#9888; Remplace [TON NOM COMPLET] par le nom du président ou du responsable de l'association avant la mise en ligne.
+              <strong>Rachid</strong> - en qualité de président de l'association.
             </p>
           </div>
         </section>

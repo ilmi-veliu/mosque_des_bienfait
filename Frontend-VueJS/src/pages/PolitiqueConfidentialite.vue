@@ -30,8 +30,8 @@
               <li><strong>Association des Musulmans de Périgueux</strong></li>
               <li>Mosquée des Bienfaisants</li>
               <li>18 Rue du Tennis, 24000 Périgueux</li>
-              <li>Email : <a href="mailto:elmernissi.fr@gmail.com" class="text-emerald-600 hover:underline">elmernissi.fr@gmail.com</a></li>
-              <li>Téléphone : 05 53 35 14 27</li>
+              <li>Email : <a href="mailto:mosquee.perigueux@gmail.com" class="text-emerald-600 hover:underline">mosquee.perigueux@gmail.com</a></li>
+              <li>Téléphone : 06 99 02 54 72</li>
             </ul>
           </div>
         </section>
@@ -202,7 +202,7 @@
           <div class="bg-emerald-50 border-l-4 border-emerald-600 rounded-xl p-6 mt-6">
             <p class="text-gray-700">
               Pour exercer vos droits, contactez-nous à :
-              <a href="mailto:elmernissi.fr@gmail.com" class="text-emerald-600 font-semibold hover:underline">elmernissi.fr@gmail.com</a>
+              <a href="mailto:mosquee.perigueux@gmail.com" class="text-emerald-600 font-semibold hover:underline">mosquee.perigueux@gmail.com</a>
             </p>
             <p class="text-gray-600 text-sm mt-2">
               Nous nous engageons à répondre dans un délai d'un mois. En cas de litige, vous pouvez saisir la
