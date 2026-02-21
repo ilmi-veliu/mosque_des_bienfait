@@ -14,6 +14,19 @@ import Footer from './composants/Footer.vue'
 import CookieBanner from './composants/CookieBanner.vue'
 import BetaBanner from './composants/BetaBanner.vue'
 
+const RELOAD_AFTER_MS = 5 * 60 * 1000 // 5 minutes d'absence
+let hiddenAt = null
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    hiddenAt = Date.now()
+  } else if (hiddenAt && Date.now() - hiddenAt > RELOAD_AFTER_MS) {
+    window.location.reload()
+  } else {
+    hiddenAt = null
+  }
+})
+
 export default {
   name: 'App',
   components: {

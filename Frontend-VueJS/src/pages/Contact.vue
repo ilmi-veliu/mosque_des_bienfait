@@ -105,13 +105,19 @@
               </div>
             </div>
 
-            <button 
+            <button
               @click="openChat"
               class="bg-white text-emerald-700 px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all"
             >
               <MessageSquare :size="20" />
-              Bouton de chat "Imam"
+              Démarrer le chat
             </button>
+
+            <p v-if="chatUnavailable" class="mt-4 text-sm bg-white/10 rounded-xl px-4 py-3">
+              Le chat n'est pas disponible. Contactez-nous par
+              <a href="mailto:mosquee.perigueux@gmail.com" class="underline font-medium">email</a>
+              ou par <a href="tel:+33699025472" class="underline font-medium">téléphone</a>.
+            </p>
           </div>
 
         </div>
@@ -121,11 +127,17 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { Phone, Mail, MessageSquare, ChevronDown } from 'lucide-vue-next'
+
+const chatUnavailable = ref(false)
 
 const openChat = () => {
   if (window.Tawk_API && window.Tawk_API.maximize) {
+    chatUnavailable.value = false
     window.Tawk_API.maximize()
+  } else {
+    chatUnavailable.value = true
   }
 }
 </script>
