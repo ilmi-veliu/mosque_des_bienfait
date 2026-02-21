@@ -20,9 +20,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-emerald-700">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
-          <h1 class="text-3xl md:text-4xl font-semibold text-gray-900 mb-3">Contacter l'Imam</h1>
+          <h1 class="text-3xl md:text-4xl font-semibold text-gray-900 mb-3">Contacter l'Imam de Périgueux</h1>
           <p class="text-gray-600 leading-relaxed">
-            Vous avez des questions sur l'Islam, besoin de conseils spirituels, ou souhaitez organiser une cérémonie ? N'hésitez pas à nous contacter.
+            Vous avez des questions sur l'Islam, besoin de conseils spirituels, ou souhaitez organiser une cérémonie ? Contactez l'imam de la Mosquée des Bienfaisants de Périgueux.
           </p>
         </div>
 

@@ -4,9 +4,9 @@
       
       <!-- Colonne 1 : Description -->
       <div class="flex-1 min-w-[220px]">
-        <h3 class="mb-4 text-base font-semibold">Mosquée des Bienfaisants</h3>
+        <h3 class="mb-4 text-base font-semibold">Mosquée des Bienfaisants — Périgueux</h3>
         <p class="text-sm leading-[1.7] text-[#717182]">
-          Un lieu de paix, de spiritualité et de communauté au service des musulmans de Périgueux et de tous ceux qui souhaitent découvrir l'Islam.
+          La mosquée de Périgueux au service des musulmans de Dordogne. Un lieu de paix, de spiritualité et de fraternité ouvert à tous ceux qui souhaitent découvrir ou pratiquer l'Islam.
         </p>
       </div>
       

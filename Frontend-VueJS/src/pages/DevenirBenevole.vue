@@ -10,9 +10,9 @@
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-4xl md:text-5xl font-semibold mb-5">Devenir Bénévole</h1>
+        <h1 class="text-4xl md:text-5xl font-semibold mb-5">Devenir Bénévole à la Mosquée de Périgueux</h1>
         <p class="max-w-3xl mx-auto text-lg leading-relaxed opacity-90">
-          Rejoignez notre équipe de bénévoles et contribuez au bien-être de la communauté. Chaque aide compte, quel que soit votre domaine de compétence.
+          Rejoignez l'équipe de bénévoles de la Mosquée des Bienfaisants de Périgueux et contribuez au bien-être de la communauté musulmane de Dordogne. Chaque aide compte.
         </p>
       </div>
     </section>

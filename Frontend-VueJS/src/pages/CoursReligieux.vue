@@ -10,9 +10,9 @@
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-4xl md:text-5xl font-semibold mb-5">Cours Religieux</h1>
+        <h1 class="text-4xl md:text-5xl font-semibold mb-5">Cours Religieux Islamiques à Périgueux</h1>
         <p class="max-w-3xl mx-auto text-lg leading-relaxed opacity-90">
-          Approfondissez vos connaissances religieuses avec nos cours dispensés à la mosquée.
+          Approfondissez vos connaissances islamiques avec les cours dispensés à la Mosquée des Bienfaisants de Périgueux — Coran, Tajwid, jurisprudence et langue arabe pour tous les niveaux.
         </p>
       </div>
     </section>

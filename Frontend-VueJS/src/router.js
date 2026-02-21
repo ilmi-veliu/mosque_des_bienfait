@@ -6,71 +6,80 @@ const routes = [
   {
     path: '/',
     name: 'Accueil',
-    component: Accueil
+    component: Accueil,
+    meta: { title: 'Mosquée des Bienfaisants Périgueux | Prières & Communauté Musulmane' }
   },
   {
     path: '/evenements',
     name: 'Evenements',
-    component: () => import('./pages/Evenements.vue')
+    component: () => import('./pages/Evenements.vue'),
+    meta: { title: 'Événements | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/contact',
     name: 'Contact',
-    component: () => import('./pages/Contact.vue')
+    component: () => import('./pages/Contact.vue'),
+    meta: { title: "Contacter l'Imam | Mosquée des Bienfaisants Périgueux" }
   },
   {
     path: '/cours',
     name: 'CoursReligieux',
-    component: () => import('./pages/CoursReligieux.vue')
+    component: () => import('./pages/CoursReligieux.vue'),
+    meta: { title: 'Cours Religieux Islamiques | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/inscription',
     name: 'Inscription',
-    component: () => import('./pages/Inscription.vue')
+    component: () => import('./pages/Inscription.vue'),
+    meta: { title: 'Inscription | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/connexion',
     name: 'Connexion',
-    component: () => import('./pages/Connexion.vue')
+    component: () => import('./pages/Connexion.vue'),
+    meta: { title: 'Connexion | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/horaires',
     name: 'Horaires',
-    component: Accueil  // Temporaire - à changer plus tard
+    component: Accueil,  // Temporaire - à changer plus tard
+    meta: { title: 'Horaires des Prières | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/politique-confidentialite',
     name: 'PolitiqueConfidentialite',
-    component: () => import('./pages/PolitiqueConfidentialite.vue')
+    component: () => import('./pages/PolitiqueConfidentialite.vue'),
+    meta: { title: 'Politique de Confidentialité | Mosquée des Bienfaisants' }
   },
   {
     path: '/mentions-legales',
     name: 'MentionsLegales',
-    component: () => import('./pages/MentionsLegales.vue')
+    component: () => import('./pages/MentionsLegales.vue'),
+    meta: { title: 'Mentions Légales | Mosquée des Bienfaisants' }
   },
   {
     path: '/benevole',
     name: 'DevenirBenevole',
     component: () => import('./pages/DevenirBenevole.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, title: 'Devenir Bénévole | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/admin',
     name: 'AdminLogin',
     component: () => import('./pages/AdminLogin.vue'),
-    meta: { hideNavbar: true, hideFooter: true }
+    meta: { hideNavbar: true, hideFooter: true, title: 'Administration | Mosquée des Bienfaisants' }
   },
   {
     path: '/admin/dashboard',
     name: 'AdminDashboard',
     component: () => import('./pages/AdminDashboard.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true, hideNavbar: true, hideFooter: true }
+    meta: { requiresAuth: true, requiresAdmin: true, hideNavbar: true, hideFooter: true, title: 'Dashboard Admin | Mosquée des Bienfaisants' }
   },
   {
     path: '/espace-benevole',
     name: 'EspaceBenevole',
     component: () => import('./pages/EspaceBenevole.vue'),
-    meta: { requiresAuth: true, hideNavbar: true, hideFooter: true }
+    meta: { requiresAuth: true, hideNavbar: true, hideFooter: true, title: 'Espace Bénévole | Mosquée des Bienfaisants' }
   }
 ]
 
@@ -92,6 +101,10 @@ supabase.auth.onAuthStateChange((_event, session) => {
   cachedSession = session
   cachedAdminRole = null // reset admin cache on auth change
   cacheTime = 0
+})
+
+router.afterEach((to) => {
+  document.title = to.meta.title || 'Mosquée des Bienfaisants | Périgueux'
 })
 
 router.beforeEach(async (to) => {

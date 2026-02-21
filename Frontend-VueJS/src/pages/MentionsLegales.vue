@@ -39,7 +39,7 @@
           </h2>
           <div class="bg-gray-50 rounded-xl p-6">
             <p class="text-gray-700">
-              <strong>Rachid</strong> - en qualité de président de l'association.
+              <strong>Id Barkach Lahoucine</strong> - en qualité de président de l'association.
             </p>
           </div>
         </section>

@@ -13,10 +13,10 @@
       <!-- Content -->
       <div class="relative z-10 flex flex-col items-center justify-center h-full text-white px-4">
         <div class="max-w-3xl text-center space-y-8">
-          <h1 class="text-4xl md:text-5xl">Bienvenue à la Mosquée des Bienfaisants</h1>
+          <h1 class="text-4xl md:text-5xl">Bienvenue à la Mosquée des Bienfaisants de Périgueux</h1>
           <p class="text-lg md:text-xl opacity-90">
-            Un lieu de paix, de prière et de communauté au cœur de Périgueux. Rejoignez-nous pour les 
-            prières quotidiennes, les événements communautaires et les moments de spiritualité partagée.
+            La mosquée des musulmans de Périgueux — un lieu de paix, de prière et de fraternité au cœur de la Dordogne.
+            Prières quotidiennes, cours islamiques, événements communautaires : rejoignez la communauté musulmane de Périgueux.
           </p>
 
           <!-- CTA Buttons -->
@@ -37,6 +37,35 @@
         </div>
       </div>
     </div>
+
+    <!-- Section présentation SEO -->
+    <section class="py-14 px-4 bg-white border-b border-gray-100">
+      <div class="max-w-5xl mx-auto text-center">
+        <h2 class="text-2xl md:text-3xl font-semibold text-gray-900 mb-4">
+          Mosquée des Bienfaisants — Périgueux (24000)
+        </h2>
+        <p class="text-gray-600 leading-relaxed max-w-3xl mx-auto mb-8">
+          Située au <strong>18 Rue du Tennis, 24000 Périgueux</strong>, la Mosquée des Bienfaisants est le lieu de rassemblement
+          de la communauté musulmane de Périgueux et de toute la Dordogne. Nous proposons les
+          <strong>prières quotidiennes</strong>, des <strong>cours religieux islamiques</strong>,
+          des événements communautaires et un accompagnement spirituel pour tous.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+          <router-link to="/cours" class="bg-emerald-50 rounded-xl p-5 hover:bg-emerald-100 transition-colors">
+            <p class="font-semibold text-emerald-800 mb-1">Cours islamiques</p>
+            <p class="text-sm text-gray-600">Tajwid, Coran, jurisprudence et plus</p>
+          </router-link>
+          <router-link to="/evenements" class="bg-emerald-50 rounded-xl p-5 hover:bg-emerald-100 transition-colors">
+            <p class="font-semibold text-emerald-800 mb-1">Événements</p>
+            <p class="text-sm text-gray-600">Activités communautaires et religieuses</p>
+          </router-link>
+          <router-link to="/contact" class="bg-emerald-50 rounded-xl p-5 hover:bg-emerald-100 transition-colors">
+            <p class="font-semibold text-emerald-800 mb-1">Contacter l'Imam</p>
+            <p class="text-sm text-gray-600">Questions spirituelles et conseils</p>
+          </router-link>
+        </div>
+      </div>
+    </section>
 
     <!-- Donation Section -->
     <section class="py-16 bg-gradient-to-br from-emerald-50 to-teal-50">

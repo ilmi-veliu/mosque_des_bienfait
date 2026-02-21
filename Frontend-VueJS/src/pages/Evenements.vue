@@ -10,9 +10,9 @@
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-4xl md:text-5xl font-semibold mb-5">Événements de la Mosquée</h1>
+        <h1 class="text-4xl md:text-5xl font-semibold mb-5">Événements de la Mosquée de Périgueux</h1>
         <p class="max-w-3xl mx-auto text-lg leading-relaxed opacity-90">
-          Découvrez tous nos événements passés et à venir. Une communauté dynamique qui organise régulièrement des activités spirituelles, éducatives et culturelles.
+          Découvrez tous les événements passés et à venir de la Mosquée des Bienfaisants de Périgueux. La communauté musulmane de Dordogne organise régulièrement des activités spirituelles, éducatives et culturelles.
         </p>
       </div>
     </section>
