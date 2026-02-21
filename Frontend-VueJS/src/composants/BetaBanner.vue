@@ -123,18 +123,18 @@ const submitReport = async () => {
 
   const type = ALLOWED_REPORT_TYPES.includes(reportType.value) ? reportType.value : 'autre'
 
-  try {
-    await supabase.from('bug_reports').insert({
-      type,
-      message: reportMessage.value.trim().slice(0, 2000),
-      email: reportEmail.value.trim().slice(0, 255) || null,
-      page: window.location.pathname.slice(0, 500)
-    })
-  } catch {
-    // silencieux
-  }
+  const { error } = await supabase.from('bug_reports').insert({
+    type,
+    message: reportMessage.value.trim().slice(0, 2000),
+    email: reportEmail.value.trim().slice(0, 255) || null,
+    page: window.location.pathname.slice(0, 500)
+  })
 
   sending.value = false
+  if (error) {
+    alert('Erreur lors de l\'envoi. Réessayez.')
+    return
+  }
   sent.value = true
   setTimeout(() => {
     showReport.value = false

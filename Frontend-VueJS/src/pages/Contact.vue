@@ -37,7 +37,7 @@
             <div class="space-y-4 mb-6">
               
               <!-- Téléphone -->
-              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">
+              <a href="tel:+33699025472" class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">
                 <div class="w-11 h-11 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Phone :size="20" class="text-white" />
                 </div>
@@ -45,10 +45,10 @@
                   <h3 class="font-semibold text-gray-900 mb-1">Téléphone</h3>
                   <p class="text-gray-600 text-sm">06 99 02 54 72</p>
                 </div>
-              </div>
+              </a>
 
               <!-- Email -->
-              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">
+              <a href="mailto:mosquee.perigueux@gmail.com" class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">
                 <div class="w-11 h-11 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Mail :size="20" class="text-white" />
                 </div>
@@ -56,7 +56,7 @@
                   <h3 class="font-semibold text-gray-900 mb-1">Email</h3>
                   <p class="text-gray-600 text-sm">mosquee.perigueux@gmail.com</p>
                 </div>
-              </div>
+              </a>
 
               <!-- Horaires -->
               <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">

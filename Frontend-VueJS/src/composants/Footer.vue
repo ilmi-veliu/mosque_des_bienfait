@@ -13,9 +13,9 @@
       <!-- Colonne 2 : Contact -->
       <div class="flex-1 min-w-[220px]">
         <h3 class="mb-4 text-base font-semibold">Contact</h3>
-        <p class="text-sm leading-[1.7] text-[#717182] mb-2">📍 Mosquée Perigueux - مسجد, 18 Rue du Tennis, 24000 Périgueux</p>
-        <p class="text-sm leading-[1.7] text-[#717182] mb-2">📞 06 99 02 54 72</p>
-        <p class="text-sm leading-[1.7] text-[#717182]">📧 mosquee.perigueux@gmail.com</p>
+        <p class="text-sm leading-[1.7] text-[#717182] mb-2">📍 18 Rue du Tennis, 24000 Périgueux</p>
+        <p class="text-sm leading-[1.7] text-[#717182] mb-2">📞 <a href="tel:+33699025472" class="hover:text-white transition-colors">06 99 02 54 72</a></p>
+        <p class="text-sm leading-[1.7] text-[#717182]">📧 <a href="mailto:mosquee.perigueux@gmail.com" class="hover:text-white transition-colors">mosquee.perigueux@gmail.com</a></p>
       </div>
       
       <!-- Colonne 3 : Horaires -->

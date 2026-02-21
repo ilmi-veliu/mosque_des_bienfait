@@ -1252,12 +1252,9 @@ const bugReportsLoading = ref(false)
 
 const fetchBugReports = async () => {
   bugReportsLoading.value = true
-  try {
-    const { data } = await supabase.from('bug_reports').select('*').order('created_at', { ascending: false })
-    bugReports.value = data || []
-  } catch {
-    bugReports.value = []
-  }
+  const { data, error } = await supabase.from('bug_reports').select('*').order('created_at', { ascending: false })
+  if (!error) bugReports.value = data || []
+  else bugReports.value = []
   bugReportsLoading.value = false
 }
 

@@ -61,6 +61,31 @@
         </form>
 
         <div class="mt-6 text-center space-y-3">
+          <button @click="showReset = !showReset" class="text-sm text-emerald-600 hover:underline">
+            Mot de passe oublié ?
+          </button>
+
+          <!-- Section réinitialisation -->
+          <div v-if="showReset" class="mt-4 p-4 bg-gray-50 rounded-xl border text-left">
+            <p class="text-sm text-gray-700 mb-3 font-medium">Entrez votre email pour recevoir un lien de réinitialisation :</p>
+            <div class="flex gap-2">
+              <input
+                v-model="resetEmail"
+                type="email"
+                placeholder="votre.email@exemple.com"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-emerald-600"
+              />
+              <button
+                @click="sendResetEmail"
+                :disabled="resetLoading"
+                class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
+              >
+                {{ resetLoading ? '...' : 'Envoyer' }}
+              </button>
+            </div>
+            <p v-if="resetMsg" class="text-xs mt-2" :class="resetError ? 'text-red-500' : 'text-emerald-600'">{{ resetMsg }}</p>
+          </div>
+
           <p class="text-sm text-gray-500">
             Pas encore de compte ?
             <router-link to="/inscription" class="text-gray-900 font-medium hover:underline">S'inscrire</router-link>
@@ -88,6 +113,32 @@ const loading = ref(false)
 const errorMsg = ref('')
 const emailError = ref('')
 const showPassword = ref(false)
+
+// Réinitialisation mot de passe
+const showReset = ref(false)
+const resetEmail = ref('')
+const resetLoading = ref(false)
+const resetMsg = ref('')
+const resetError = ref(false)
+
+const sendResetEmail = async () => {
+  if (!resetEmail.value.trim()) return
+  resetLoading.value = true
+  resetMsg.value = ''
+  resetError.value = false
+
+  const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.value.trim(), {
+    redirectTo: `${window.location.origin}/reset-password`
+  })
+
+  resetLoading.value = false
+  if (error) {
+    resetMsg.value = 'Erreur lors de l\'envoi. Vérifiez l\'email.'
+    resetError.value = true
+  } else {
+    resetMsg.value = 'Email envoyé ! Vérifiez votre boîte mail (et les spams).'
+  }
+}
 
 const validateEmail = () => {
   emailError.value = ''

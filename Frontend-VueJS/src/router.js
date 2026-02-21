@@ -80,6 +80,12 @@ const routes = [
     name: 'EspaceBenevole',
     component: () => import('./pages/EspaceBenevole.vue'),
     meta: { requiresAuth: true, hideNavbar: true, hideFooter: true, title: 'Espace Bénévole | Mosquée des Bienfaisants' }
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('./pages/ResetPassword.vue'),
+    meta: { title: 'Nouveau mot de passe | Mosquée des Bienfaisants' }
   }
 ]
 
