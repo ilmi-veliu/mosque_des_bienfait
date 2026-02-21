@@ -801,7 +801,7 @@
                   <Music :size="18" class="text-gray-400" />
                   <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un audio' }}</span>
                 </div>
-                <input type="file" accept="audio/*,image/*,.opus,.ogg,.m4a,.amr,.wav,.mp3,.aac,.wma" class="hidden" @change="handleCoursAudioUpload" :disabled="uploading" />
+                <input type="file" accept="audio/*,.opus,.ogg,.m4a,.amr,.wav,.mp3,.aac,.wma,.amr" class="hidden" @change="handleCoursAudioUpload" :disabled="uploading" />
               </label>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
               <input v-model="coursForm.audio_url" type="text" placeholder="Coller une URL audio..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
@@ -877,63 +877,38 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif
 const uploadFile = async (file, forceAudio = false) => {
   if (!file) return null
 
-  // Validation image uniquement (l'input HTML filtre déjà les audio)
-  if (!forceAudio) {
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      alert('Format image non supporté. Utilisez JPG, PNG, WebP ou GIF.')
-      return null
-    }
-  }
-
-  const maxSize = forceAudio ? 50 * 1024 * 1024 : 10 * 1024 * 1024
-  if (file.size > maxSize) {
-    alert(`Fichier trop volumineux (max ${forceAudio ? '50' : '10'} MB)`)
+  // Validation image uniquement
+  if (!forceAudio && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    alert('Format image non supporté. Utilisez JPG, PNG, WebP ou GIF.')
     return null
   }
+
   uploading.value = true
   const sizeMB = (file.size / 1024 / 1024).toFixed(1)
-  uploadProgress.value = `${sizeMB} MB`
+  uploadProgress.value = `Upload (${sizeMB} MB)...`
 
   let uploadBlob = file
   let ext = file.name.split('.').pop().toLowerCase()
-  let contentType = file.type
+  let contentType = file.type || 'application/octet-stream'
 
   // Compresser les images
-  if (file.type.startsWith('image/') && !forceAudio) {
-    uploadProgress.value = `Compression (${sizeMB} MB)...`
+  if (!forceAudio && file.type.startsWith('image/')) {
+    uploadProgress.value = `Compression...`
     uploadBlob = await compressImage(file)
     ext = 'jpg'
     contentType = 'image/jpeg'
-    const newSizeMB = (uploadBlob.size / 1024 / 1024).toFixed(1)
-    uploadProgress.value = `Upload (${newSizeMB} MB)...`
-  }
-
-  // Si c'est un upload audio mais que le fichier a une mauvaise extension
-  if (forceAudio && (!contentType || !contentType.startsWith('audio/'))) {
-    ext = 'ogg'
-    contentType = 'audio/ogg'
   }
 
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`
   const filePath = `uploads/${fileName}`
 
   try {
-    const uploadPromise = supabase.storage.from('images').upload(filePath, uploadBlob, {
-      contentType: contentType || undefined
-    })
-    // Timeout : 5 min pour audio, 30s pour images
-    const timeoutMs = forceAudio ? 300000 : 30000
-    const timeoutLabel = forceAudio ? '5 min' : '30s'
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`Upload trop long (> ${timeoutLabel}). Vérifie ta connexion.`)), timeoutMs)
-    )
-    const { error } = await Promise.race([uploadPromise, timeoutPromise])
-
+    const { error } = await supabase.storage.from('images').upload(filePath, uploadBlob, { contentType })
     uploading.value = false
     uploadProgress.value = ''
 
     if (error) {
-      alert('Erreur lors de l\'upload. Réessayez.')
+      alert('Erreur upload : ' + (error.message || 'Réessayez.'))
       return null
     }
 
@@ -942,7 +917,7 @@ const uploadFile = async (file, forceAudio = false) => {
   } catch (e) {
     uploading.value = false
     uploadProgress.value = ''
-    alert('Erreur lors de l\'upload. Vérifiez votre connexion et réessayez.')
+    alert('Erreur réseau. Vérifiez votre connexion.')
     return null
   }
 }

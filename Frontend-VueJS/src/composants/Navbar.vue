@@ -135,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Building2, Home, Video, Calendar, MessageSquare, HandHelping, UserPlus, LogIn, LogOut, Shield, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
@@ -189,11 +189,18 @@ const handleLogout = async () => {
   router.push('/')
 }
 
+let authSub = null
+
 onMounted(async () => {
   const { data: { session } } = await supabase.auth.getSession()
   await updateAuthState(session)
-  supabase.auth.onAuthStateChange(async (_event, session) => {
+  const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
     await updateAuthState(session)
   })
+  authSub = data.subscription
+})
+
+onBeforeUnmount(() => {
+  authSub?.unsubscribe()
 })
 </script>
