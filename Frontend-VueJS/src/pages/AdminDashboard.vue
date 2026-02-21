@@ -873,15 +873,16 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
 }
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/mp4', 'audio/webm']
+const ALLOWED_AUDIO_EXTS = ['mp3', 'ogg', 'wav', 'mp4', 'm4a', 'opus', 'aac', 'wma', 'amr', 'webm', 'flac']
 
 const uploadFile = async (file, forceAudio = false) => {
   if (!file) return null
 
-  // Validation MIME type
+  // Validation MIME type (ou extension si MIME non reconnu, ex: WhatsApp .opus)
   if (forceAudio) {
-    if (!ALLOWED_AUDIO_TYPES.includes(file.type) && !file.type.startsWith('audio/')) {
-      alert('Format audio non supporté. Utilisez MP3, OGG, WAV ou MP4.')
+    const ext = file.name.split('.').pop().toLowerCase()
+    if (!file.type.startsWith('audio/') && !ALLOWED_AUDIO_EXTS.includes(ext)) {
+      alert('Format audio non supporté. Utilisez MP3, OGG, WAV, M4A ou OPUS.')
       return null
     }
   } else {
