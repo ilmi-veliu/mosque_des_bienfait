@@ -638,7 +638,7 @@
 
     <!-- MODAL ÉVÉNEMENT -->
     <div v-if="showEventModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showEventModal = false">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
         <div class="p-6 border-b flex justify-between items-center">
           <h3 class="text-xl font-semibold">{{ editingEvent ? 'Modifier' : 'Ajouter' }} un événement</h3>
           <button @click="showEventModal = false" class="text-gray-400 hover:text-gray-600">
@@ -722,7 +722,7 @@
 
     <!-- MODAL COURS -->
     <div v-if="showCoursModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showCoursModal = false">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
         <div class="p-6 border-b flex justify-between items-center">
           <h3 class="text-xl font-semibold">{{ editingCours ? 'Modifier' : 'Ajouter' }} un cours</h3>
           <button @click="showCoursModal = false" class="text-gray-400 hover:text-gray-600">
