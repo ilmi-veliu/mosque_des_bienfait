@@ -693,7 +693,7 @@
                   <Upload :size="18" class="text-gray-400" />
                   <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un fichier' }}</span>
                 </div>
-                <input type="file" accept="image/*" class="hidden" @change="handleEventImageUpload" :disabled="uploading" />
+                <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleEventImageUpload" :disabled="uploading" />
               </label>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
               <input v-model="eventForm.image_url" type="text" placeholder="Coller une URL..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
@@ -783,7 +783,7 @@
                   <Upload :size="18" class="text-gray-400" />
                   <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un fichier' }}</span>
                 </div>
-                <input type="file" accept="image/*" class="hidden" @change="handleCoursImageUpload" :disabled="uploading" />
+                <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleCoursImageUpload" :disabled="uploading" />
               </label>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
               <input v-model="coursForm.image_url" type="text" placeholder="Coller une URL..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
@@ -801,7 +801,7 @@
                   <Music :size="18" class="text-gray-400" />
                   <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un audio' }}</span>
                 </div>
-                <input type="file" accept="audio/*,.opus,.ogg,.m4a,.amr,.wav,.mp3,.aac,.wma,.amr" class="hidden" @change="handleCoursAudioUpload" :disabled="uploading" />
+                <input type="file" class="hidden" @change="handleCoursAudioUpload" :disabled="uploading" />
               </label>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
               <input v-model="coursForm.audio_url" type="text" placeholder="Coller une URL audio..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
@@ -872,13 +872,13 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
   })
 }
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
 
 const uploadFile = async (file, forceAudio = false) => {
   if (!file) return null
 
-  // Validation image uniquement
-  if (!forceAudio && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+  // Validation image uniquement (pas pour audio)
+  if (!forceAudio && !ALLOWED_IMAGE_TYPES.includes(file.type) && !file.type.startsWith('image/')) {
     alert('Format image non supporté. Utilisez JPG, PNG, WebP ou GIF.')
     return null
   }
@@ -891,7 +891,7 @@ const uploadFile = async (file, forceAudio = false) => {
   let ext = file.name.split('.').pop().toLowerCase()
   let contentType = file.type || 'application/octet-stream'
 
-  // Compresser les images
+  // Compresser les images (inclut HEIC → JPEG via canvas)
   if (!forceAudio && file.type.startsWith('image/')) {
     uploadProgress.value = `Compression...`
     uploadBlob = await compressImage(file)
@@ -908,7 +908,11 @@ const uploadFile = async (file, forceAudio = false) => {
     uploadProgress.value = ''
 
     if (error) {
-      alert('Erreur upload : ' + (error.message || 'Réessayez.'))
+      if (error.message?.includes('too large') || error.statusCode === 413) {
+        alert(`Fichier trop volumineux (${sizeMB} MB). Réduisez la taille ou utilisez un lien URL à la place.`)
+      } else {
+        alert('Erreur upload : ' + (error.message || 'Réessayez.'))
+      }
       return null
     }
 

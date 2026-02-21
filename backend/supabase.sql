@@ -83,9 +83,11 @@ CREATE TABLE IF NOT EXISTS benevoles (
 -- ============================================
 -- STORAGE - BUCKET IMAGES
 -- ============================================
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('images', 'images', true)
-ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('images', 'images', true, null, null)
+ON CONFLICT (id) DO UPDATE SET
+  allowed_mime_types = null,
+  file_size_limit = null;
 
 
 -- ============================================
