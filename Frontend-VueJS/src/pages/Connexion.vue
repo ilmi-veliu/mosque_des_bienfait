@@ -26,6 +26,9 @@
               type="email"
               required
               placeholder="votre.email@exemple.com"
+              autocomplete="email"
+              autocapitalize="none"
+              autocorrect="off"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-gray-900 transition-colors"
               :class="emailError ? 'border-red-400' : ''"
               @blur="validateEmail"
@@ -41,6 +44,10 @@
                 :type="showPassword ? 'text' : 'password'"
                 required
                 placeholder="Votre mot de passe"
+                autocomplete="current-password"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck="false"
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-gray-900 transition-colors pr-12"
               />
               <button type="button" @click="showPassword = !showPassword"
@@ -159,13 +166,22 @@ const handleLogin = async () => {
     return
   }
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
-  })
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.value.trim(),
+      password: password.value
+    })
 
-  if (error) {
-    errorMsg.value = 'Email ou mot de passe incorrect.'
+    if (error) {
+      const isNetwork = !navigator.onLine || error.message?.toLowerCase().includes('fetch') || error.message?.toLowerCase().includes('network') || error.message?.toLowerCase().includes('failed')
+      errorMsg.value = isNetwork
+        ? 'Problème de connexion réseau. Vérifiez votre accès internet et réessayez.'
+        : 'Email ou mot de passe incorrect.'
+      loading.value = false
+      return
+    }
+  } catch {
+    errorMsg.value = 'Problème de connexion réseau. Vérifiez votre accès internet et réessayez.'
     loading.value = false
     return
   }

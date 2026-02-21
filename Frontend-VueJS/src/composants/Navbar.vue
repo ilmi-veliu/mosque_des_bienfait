@@ -150,8 +150,12 @@ const checkBenevole = async (email) => {
   if (!email) {
     isBenevole.value = false
     isAdmin.value = false
+    lastCheckedEmail = null
     return
   }
+  // Évite une requête DB si c'est le même utilisateur (ex: refresh token)
+  if (email === lastCheckedEmail) return
+  lastCheckedEmail = email
   try {
     const { data } = await supabase
       .from('benevoles')
@@ -174,6 +178,7 @@ const updateAuthState = async (session) => {
   } else {
     isAdmin.value = false
     isBenevole.value = false
+    lastCheckedEmail = null
   }
 }
 
@@ -190,6 +195,7 @@ const handleLogout = async () => {
 }
 
 let authSub = null
+let lastCheckedEmail = null
 
 onMounted(async () => {
   const { data: { session } } = await supabase.auth.getSession()
