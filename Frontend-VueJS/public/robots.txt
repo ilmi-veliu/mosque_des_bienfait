@@ -3,3 +3,5 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/dashboard
 Disallow: /espace-benevole
+
+Sitemap: https://mosquee-des-bienfaisants.com/sitemap.xml
