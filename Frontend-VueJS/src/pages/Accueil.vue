@@ -13,8 +13,8 @@
       <!-- Content -->
       <div class="relative z-10 flex flex-col items-center justify-center h-full text-white px-4">
         <div class="max-w-3xl text-center space-y-8">
-          <h1 class="text-4xl md:text-5xl">Bienvenue à la Mosquée de Périgueux</h1>
-          <p class="text-lg md:text-xl opacity-90">
+          <h1 class="text-3xl sm:text-4xl md:text-5xl">Bienvenue à la Mosquée de Périgueux</h1>
+          <p class="text-base sm:text-lg md:text-xl opacity-90">
             Un lieu de paix, de prière et de communauté au cœur de Périgueux. Rejoignez-nous pour les
             prières quotidiennes, les événements communautaires et les moments de spiritualité partagée.
           </p>

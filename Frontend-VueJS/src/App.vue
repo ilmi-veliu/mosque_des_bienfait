@@ -39,5 +39,7 @@ export default {
 </script>
 
 <style>
-/* Styles globaux si nécessaire */
+body {
+  overflow-x: hidden;
+}
 </style>

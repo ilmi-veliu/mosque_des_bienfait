@@ -30,7 +30,7 @@
         <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           
           <!-- Infos Contact -->
-          <div class="bg-white rounded-2xl shadow-lg p-8">
+          <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-8">
             <h2 class="text-2xl font-semibold text-gray-900 mb-2">Informations de Contact</h2>
             <p class="text-gray-500 text-sm mb-6">Plusieurs moyens pour nous joindre</p>
             
@@ -89,7 +89,7 @@
           </div>
 
           <!-- Chat Direct -->
-          <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-center justify-center">
+          <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl shadow-xl p-5 sm:p-8 flex flex-col items-center text-center justify-center">
             <div class="mb-4 opacity-90">
               <MessageSquare :size="64" />
             </div>

@@ -1,34 +1,34 @@
 <template>
-  <footer class="bg-[#030213] text-white px-6 py-12 mt-20">
-    <div class="flex flex-wrap justify-between gap-10 max-w-[75rem] mx-auto">
-      
+  <footer class="bg-[#030213] text-white px-4 sm:px-6 py-10 sm:py-12 mt-20">
+    <div class="flex flex-wrap justify-between gap-6 sm:gap-10 max-w-[75rem] mx-auto">
+
       <!-- Colonne 1 : Description -->
-      <div class="flex-1 min-w-[220px]">
+      <div class="flex-1 min-w-[160px] sm:min-w-[220px]">
         <h3 class="mb-4 text-base font-semibold">Mosquée des Bienfaisants — Périgueux</h3>
         <p class="text-sm leading-[1.7] text-[#717182]">
           La mosquée de Périgueux au service des musulmans de Dordogne. Un lieu de paix, de spiritualité et de fraternité ouvert à tous ceux qui souhaitent découvrir ou pratiquer l'Islam.
         </p>
       </div>
-      
+
       <!-- Colonne 2 : Contact -->
-      <div class="flex-1 min-w-[220px]">
+      <div class="flex-1 min-w-[160px] sm:min-w-[220px]">
         <h3 class="mb-4 text-base font-semibold">Contact</h3>
         <p class="text-sm leading-[1.7] text-[#717182] mb-2">📍 18 Rue du Tennis, 24000 Périgueux</p>
         <p class="text-sm leading-[1.7] text-[#717182] mb-2">📞 <a href="tel:+33699025472" class="hover:text-white transition-colors">06 99 02 54 72</a></p>
-        <p class="text-sm leading-[1.7] text-[#717182]">📧 <a href="mailto:mosquee.perigueux@gmail.com" class="hover:text-white transition-colors">mosquee.perigueux@gmail.com</a></p>
+        <p class="text-sm leading-[1.7] text-[#717182] break-all">📧 <a href="mailto:mosquee.perigueux@gmail.com" class="hover:text-white transition-colors">mosquee.perigueux@gmail.com</a></p>
       </div>
-      
+
       <!-- Colonne 3 : Horaires -->
-      <div class="flex-1 min-w-[220px]">
+      <div class="flex-1 min-w-[160px] sm:min-w-[220px]">
         <h3 class="mb-4 text-base font-semibold">Horaires d'Ouverture</h3>
         <p class="text-sm leading-[1.7] text-[#717182]">
           Ouvert tous les jours pour les prières<br>
           20 minutes avant et après la prière
         </p>
       </div>
-      
+
       <!-- Colonne 4 : Liens Rapides -->
-      <div class="flex-1 min-w-[220px]">
+      <div class="flex-1 min-w-[160px] sm:min-w-[220px]">
         <h3 class="mb-4 text-base font-semibold">Liens Rapides</h3>
         <ul class="list-none p-0">
           <li class="mb-2">
