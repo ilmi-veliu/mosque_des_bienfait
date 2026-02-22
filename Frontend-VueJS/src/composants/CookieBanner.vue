@@ -72,7 +72,7 @@
     script.src = 'https://embed.tawk.to/68ee9823ab07261951f59f2d/1j7i04j9u';
     script.charset = 'UTF-8';
     script.setAttribute('crossorigin', '*');
-    
+
     const firstScript = document.getElementsByTagName('script')[0];
     firstScript.parentNode?.insertBefore(script, firstScript);
   };
