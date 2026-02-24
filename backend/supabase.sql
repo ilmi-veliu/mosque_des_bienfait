@@ -754,6 +754,75 @@ CREATE POLICY "br_delete" ON bug_reports FOR DELETE TO authenticated USING (is_s
 
 
 -- ============================================
+-- TABLE PROFILES (photo, bio, niveau)
+-- ============================================
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  prenom TEXT,
+  nom TEXT,
+  bio TEXT,
+  avatar_url TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "profiles_select" ON profiles;
+DROP POLICY IF EXISTS "profiles_all" ON profiles;
+
+-- Lecture : utilisateurs connectés (pour afficher les avatars dans la navbar)
+CREATE POLICY "profiles_select" ON profiles FOR SELECT TO authenticated USING (true);
+-- Modification : chacun ne peut modifier que son propre profil
+CREATE POLICY "profiles_all" ON profiles FOR ALL TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+
+-- ============================================
+-- STORAGE - BUCKET AVATARS
+-- ============================================
+INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "avatars_select" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_insert" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_update" ON storage.objects;
+
+-- Lecture : tout le monde (bucket public)
+CREATE POLICY "avatars_select" ON storage.objects FOR SELECT TO public USING (bucket_id = 'avatars');
+-- Upload : chaque utilisateur dans son propre dossier (userId/avatar.ext)
+CREATE POLICY "avatars_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (
+  bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]
+);
+-- Remplacement : même condition
+CREATE POLICY "avatars_update" ON storage.objects FOR UPDATE TO authenticated USING (
+  bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+
+-- ============================================
+-- TABLE COURS_VUES (vues uniques par cours)
+-- ============================================
+CREATE TABLE IF NOT EXISTS cours_vues (
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  cours_id UUID NOT NULL,
+  derniere_vue TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (user_id, cours_id)
+);
+
+ALTER TABLE cours_vues ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "cv_select" ON cours_vues;
+DROP POLICY IF EXISTS "cv_insert" ON cours_vues;
+DROP POLICY IF EXISTS "cv_update" ON cours_vues;
+
+-- Lecture : admin uniquement (pour voir le compteur)
+CREATE POLICY "cv_select" ON cours_vues FOR SELECT TO authenticated USING (is_admin_or_superadmin());
+-- Enregistrement : chaque utilisateur enregistre sa propre vue
+CREATE POLICY "cv_insert" ON cours_vues FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+-- Mise à jour de la date : l'utilisateur lui-même
+CREATE POLICY "cv_update" ON cours_vues FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+
+
+-- ============================================
 -- COMPTE ADMIN
 -- ============================================
 -- À créer manuellement dans :

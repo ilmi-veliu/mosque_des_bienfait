@@ -101,26 +101,6 @@
           </div>
         </div>
 
-        <!-- Niveau islamique -->
-        <div class="bg-white rounded-2xl shadow-sm p-6">
-          <h2 class="text-base font-semibold text-gray-800 mb-1">Niveau islamique</h2>
-          <p class="text-xs text-gray-400 mb-4">Votre niveau dans les cours islamiques</p>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <button
-              v-for="niveau in niveaux"
-              :key="niveau.value"
-              @click="form.classe = niveau.value"
-              class="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-sm font-medium"
-              :class="form.classe === niveau.value
-                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                : 'border-gray-100 hover:border-gray-200 text-gray-600'"
-            >
-              <span class="text-xl">{{ niveau.emoji }}</span>
-              {{ niveau.label }}
-            </button>
-          </div>
-        </div>
-
         <!-- Sauvegarder -->
         <div class="flex items-center gap-3">
           <button
@@ -163,18 +143,8 @@ const form = ref({
   prenom: '',
   nom: '',
   bio: '',
-  avatar_url: '',
-  classe: ''
+  avatar_url: ''
 })
-
-const niveaux = [
-  { value: 'debutant', label: 'Débutant', emoji: '🌱' },
-  { value: 'intermediaire', label: 'Intermédiaire', emoji: '📖' },
-  { value: 'avance', label: 'Avancé', emoji: '⭐' },
-  { value: 'coran', label: 'Récitation Coran', emoji: '📿' },
-  { value: 'tajwid', label: 'Tajwid', emoji: '🎓' },
-  { value: 'hafiz', label: 'Hafiz', emoji: '🏆' }
-]
 
 const initiales = computed(() => {
   const p = form.value.prenom?.[0] || ''
@@ -231,13 +201,12 @@ const saveProfile = async () => {
     nom: form.value.nom,
     bio: form.value.bio,
     avatar_url: form.value.avatar_url,
-    classe: form.value.classe,
     updated_at: new Date().toISOString()
   }, { onConflict: 'id' })
 
   saving.value = false
   if (error) {
-    saveError.value = 'Erreur lors de la sauvegarde'
+    saveError.value = error.message || 'Erreur lors de la sauvegarde'
   } else {
     saved.value = true
     setTimeout(() => { saved.value = false }, 3000)
@@ -264,8 +233,7 @@ onMounted(async () => {
       prenom: data.prenom || '',
       nom: data.nom || '',
       bio: data.bio || '',
-      avatar_url: data.avatar_url || '',
-      classe: data.classe || ''
+      avatar_url: data.avatar_url || ''
     }
   }
   loading.value = false

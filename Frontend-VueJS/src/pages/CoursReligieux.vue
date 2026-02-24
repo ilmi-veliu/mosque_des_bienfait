@@ -131,8 +131,8 @@
                   <MapPin :size="18" class="text-gray-400" />
                   <span>{{ c.lieu }}</span>
                 </div>
-                <!-- Compteur de vues (visible pour les connectés) -->
-                <div v-if="currentUserId" class="flex items-center gap-2.5 text-sm text-gray-400">
+                <!-- Compteur de vues (visible pour les admins uniquement) -->
+                <div v-if="isAdmin" class="flex items-center gap-2.5 text-sm text-gray-400">
                   <Eye :size="18" />
                   <span>{{ vuesMap[c.id] || 0 }} vue{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }} unique{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }}</span>
                 </div>
@@ -172,6 +172,8 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { ChevronLeft, Search, Calendar, MapPin, User, RotateCcw, Eye } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import { store, preloadCours } from '../store'
+
+const isAdmin = ref(false)
 
 const searchQuery = ref('')
 const selectedCategorie = ref('')
@@ -298,6 +300,14 @@ const fetchProgress = async () => {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
   currentUserId.value = session.user.id
+
+  const { data: ben } = await supabase
+    .from('benevoles')
+    .select('role')
+    .ilike('email', session.user.email)
+    .eq('statut', 'accepté')
+    .maybeSingle()
+  isAdmin.value = ['admin', 'superadmin'].includes(ben?.role)
 
   const { data } = await supabase
     .from('user_progress')
