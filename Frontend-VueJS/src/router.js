@@ -86,6 +86,18 @@ const routes = [
     name: 'ResetPassword',
     component: () => import('./pages/ResetPassword.vue'),
     meta: { title: 'Nouveau mot de passe | Mosquée des Bienfaisants' }
+  },
+  {
+    path: '/profil',
+    name: 'MonProfil',
+    component: () => import('./pages/MonProfil.vue'),
+    meta: { requiresAuth: true, title: 'Mon Profil | Mosquée des Bienfaisants' }
+  },
+  {
+    path: '/demo-navbar',
+    name: 'DemoNavbar',
+    component: () => import('./pages/DemoNavbar.vue'),
+    meta: { hideNavbar: true, hideFooter: true, title: 'Choisir la navbar | Demo' }
   }
 ]
 

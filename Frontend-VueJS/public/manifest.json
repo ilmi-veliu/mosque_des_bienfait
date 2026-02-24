@@ -1,0 +1,43 @@
+{
+  "name": "Mosquée des Bienfaisants - Périgueux",
+  "short_name": "Mosquée Périgueux",
+  "description": "Prières, cours islamiques et communauté musulmane à Périgueux",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030213",
+  "theme_color": "#059669",
+  "lang": "fr",
+  "orientation": "portrait-primary",
+  "categories": ["religion", "education"],
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Horaires de prière",
+      "url": "/#horaires",
+      "description": "Voir les horaires de prière"
+    },
+    {
+      "name": "Cours religieux",
+      "url": "/cours",
+      "description": "Accéder aux cours islamiques"
+    },
+    {
+      "name": "Contact",
+      "url": "/contact",
+      "description": "Contacter l'imam"
+    }
+  ]
+}

@@ -5,6 +5,7 @@
     <router-view />
     <Footer v-if="!$route.meta.hideFooter" />
     <CookieBanner />
+    <InstallBanner />
   </div>
 </template>
 
@@ -13,6 +14,7 @@ import Navbar from './composants/Navbar.vue'
 import Footer from './composants/Footer.vue'
 import CookieBanner from './composants/CookieBanner.vue'
 import BetaBanner from './composants/BetaBanner.vue'
+import InstallBanner from './composants/InstallBanner.vue'
 
 const RELOAD_AFTER_MS = 5 * 60 * 1000 // 5 minutes d'absence
 let hiddenAt = null
@@ -33,7 +35,8 @@ export default {
     Navbar,
     Footer,
     CookieBanner,
-    BetaBanner
+    BetaBanner,
+    InstallBanner
   }
 }
 </script>
