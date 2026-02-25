@@ -156,11 +156,51 @@
                 </a>
               </div>
 
-              <!-- Texte -->
-              <div v-else
-                class="px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed"
-                :class="msg.isOwn ? 'bg-emerald-600 text-white' : 'bg-white text-gray-800 border'">
-                {{ msg.content }}
+              <!-- Texte : mode édition inline -->
+              <div v-else-if="editingMsgId === msg.id" class="flex flex-col gap-1.5 w-full min-w-52">
+                <textarea
+                  v-model="editContent"
+                  @keydown.enter.exact.prevent="saveEdit(msg)"
+                  @keydown.escape="cancelEdit"
+                  class="w-full px-3 py-2 border border-emerald-400 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
+                  rows="2"
+                  autofocus
+                ></textarea>
+                <div class="flex gap-2 justify-end">
+                  <button @click="cancelEdit"
+                    class="text-xs text-gray-500 hover:text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors">
+                    Annuler
+                  </button>
+                  <button @click="saveEdit(msg)"
+                    class="text-xs text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded-lg transition-colors flex items-center gap-1">
+                    <Check :size="12" /> Enregistrer
+                  </button>
+                </div>
+                <p class="text-xs text-gray-400">Entrée pour enregistrer · Échap pour annuler</p>
+              </div>
+
+              <!-- Texte : affichage normal -->
+              <div v-else-if="msg.type === 'text'" class="relative">
+                <div
+                  class="px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed"
+                  :class="msg.isOwn ? 'bg-emerald-600 text-white' : 'bg-white text-gray-800 border'">
+                  {{ msg.content }}
+                </div>
+                <!-- Badge "modifié" -->
+                <span v-if="msg.is_edited"
+                  class="text-[10px] mt-0.5 block"
+                  :class="msg.isOwn ? 'text-white/50 text-right' : 'text-gray-400'">
+                  modifié
+                </span>
+                <!-- Bouton modifier (hover, 5 min max) -->
+                <button
+                  v-if="canEdit(msg)"
+                  @click="startEdit(msg)"
+                  class="absolute -top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white border shadow-sm rounded-full p-1 hover:bg-gray-50"
+                  :class="msg.isOwn ? '-left-8' : '-right-8'"
+                  title="Modifier (5 min)">
+                  <Pencil :size="11" class="text-gray-500" />
+                </button>
               </div>
 
               <!-- Réactions -->
@@ -328,7 +368,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import {
   ChevronLeft, MessageSquare, Send, Mic, Smile, Paperclip,
-  Play, Pause, FileText, Download, X
+  Play, Pause, FileText, Download, X, Pencil, Check
 } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
@@ -421,6 +461,11 @@ const audioElements = ref({})
 
 // Profil de l'utilisateur connecté
 const myProfile = ref({ name: '', avatarUrl: '', initials: '', color: '#10b981' })
+
+// Édition de message
+const editingMsgId = ref(null)
+const editContent = ref('')
+const EDIT_WINDOW_MS = 5 * 60 * 1000 // 5 minutes
 
 // Cache des profils des autres utilisateurs { userId: { name, avatarUrl, initials, color } }
 const profilesCache = ref({})
@@ -669,16 +714,32 @@ const subscribeToRoom = (roomId) => {
       filter: `room_id=eq.${roomId}`,
     }, async (payload) => {
       const raw = payload.new
-      // Charger le profil de l'expéditeur si pas en cache
       if (raw.user_id && !profilesCache.value[raw.user_id] && raw.user_id !== currentUser?.id) {
         await loadProfilesBatch([raw.user_id])
       }
       const msg = formatSupabaseMsg({ ...raw, chat_reactions: [] })
       if (!messagesMap.value[roomId]) messagesMap.value[roomId] = []
-      // Éviter les doublons (si on est l'expéditeur, on a déjà ajouté le message localement)
+      // Éviter les doublons si on est l'expéditeur (ajouté localement)
       if (!msg.isOwn) {
         messagesMap.value[roomId].push(msg)
         scrollBottom()
+      }
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'chat_messages',
+      filter: `room_id=eq.${roomId}`,
+    }, (payload) => {
+      const updated = payload.new
+      const msgs = messagesMap.value[roomId]
+      if (!msgs) return
+      const idx = msgs.findIndex(m => m.id === updated.id)
+      if (idx !== -1) {
+        // Mettre à jour le contenu et le flag "modifié" en temps réel
+        msgs[idx].content = updated.content
+        msgs[idx].is_edited = updated.is_edited
+        msgs[idx].updated_at = updated.updated_at
       }
     })
     .subscribe()
@@ -899,6 +960,50 @@ const addReaction = async (msg, emoji) => {
       user_id: currentUser.id,
       emoji,
     }, { onConflict: 'message_id,user_id,emoji' })
+  }
+}
+
+// ─── Édition de message ──────────────────────────────────────────────────────────
+const canEdit = (msg) => {
+  if (!msg.isOwn || msg.type !== 'text') return false
+  const age = Date.now() - new Date(msg.created_at).getTime()
+  return age < EDIT_WINDOW_MS
+}
+
+const startEdit = (msg) => {
+  editingMsgId.value = msg.id
+  editContent.value = msg.content
+}
+
+const cancelEdit = () => {
+  editingMsgId.value = null
+  editContent.value = ''
+}
+
+const saveEdit = async (msg) => {
+  const newContent = editContent.value.trim()
+  if (!newContent || newContent === msg.content) { cancelEdit(); return }
+
+  // Vérifier que la fenêtre de 5 min n'est pas dépassée
+  if (!canEdit(msg)) {
+    alert('La fenêtre de 5 minutes pour modifier ce message est dépassée.')
+    cancelEdit()
+    return
+  }
+
+  // Mise à jour locale immédiate
+  msg.content = newContent
+  msg.is_edited = true
+  msg.updated_at = new Date()
+  cancelEdit()
+
+  // Persistance Supabase
+  if (supabaseMode && !String(msg.id).startsWith('local')) {
+    await supabase
+      .from('chat_messages')
+      .update({ content: newContent, is_edited: true, updated_at: new Date().toISOString() })
+      .eq('id', msg.id)
+      .eq('user_id', currentUser?.id) // sécurité : seulement ses propres messages
   }
 }
 
