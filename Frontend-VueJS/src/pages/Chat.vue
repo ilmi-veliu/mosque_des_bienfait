@@ -22,6 +22,7 @@
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Salons</p>
         </div>
         <div class="flex-1 overflow-y-auto">
+
           <button
             v-for="room in rooms"
             :key="room.id"
@@ -42,6 +43,22 @@
               {{ room.unread }}
             </span>
           </button>
+        </div>
+
+        <!-- Profil utilisateur connecté (bas de sidebar) -->
+        <div v-if="myProfile.name" class="border-t px-4 py-3 flex items-center gap-3 bg-gray-50 shrink-0">
+          <div class="w-8 h-8 rounded-full overflow-hidden shrink-0">
+            <img v-if="myProfile.avatarUrl" :src="myProfile.avatarUrl" :alt="myProfile.name"
+              class="w-full h-full object-cover" />
+            <div v-else class="w-full h-full flex items-center justify-center text-white text-xs font-bold"
+              :style="{ background: myProfile.color }">
+              {{ myProfile.initials }}
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-800 truncate">{{ myProfile.name }}</p>
+            <p class="text-xs text-emerald-600">En ligne</p>
+          </div>
         </div>
       </div>
 
@@ -70,16 +87,20 @@
             class="flex gap-2 group"
             :class="msg.isOwn ? 'flex-row-reverse' : ''">
 
-            <!-- Avatar -->
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1"
-              :style="{ background: msg.avatarColor }">
-              {{ msg.initials }}
+            <!-- Avatar (photo de profil ou initiales) -->
+            <div class="w-8 h-8 rounded-full shrink-0 mt-1 overflow-hidden">
+              <img v-if="msg.avatarUrl" :src="msg.avatarUrl" :alt="msg.senderName"
+                class="w-full h-full object-cover" />
+              <div v-else class="w-full h-full flex items-center justify-center text-white text-xs font-bold"
+                :style="{ background: msg.avatarColor }">
+                {{ msg.initials }}
+              </div>
             </div>
 
             <!-- Contenu -->
             <div class="max-w-[70%] flex flex-col" :class="msg.isOwn ? 'items-end' : 'items-start'">
               <span class="text-xs text-gray-400 mb-1">
-                {{ msg.isOwn ? 'Vous' : msg.senderName }} · {{ formatTime(msg.created_at) }}
+                {{ msg.isOwn ? myProfile.name || 'Vous' : msg.senderName }} · {{ formatTime(msg.created_at) }}
               </span>
 
               <!-- Vocal -->
@@ -398,6 +419,12 @@ const messagesContainer = ref(null)
 const fileInput = ref(null)
 const audioElements = ref({})
 
+// Profil de l'utilisateur connecté
+const myProfile = ref({ name: '', avatarUrl: '', initials: '', color: '#10b981' })
+
+// Cache des profils des autres utilisateurs { userId: { name, avatarUrl, initials, color } }
+const profilesCache = ref({})
+
 let currentUser = null
 let supabaseMode = false   // true quand les tables Supabase existent
 let realtimeChannel = null
@@ -473,11 +500,75 @@ const selectRoom = async (room) => {
   await scrollBottom()
 }
 
+// ─── Chargement du profil ────────────────────────────────────────────────────────
+const loadMyProfile = async (user) => {
+  // D'abord les user_metadata (rapide, pas de requête)
+  const metaPrenom = user.user_metadata?.prenom || ''
+  const metaNom = user.user_metadata?.nom || ''
+  const fallbackName = metaPrenom
+    ? `${metaPrenom} ${metaNom}`.trim()
+    : user.email?.split('@')[0] || 'Moi'
+
+  myProfile.value = {
+    name: fallbackName,
+    avatarUrl: '',
+    initials: initialsFor(fallbackName),
+    color: colorFor(user.id),
+  }
+
+  // Charger le profil complet depuis Supabase
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('prenom, nom, avatar_url')
+      .eq('id', user.id)
+      .single()
+
+    if (data) {
+      const fullName = [data.prenom, data.nom].filter(Boolean).join(' ') || fallbackName
+      myProfile.value = {
+        name: fullName,
+        avatarUrl: data.avatar_url || '',
+        initials: initialsFor(fullName),
+        color: colorFor(user.id),
+      }
+    }
+  } catch {}
+}
+
+// Charger les profils d'une liste d'userIds (pour les messages reçus)
+const loadProfilesBatch = async (userIds) => {
+  const toLoad = userIds.filter(id => id && !profilesCache.value[id])
+  if (!toLoad.length) return
+
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, prenom, nom, avatar_url')
+      .in('id', toLoad)
+
+    if (data) {
+      for (const p of data) {
+        const fullName = [p.prenom, p.nom].filter(Boolean).join(' ') || '...'
+        profilesCache.value[p.id] = {
+          name: fullName,
+          avatarUrl: p.avatar_url || '',
+          initials: initialsFor(fullName),
+          color: colorFor(p.id),
+        }
+      }
+    }
+  } catch {}
+}
+
 // ─── Supabase ───────────────────────────────────────────────────────────────────
 const initSupabase = async () => {
   try {
     const { data: { session } } = await supabase.auth.getSession()
     currentUser = session?.user || null
+
+    // Charger le profil de l'utilisateur connecté
+    if (currentUser) await loadMyProfile(currentUser)
 
     // Tenter de charger les salons depuis Supabase
     const { data: roomsData, error } = await supabase
@@ -503,6 +594,14 @@ const initSupabase = async () => {
   } catch {
     // Tables Supabase non créées → mode démo local
     supabaseMode = false
+    // Tenter quand même de charger le profil (les tables profiles existent toujours)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        currentUser = session.user
+        await loadMyProfile(session.user)
+      }
+    } catch {}
   }
 }
 
@@ -525,6 +624,9 @@ const loadMessagesFromSupabase = async (roomId) => {
     .limit(100)
 
   if (data) {
+    // Précharger les profils de tous les expéditeurs uniques
+    const uniqueIds = [...new Set(data.map(m => m.user_id).filter(Boolean))]
+    await loadProfilesBatch(uniqueIds)
     messagesMap.value[roomId] = data.map(formatSupabaseMsg)
   }
   loadingMessages.value = false
@@ -532,11 +634,21 @@ const loadMessagesFromSupabase = async (roomId) => {
 }
 
 const formatSupabaseMsg = (msg) => {
-  const name = msg.sender_name || msg.user_id?.slice(0, 8) || 'Anonyme'
+  const isOwn = msg.user_id === currentUser?.id
+  // Utiliser le profil caché si dispo, sinon le nom stocké dans le message
+  const profile = profilesCache.value[msg.user_id]
+  const name = isOwn
+    ? myProfile.value.name || msg.sender_name || 'Vous'
+    : profile?.name || msg.sender_name || 'Anonyme'
+  const avatarUrl = isOwn
+    ? myProfile.value.avatarUrl
+    : profile?.avatarUrl || ''
+
   return {
     ...msg,
     senderName: name,
-    isOwn: msg.user_id === currentUser?.id,
+    isOwn,
+    avatarUrl,
     avatarColor: colorFor(msg.user_id || name),
     initials: initialsFor(name),
     reactions: msg.chat_reactions || [],
@@ -555,11 +667,19 @@ const subscribeToRoom = (roomId) => {
       schema: 'public',
       table: 'chat_messages',
       filter: `room_id=eq.${roomId}`,
-    }, (payload) => {
-      const msg = formatSupabaseMsg(payload.new)
+    }, async (payload) => {
+      const raw = payload.new
+      // Charger le profil de l'expéditeur si pas en cache
+      if (raw.user_id && !profilesCache.value[raw.user_id] && raw.user_id !== currentUser?.id) {
+        await loadProfilesBatch([raw.user_id])
+      }
+      const msg = formatSupabaseMsg({ ...raw, chat_reactions: [] })
       if (!messagesMap.value[roomId]) messagesMap.value[roomId] = []
-      messagesMap.value[roomId].push(msg)
-      scrollBottom()
+      // Éviter les doublons (si on est l'expéditeur, on a déjà ajouté le message localement)
+      if (!msg.isOwn) {
+        messagesMap.value[roomId].push(msg)
+        scrollBottom()
+      }
     })
     .subscribe()
 }
@@ -594,11 +714,8 @@ const pushMessage = async (msgData) => {
   const roomId = currentRoom.value?.id
   if (!roomId) return
 
-  const senderName = currentUser
-    ? (currentUser.user_metadata?.prenom
-        ? `${currentUser.user_metadata.prenom} ${currentUser.user_metadata.nom || ''}`.trim()
-        : currentUser.email?.split('@')[0])
-    : 'Vous'
+  // Utiliser le profil chargé (vrai nom + avatar)
+  const senderName = myProfile.value.name || currentUser?.email?.split('@')[0] || 'Vous'
 
   const localMsg = {
     id: 'local-' + (++nextDemoId),
@@ -607,8 +724,9 @@ const pushMessage = async (msgData) => {
     sender_name: senderName,
     senderName,
     isOwn: true,
-    avatarColor: colorFor(currentUser?.id || 'local'),
-    initials: initialsFor(senderName),
+    avatarUrl: myProfile.value.avatarUrl,
+    avatarColor: myProfile.value.color,
+    initials: myProfile.value.initials,
     created_at: new Date(),
     reactions: [],
     playing: false,
