@@ -1,0 +1,40 @@
+name: Nettoyage automatique du chat (7 jours)
+
+# Déclenché chaque nuit à 3h00 UTC + possibilité de lancement manuel
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Supprimer messages et fichiers > 7 jours
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Appeler la Edge Function Supabase
+        run: |
+          RESPONSE=$(curl -s -o /tmp/cleanup_response.json -w "%{http_code}" \
+            -X POST "${{ secrets.SUPABASE_FUNCTION_URL }}/cleanup-old-messages" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json")
+
+          echo "--- Réponse HTTP : $RESPONSE ---"
+          cat /tmp/cleanup_response.json
+
+          if [ "$RESPONSE" != "200" ]; then
+            echo "Échec du nettoyage (HTTP $RESPONSE)"
+            exit 1
+          fi
+
+# ─── CONFIGURATION REQUISE ──────────────────────────────────────────────────
+# Dans GitHub > Settings > Secrets and variables > Actions, ajouter :
+#
+# SUPABASE_FUNCTION_URL : URL de ton projet Supabase
+#   → Supabase Dashboard > Settings > API > Project URL
+#   → Exemple : https://xyzxyzxyz.supabase.co/functions/v1
+#
+# SUPABASE_ANON_KEY : Clé publique anon de ton projet
+#   → Supabase Dashboard > Settings > API > anon public
+# ────────────────────────────────────────────────────────────────────────────

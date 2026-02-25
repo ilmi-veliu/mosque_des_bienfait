@@ -625,6 +625,9 @@ const initSupabase = async () => {
 
     supabaseMode = true
 
+    // Nettoyage silencieux une fois par jour (messages + fichiers > 7 jours)
+    runDailyCleanup()
+
     if (roomsData?.length) {
       rooms.value = roomsData.map(r => ({
         ...r,
@@ -647,6 +650,23 @@ const initSupabase = async () => {
         await loadMyProfile(session.user)
       }
     } catch {}
+  }
+}
+
+// ─── Nettoyage automatique (max 1 fois/jour) ─────────────────────────────────
+const runDailyCleanup = async () => {
+  const STORAGE_KEY = 'mosque_chat_last_cleanup'
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000
+  const last = localStorage.getItem(STORAGE_KEY)
+
+  // Ne rien faire si déjà lancé dans les dernières 24h
+  if (last && Date.now() - parseInt(last) < ONE_DAY_MS) return
+
+  try {
+    await supabase.functions.invoke('cleanup-old-messages')
+    localStorage.setItem(STORAGE_KEY, Date.now().toString())
+  } catch {
+    // Silencieux : le nettoyage n'est pas critique pour l'expérience utilisateur
   }
 }
 
