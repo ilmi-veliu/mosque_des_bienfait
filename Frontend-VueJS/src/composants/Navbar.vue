@@ -16,6 +16,11 @@
           <router-link to="/cours" class="hover:text-gray-600 transition-colors">Cours Vidéo</router-link>
           <router-link to="/evenements" class="hover:text-gray-600 transition-colors">Événements</router-link>
           <router-link to="/contact" class="hover:text-gray-600 transition-colors">Contact Imam</router-link>
+          <router-link v-if="isLoggedIn" to="/chat"
+            class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-medium">
+            <MessagesSquare :size="15" />
+            Chat
+          </router-link>
 
           <!-- Connecté : avatar dropdown -->
           <template v-if="isLoggedIn">
@@ -129,6 +134,10 @@
           <MessageSquare :size="18" class="text-gray-400" />
           Contact Imam
         </router-link>
+        <router-link v-if="isLoggedIn" @click="mobileOpen = false" to="/chat" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-emerald-50 transition-colors text-sm text-emerald-700 font-medium">
+          <MessagesSquare :size="18" class="text-emerald-500" />
+          Chat communautaire
+        </router-link>
 
         <!-- Connecté : section compte -->
         <template v-if="isLoggedIn">
@@ -183,7 +192,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Building2, Home, Video, Calendar, MessageSquare, HandHelping, UserPlus, LogIn, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X } from 'lucide-vue-next'
+import { Building2, Home, Video, Calendar, MessageSquare, MessagesSquare, HandHelping, UserPlus, LogIn, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
