@@ -98,6 +98,18 @@ const routes = [
     name: 'DemoNavbar',
     component: () => import('./pages/DemoNavbar.vue'),
     meta: { hideNavbar: true, hideFooter: true, title: 'Choisir la navbar | Demo' }
+  },
+  {
+    path: '/paiement/succes',
+    name: 'PaiementSucces',
+    component: () => import('./pages/PaiementSucces.vue'),
+    meta: { title: 'Paiement réussi | Mosquée des Bienfaisants' }
+  },
+  {
+    path: '/paiement/annule',
+    name: 'PaiementAnnule',
+    component: () => import('./pages/PaiementAnnule.vue'),
+    meta: { title: 'Paiement annulé | Mosquée des Bienfaisants' }
   }
 ]
 

@@ -24,6 +24,9 @@ sequelize.authenticate()
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/auth', require('./routes/login'));
 
+// Routes paiement Stripe
+app.use('/api/paiement', require('./routes/paiement'));
+
 // Route de test
 app.get('/api', (req, res) => {
   res.json({ message: 'API fonctionne avec PostgreSQL !' });
