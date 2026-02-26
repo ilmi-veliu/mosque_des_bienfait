@@ -1564,8 +1564,8 @@ const loadImamConversations = async () => {
   allImamMessages = (messages || []).map(m => ({ ...m, playing: false }))
   imamConversations.value = buildImamConversations(allImamMessages)
   imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
-  // Marquer comme non lues les convs dont le dernier message vient d'un visiteur
-  unreadConvKeys.value = new Set(imamConversations.value.filter(c => c.hasUnread).map(c => c.key))
+  // Toutes les conversations ont un point rouge jusqu'à ce que Rachid clique dessus
+  unreadConvKeys.value = new Set(imamConversations.value.map(c => c.key))
 
   if (imamChannel) supabase.removeChannel(imamChannel)
   imamChannel = supabase
