@@ -751,20 +751,37 @@
             </div>
 
             <!-- Zone de réponse -->
-            <div class="border-t px-4 py-3 bg-white flex items-end gap-2">
-              <textarea
-                v-model="imamReply"
-                @keydown.enter.exact.prevent="sendImamReply"
-                placeholder="Répondre en tant qu'Imam... (Entrée pour envoyer)"
-                rows="1"
-                class="flex-1 px-3 py-2 border rounded-xl text-sm resize-none focus:outline-none focus:border-emerald-500 transition-colors"
-                style="min-height:38px; max-height:90px; overflow-y:auto;"
-                @input="e => { e.target.style.height='auto'; e.target.style.height=Math.min(e.target.scrollHeight,90)+'px' }"
-              ></textarea>
-              <button @click="sendImamReply" :disabled="!imamReply.trim() || imamSending"
-                class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-40 shrink-0">
-                <Send :size="18" />
-              </button>
+            <div class="border-t bg-white">
+              <!-- Fichiers en attente -->
+              <div v-if="imamPendingFiles.length" class="px-4 pt-2 flex gap-2 flex-wrap">
+                <div v-for="(f, i) in imamPendingFiles" :key="i"
+                  class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 text-xs text-gray-700">
+                  <span>📎</span>
+                  <span class="truncate max-w-[120px]">{{ f.name }}</span>
+                  <button @click="imamPendingFiles.splice(i, 1)" class="text-gray-400 hover:text-red-500 ml-1">✕</button>
+                </div>
+              </div>
+              <p v-if="imamFileError" class="px-4 pt-1 text-xs text-red-500">{{ imamFileError }}</p>
+              <div class="px-4 py-3 flex items-end gap-2">
+                <input ref="imamFileInput" type="file" multiple class="hidden" @change="onImamFileChange" />
+                <button @click="imamFileInput.click()" class="p-2 text-gray-400 hover:text-emerald-600 transition-colors shrink-0" title="Joindre un fichier">
+                  <Paperclip :size="18" />
+                </button>
+                <textarea
+                  v-model="imamReply"
+                  @keydown.enter.exact.prevent="sendImamReply"
+                  placeholder="Répondre en tant qu'Imam... (Entrée pour envoyer)"
+                  rows="1"
+                  class="flex-1 px-3 py-2 border rounded-xl text-sm resize-none focus:outline-none focus:border-emerald-500 transition-colors"
+                  style="min-height:38px; max-height:90px; overflow-y:auto;"
+                  @input="e => { e.target.style.height='auto'; e.target.style.height=Math.min(e.target.scrollHeight,90)+'px' }"
+                ></textarea>
+                <button @click="sendImamReply" :disabled="(!imamReply.trim() && !imamPendingFiles.length) || imamSending"
+                  class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-40 shrink-0">
+                  <div v-if="imamSending" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <Send v-else :size="18" />
+                </button>
+              </div>
             </div>
           </template>
         </div>
@@ -965,7 +982,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -1480,6 +1497,9 @@ const imamUnreadCount = ref(0)
 const imamMsgsEl = ref(null)
 const unreadConvKeys = ref(new Set())
 const imamAudioEls = ref({})
+const imamPendingFiles = ref([])
+const imamFileInput = ref(null)
+const imamFileError = ref('')
 let allImamMessages = []
 let imamChannel = null
 
@@ -1614,31 +1634,99 @@ const selectImamConversation = (conv) => {
   }, 50)
 }
 
-const sendImamReply = async () => {
-  if (!imamReply.value.trim() || imamSending.value || !selectedImamConv.value || !imamRoom.value) return
-  imamSending.value = true
-  const { data: { session } } = await supabase.auth.getSession()
-  const content = imamReply.value.trim()
-  const { data: inserted, error } = await supabase.from('chat_messages').insert({
-    room_id: imamRoom.value.id,
-    user_id: session?.user?.id || null,
-    session_id: selectedImamConv.value.session_id,
-    sender_name: 'Imam',
-    content,
-    type: 'text'
-  }).select().single()
-
-  if (error) {
-    alert('Erreur envoi : ' + (error.message || 'Vérifiez les permissions Supabase.'))
-  } else {
-    imamReply.value = ''
-    // Ajout immédiat sans attendre le realtime
-    const newMsg = { ...inserted, playing: false }
-    allImamMessages = [...allImamMessages, newMsg]
-    imamConversations.value = buildImamConversations(allImamMessages)
-    imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
-    selectImamConversation(selectedImamConv.value)
+const uploadImamFile = async (file) => {
+  const MAX = 10 * 1024 * 1024
+  if (file.size > MAX) {
+    imamFileError.value = `Fichier trop volumineux (max 10 Mo).`
+    return null
   }
+  const allowedPrefixes = ['image/', 'audio/']
+  const allowedExact = ['application/pdf', 'text/plain',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+  if (!allowedPrefixes.some(p => file.type.startsWith(p)) && !allowedExact.includes(file.type)) {
+    imamFileError.value = 'Type non autorisé. Utilisez image, PDF, DOC ou TXT.'
+    return null
+  }
+  try {
+    const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}`
+    const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `imam-admin/${safeName}.${ext}`
+    const { data, error } = await supabase.storage.from('chat-media').upload(path, file, { upsert: false })
+    if (error) throw error
+    const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
+    return {
+      url: urlData.publicUrl,
+      name: file.name.slice(0, 100),
+      size: file.size,
+      type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
+    }
+  } catch {
+    imamFileError.value = 'Erreur lors de l\'upload.'
+    return null
+  }
+}
+
+const onImamFileChange = (e) => {
+  imamFileError.value = ''
+  for (const file of e.target.files) {
+    imamPendingFiles.value.push(file)
+  }
+  e.target.value = ''
+}
+
+const sendImamReply = async () => {
+  const hasText = imamReply.value.trim()
+  const hasFiles = imamPendingFiles.value.length > 0
+  if (!hasText && !hasFiles) return
+  if (imamSending.value || !selectedImamConv.value || !imamRoom.value) return
+  imamSending.value = true
+  imamFileError.value = ''
+  const { data: { session } } = await supabase.auth.getSession()
+
+  const insertMsg = async (msgData) => {
+    const { data: inserted, error } = await supabase.from('chat_messages').insert(msgData).select().single()
+    if (error) { alert('Erreur envoi : ' + error.message); return }
+    const newMsg = { ...inserted, playing: false }
+    if (!allImamMessages.some(m => m.id === newMsg.id)) {
+      allImamMessages = [...allImamMessages, newMsg]
+      imamConversations.value = buildImamConversations(allImamMessages)
+      imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
+    }
+  }
+
+  // Envoi des fichiers
+  for (const file of imamPendingFiles.value) {
+    const result = await uploadImamFile(file)
+    if (result) {
+      await insertMsg({
+        room_id: imamRoom.value.id,
+        user_id: session?.user?.id || null,
+        session_id: selectedImamConv.value.session_id,
+        sender_name: 'Imam',
+        content: '',
+        type: result.type,
+        file_url: result.url,
+        file_name: result.name,
+        file_size: result.size,
+      })
+    }
+  }
+  imamPendingFiles.value = []
+
+  // Envoi du texte
+  if (hasText) {
+    await insertMsg({
+      room_id: imamRoom.value.id,
+      user_id: session?.user?.id || null,
+      session_id: selectedImamConv.value.session_id,
+      sender_name: 'Imam',
+      content: hasText,
+      type: 'text'
+    })
+    imamReply.value = ''
+  }
+
+  selectImamConversation(selectedImamConv.value)
   imamSending.value = false
 }
 
