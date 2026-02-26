@@ -661,9 +661,10 @@
         <p class="text-xs mt-2">Exécutez le SQL de migration dans Supabase.</p>
       </div>
 
-      <div v-else class="flex gap-4 h-[600px]">
-        <!-- Liste conversations -->
-        <div class="w-64 shrink-0 border rounded-2xl bg-white overflow-y-auto flex flex-col">
+      <div v-else class="flex flex-col md:flex-row gap-4 md:h-[600px]">
+        <!-- Liste conversations — cachée sur mobile quand une conv est sélectionnée -->
+        <div class="md:w-64 md:shrink-0 border rounded-2xl bg-white overflow-y-auto flex flex-col md:max-h-full max-h-72"
+          :class="selectedImamConv ? 'hidden md:flex' : 'flex'">
           <div class="px-4 py-3 border-b bg-gray-50">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Conversations ({{ imamConversations.length }})</p>
           </div>
@@ -682,19 +683,24 @@
           </button>
         </div>
 
-        <!-- Messages + réponse -->
-        <div class="flex-1 border rounded-2xl bg-white flex flex-col overflow-hidden">
+        <!-- Messages + réponse — cachée sur mobile quand aucune conv sélectionnée -->
+        <div class="flex-1 border rounded-2xl bg-white flex flex-col overflow-hidden min-h-[500px] md:min-h-0"
+          :class="!selectedImamConv ? 'hidden md:flex' : 'flex'">
           <div v-if="!selectedImamConv" class="flex-1 flex items-center justify-center text-gray-400">
             <p>Sélectionnez une conversation</p>
           </div>
           <template v-else>
             <!-- Entête -->
-            <div class="px-5 py-3 border-b bg-gray-50 flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center">
+            <div class="px-4 py-3 border-b bg-gray-50 flex items-center gap-3">
+              <!-- Bouton retour sur mobile -->
+              <button @click="selectedImamConv = null" class="md:hidden p-1 text-gray-500 hover:text-gray-700 shrink-0">
+                <ChevronLeft :size="20" />
+              </button>
+              <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center shrink-0">
                 {{ (selectedImamConv.label[0] || '?').toUpperCase() }}
               </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-800">{{ selectedImamConv.label }}</p>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-gray-800 truncate">{{ selectedImamConv.label }}</p>
                 <p class="text-xs text-gray-400">{{ selectedImamConv.msgCount }} messages</p>
               </div>
             </div>
@@ -956,7 +962,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
