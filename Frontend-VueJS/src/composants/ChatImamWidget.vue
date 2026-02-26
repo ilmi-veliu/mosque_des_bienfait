@@ -1,10 +1,10 @@
 <template>
   <!-- Bouton flottant + popup — caché sur /chat et /admin -->
-  <div v-if="!hideWidget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+  <div v-if="!hideWidget" class="fixed bottom-4 right-2 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3">
 
     <!-- Chat popup -->
     <Transition name="popup">
-      <div v-if="open" class="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col" style="height: 500px;">
+      <div v-if="open" class="w-[calc(100vw-1rem)] max-w-sm sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col" style="height: 500px;">
 
         <!-- Header -->
         <div class="bg-[#030213] text-white px-4 py-3 flex items-center justify-between shrink-0">
