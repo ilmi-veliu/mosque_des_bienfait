@@ -142,10 +142,6 @@
           <!-- Zone de saisie -->
           <div class="bg-white border-t px-3 py-3 shrink-0">
             <p v-if="errorMsg" class="text-xs text-red-500 mb-2">{{ errorMsg }}</p>
-            <div v-if="isRecording" class="flex items-center gap-2 mb-2 text-red-500">
-              <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              <span class="text-xs font-medium">Enregistrement... {{ recordingDuration }}s — Relâchez pour envoyer</span>
-            </div>
             <div class="flex items-end gap-1.5">
 
               <!-- Emoji -->
@@ -176,18 +172,8 @@
                 @input="autoResize($event.target)"
               ></textarea>
 
-              <!-- Micro ou Envoyer -->
-              <button
-                v-if="!newMessage.trim() && !pendingFiles.length"
-                @mousedown.prevent="startRecording"
-                @mouseup.prevent="stopRecording"
-                @touchstart.prevent="startRecording"
-                @touchend.prevent="stopRecording"
-                class="p-2 rounded-xl transition-colors shrink-0 select-none"
-                :class="isRecording ? 'bg-red-500 text-white scale-110' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'">
-                <Mic :size="18" />
-              </button>
-              <button v-else @click="sendMessage"
+              <!-- Envoyer -->
+              <button @click="sendMessage"
                 :disabled="sending || (!newMessage.trim() && !pendingFiles.length)"
                 class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shrink-0 disabled:opacity-50">
                 <div v-if="sending" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -224,7 +210,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { MessageSquare, X, Send, Smile, Paperclip, Mic, Play, Pause } from 'lucide-vue-next'
+import { MessageSquare, X, Send, Smile, Paperclip, Play, Pause } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const route = useRoute()
@@ -256,27 +242,8 @@ const unreadCount = ref(0)
 // Rate-limit
 const recentSendTimestamps = []
 
-// Audio
-const isRecording = ref(false)
-const recordingDuration = ref(0)
-let mediaRecorder = null
-let audioChunks = []
-let recordingStream = null
-let recordingTimer = null
-let recordingStartTime = null
 let realtimeChannel = null
 let localIdCounter = 0
-
-// Détecter le meilleur format audio supporté
-const getSupportedMimeType = () => {
-  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg']
-  return types.find(t => MediaRecorder.isTypeSupported(t)) || ''
-}
-const getAudioExt = (mimeType) => {
-  if (mimeType.includes('mp4')) return 'mp4'
-  if (mimeType.includes('ogg')) return 'ogg'
-  return 'webm'
-}
 
 // Identifiant de session persistant : chaque visiteur a sa conversation privée
 const mySessionId = (() => {
@@ -473,82 +440,6 @@ const updateAudioProgress = (msg) => {
   msg.audioDuration = `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-// ─── Enregistrement vocal ────────────────────────────────────────────────────────
-const startRecording = async () => {
-  try {
-    recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    audioChunks = []
-    const mimeType = getSupportedMimeType()
-    mediaRecorder = mimeType ? new MediaRecorder(recordingStream, { mimeType }) : new MediaRecorder(recordingStream)
-    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data) }
-    mediaRecorder.start(100)
-    isRecording.value = true
-    recordingDuration.value = 0
-    recordingStartTime = Date.now()
-    recordingTimer = setInterval(() => {
-      recordingDuration.value = Math.floor((Date.now() - recordingStartTime) / 1000)
-    }, 200)
-  } catch {
-    errorMsg.value = 'Microphone non accessible.'
-  }
-}
-
-const stopRecording = () => {
-  if (!mediaRecorder || mediaRecorder.state === 'inactive') return
-  clearInterval(recordingTimer)
-  const duration = Math.max(1, Math.round((Date.now() - (recordingStartTime || Date.now())) / 1000))
-  const mimeType = mediaRecorder.mimeType || 'audio/webm'
-  const ext = getAudioExt(mimeType)
-
-  mediaRecorder.onstop = async () => {
-    const blob = new Blob(audioChunks, { type: mimeType })
-    isRecording.value = false
-    recordingDuration.value = 0
-    recordingStartTime = null
-
-    const mins = Math.floor(duration / 60)
-    const secs = duration % 60
-    const durationLabel = `${mins}:${secs.toString().padStart(2, '0')}`
-
-    // Upload Supabase, fallback blob local si ça échoue
-    let fileUrl = URL.createObjectURL(blob)
-    try {
-      const folder = isLoggedIn.value ? currentUser.value.id : 'anon-imam'
-      const path = `${folder}/imam_${Date.now()}.${ext}`
-      const { data: upData, error: upErr } = await supabase.storage
-        .from('chat-media').upload(path, blob, { contentType: mimeType })
-      if (!upErr && upData) {
-        const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(upData.path)
-        fileUrl = urlData.publicUrl
-      }
-    } catch {}
-
-    const msgData = {
-      room_id: imamRoom.value.id,
-      user_id: isLoggedIn.value ? currentUser.value.id : null,
-      sender_name: myName.value,
-      session_id: mySessionId,
-      type: 'audio',
-      file_url: fileUrl,
-      file_name: `vocal_${durationLabel}.${ext}`,
-      content: '',
-      duration: durationLabel,
-    }
-    try {
-      const { data } = await supabase.from('chat_messages').insert(msgData).select().single()
-      if (data) {
-        messages.value.push(formatMsg(data, true))
-        await scrollBottom()
-      }
-    } catch {
-      messages.value.push(formatMsg({ ...msgData, id: `local-${Date.now()}`, created_at: new Date() }, true))
-      await scrollBottom()
-    }
-    recordingStream?.getTracks().forEach(t => t.stop())
-    recordingStream = null
-  }
-  mediaRecorder.stop()
-}
 
 // ─── Upload fichier ──────────────────────────────────────────────────────────────
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
@@ -691,7 +582,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   if (realtimeChannel) supabase.removeChannel(realtimeChannel)
   window.removeEventListener('ouvrir-chat-imam', () => { open.value = true })
-  recordingStream?.getTracks().forEach(t => t.stop())
 })
 </script>
 

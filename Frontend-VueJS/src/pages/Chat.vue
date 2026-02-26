@@ -379,13 +379,7 @@
             </div>
           </div>
 
-          <!-- Indicateur enregistrement vocal -->
-          <div v-if="isRecording && !(currentRoom.is_readonly && !isAdmin) && !isMuted" class="flex items-center gap-2 mb-2 text-red-500">
-            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            <span class="text-xs font-medium">Enregistrement... {{ recordingDuration }}s — Relâchez pour envoyer</span>
-          </div>
-
-          <div v-if="!(currentRoom.is_readonly && !isAdmin) && !isMuted" class="flex items-end gap-2">
+<div v-if="!(currentRoom.is_readonly && !isAdmin) && !isMuted" class="flex items-end gap-2">
             <!-- Emoji -->
             <button
               @click="showEmojiPicker = !showEmojiPicker"
@@ -415,22 +409,8 @@
               @keyup="autoResize($event.target)"
             ></textarea>
 
-            <!-- Micro (vocal) ou Envoyer -->
+            <!-- Envoyer -->
             <button
-              v-if="!newMessage.trim() && !pendingFiles.length"
-              @mousedown.prevent="startRecording"
-              @mouseup.prevent="stopRecording"
-              @touchstart.prevent="startRecording"
-              @touchend.prevent="stopRecording"
-              class="p-2 rounded-xl transition-colors shrink-0 select-none"
-              :class="isRecording
-                ? 'bg-red-500 text-white scale-110'
-                : 'text-gray-400 hover:text-red-500 hover:bg-red-50'">
-              <Mic :size="20" />
-            </button>
-
-            <button
-              v-else
               @click="sendMessage"
               :disabled="sending"
               class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shrink-0 disabled:opacity-50">
@@ -455,7 +435,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import {
-  ChevronLeft, MessageSquare, Send, Mic, Smile, Paperclip,
+  ChevronLeft, MessageSquare, Send, Smile, Paperclip,
   Play, Pause, FileText, Download, X, Pencil, Check,
   Trash2, Plus, VolumeX, Lock, Unlock
 } from 'lucide-vue-next'
@@ -544,8 +524,6 @@ const loadingMessages = ref(false)
 const showEmojiPicker = ref(false)
 const pendingFiles = ref([])
 const lightboxUrl = ref(null)
-const isRecording = ref(false)
-const recordingDuration = ref(0)
 const someoneTyping = ref(false)
 const messagesContainer = ref(null)
 const fileInput = ref(null)
@@ -655,22 +633,7 @@ let currentUser = null
 let supabaseMode = false   // true quand les tables Supabase existent
 let userGender = null      // 'homme' | 'femme' | null
 let realtimeChannel = null
-let mediaRecorder = null
-let audioChunks = []
-let recordingStream = null
-let recordingTimer = null
-let recordingStartTime = null
 let typingTimer = null
-
-const getSupportedMimeType = () => {
-  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg']
-  return types.find(t => MediaRecorder.isTypeSupported(t)) || ''
-}
-const getAudioExt = (mimeType) => {
-  if (mimeType.includes('mp4')) return 'mp4'
-  if (mimeType.includes('ogg')) return 'ogg'
-  return 'webm'
-}
 let nextDemoId = 100
 
 const modeLabel = computed(() => supabaseMode ? 'Temps réel · Supabase' : 'Mode démonstration')
@@ -1106,68 +1069,6 @@ const sendFile = async (file) => {
   })
 }
 
-// ─── Vocal ───────────────────────────────────────────────────────────────────────
-const startRecording = async () => {
-  try {
-    recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    audioChunks = []
-    const mimeType = getSupportedMimeType()
-    mediaRecorder = mimeType ? new MediaRecorder(recordingStream, { mimeType }) : new MediaRecorder(recordingStream)
-    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data) }
-    mediaRecorder.start(100)
-    isRecording.value = true
-    recordingDuration.value = 0
-    recordingStartTime = Date.now()
-    recordingTimer = setInterval(() => {
-      recordingDuration.value = Math.floor((Date.now() - recordingStartTime) / 1000)
-    }, 200)
-  } catch {
-    alert('Microphone non accessible. Vérifiez les permissions.')
-  }
-}
-
-const stopRecording = () => {
-  if (!mediaRecorder || mediaRecorder.state === 'inactive') return
-  clearInterval(recordingTimer)
-  const duration = Math.max(1, Math.round((Date.now() - (recordingStartTime || Date.now())) / 1000))
-  const mimeType = mediaRecorder.mimeType || 'audio/webm'
-  const ext = getAudioExt(mimeType)
-
-  mediaRecorder.onstop = async () => {
-    const blob = new Blob(audioChunks, { type: mimeType })
-    let fileUrl = URL.createObjectURL(blob)
-
-    if (supabaseMode && currentUser) {
-      try {
-        const path = `${currentUser.id}/audio_${Date.now()}.${ext}`
-        const { data, error } = await supabase.storage
-          .from('chat-media')
-          .upload(path, blob, { contentType: mimeType })
-        if (!error && data) {
-          const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
-          fileUrl = urlData.publicUrl
-        }
-      } catch {}
-    }
-
-    const mins = Math.floor(duration / 60)
-    const secs = duration % 60
-    await pushMessage({
-      type: 'audio',
-      file_url: fileUrl,
-      file_name: `vocal.${ext}`,
-      duration: `${mins}:${secs.toString().padStart(2, '0')}`,
-    })
-    await scrollBottom()
-    recordingStream?.getTracks().forEach(t => t.stop())
-    recordingStream = null
-    recordingStartTime = null
-  }
-
-  mediaRecorder.stop()
-  isRecording.value = false
-  recordingDuration.value = 0
-}
 
 // ─── Audio player ────────────────────────────────────────────────────────────────
 const toggleAudio = (msg) => {
@@ -1276,8 +1177,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (realtimeChannel) supabase.removeChannel(realtimeChannel)
-  recordingStream?.getTracks().forEach(t => t.stop())
-  clearInterval(recordingTimer)
   clearTimeout(typingTimer)
 })
 
