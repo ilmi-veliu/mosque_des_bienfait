@@ -79,13 +79,11 @@ onMounted(() => {
   // Ne pas afficher si déjà installé (mode standalone)
   if (window.matchMedia('(display-mode: standalone)').matches) return
 
-  // Détecter iOS (Safari)
+  // Détecter iOS (tous navigateurs : Safari, Chrome, Firefox)
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
 
-  if (isIos && isSafari) {
+  if (isIos) {
     iosMode.value = true
-    // Sur iOS on montre seulement sur mobile
     setTimeout(() => { visible.value = true }, 3000)
     return
   }
