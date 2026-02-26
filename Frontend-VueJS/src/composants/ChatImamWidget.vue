@@ -200,8 +200,6 @@
         class="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center border-2 border-white font-semibold">
         {{ unreadCount }}
       </span>
-      <span v-else-if="!open"
-        class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
     </button>
 
   </div>
