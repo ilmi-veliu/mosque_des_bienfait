@@ -5,8 +5,8 @@
         <div class="flex items-start gap-2 text-sm text-blue-800">
           <Info :size="16" class="flex-shrink-0 mt-0.5" />
           <p class="leading-snug">
-            <span class="font-semibold">La messagerie est en cours de révision.</span>
-            Si vous n'obtenez pas de réponse, envoyez un SMS au <a href="sms:+33699025472" class="underline font-medium hover:text-blue-900">06 99 02 54 72</a> ou laissez votre email à la fin de votre message.
+            <span class="font-semibold">Le bug de la messagerie est désormais résolu !</span>
+            Si vous n'avez pas eu de réponse à votre ancienne question, merci de la reposer. Se connecter à votre compte vous assure un meilleur suivi.
           </p>
         </div>
         <button @click="dismiss" class="text-blue-400 hover:text-blue-600 transition-colors p-1 flex-shrink-0">
