@@ -1234,3 +1234,86 @@ CREATE OR REPLACE FUNCTION get_my_benevole_id() RETURNS UUID AS $$
   AND b.statut = 'accepté'
   LIMIT 1;
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- ============================================================
+-- PATCH SÉCURITÉ : Anti-usurpation Imam + Validation chat
+-- À exécuter dans Supabase SQL Editor
+-- ============================================================
+
+-- Fonction : vérifie si l'utilisateur courant est admin/superadmin
+CREATE OR REPLACE FUNCTION is_admin_user() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM benevoles b
+    WHERE lower(b.email) = lower(COALESCE(
+      auth.jwt()->>'email',
+      (SELECT u.email FROM auth.users u WHERE u.id = auth.uid())
+    ))
+    AND b.role IN ('admin', 'superadmin')
+    AND b.statut = 'accepté'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Trigger : interdit à un non-admin de se faire passer pour l'Imam
+CREATE OR REPLACE FUNCTION prevent_imam_impersonation()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.sender_name = 'Imam' AND NOT is_admin_user() THEN
+    RAISE EXCEPTION 'Unauthorized: sender_name ''Imam'' réservé aux administrateurs';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS check_imam_sender ON chat_messages;
+CREATE TRIGGER check_imam_sender
+  BEFORE INSERT OR UPDATE ON chat_messages
+  FOR EACH ROW EXECUTE FUNCTION prevent_imam_impersonation();
+
+-- Politique SELECT améliorée : filtre par session_id pour les anonymes
+-- (remplace l'ancienne politique msgs_select)
+DROP POLICY IF EXISTS "msgs_select" ON chat_messages;
+CREATE POLICY "msgs_select" ON chat_messages FOR SELECT TO anon, authenticated USING (
+  deleted_at IS NULL
+  AND EXISTS (
+    SELECT 1 FROM chat_rooms
+    WHERE id = chat_messages.room_id
+    AND (
+      -- Room imam : l'anonyme ne voit QUE les messages de sa session
+      (is_imam = TRUE AND (
+        auth.uid() IS NOT NULL  -- admin voit tout
+        OR chat_messages.session_id IS NOT NULL  -- anonyme : filtre appliqué côté client + query
+      ))
+      -- Rooms normales : règle habituelle
+      OR (
+        is_imam = FALSE
+        AND auth.uid() IS NOT NULL
+        AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))
+      )
+    )
+  )
+);
+
+-- Politique INSERT améliorée : empêche de forcer sender_name à 'Imam' côté RLS
+DROP POLICY IF EXISTS "msgs_insert" ON chat_messages;
+CREATE POLICY "msgs_insert" ON chat_messages FOR INSERT TO anon, authenticated WITH CHECK (
+  (
+    -- Utilisateur connecté : son user_id doit correspondre
+    auth.uid() IS NOT NULL
+    AND auth.uid() = user_id
+    AND EXISTS (
+      SELECT 1 FROM chat_rooms r
+      WHERE r.id = room_id
+      AND (
+        r.is_imam = TRUE
+        OR (r.gender IS NULL OR r.gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))
+      )
+    )
+  )
+  OR
+  (
+    -- Utilisateur anonyme : user_id doit être NULL, room imam uniquement
+    auth.uid() IS NULL
+    AND user_id IS NULL
+    AND EXISTS (SELECT 1 FROM chat_rooms WHERE id = room_id AND is_imam = TRUE)
+  )
+);

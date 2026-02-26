@@ -263,8 +263,20 @@ let mediaRecorder = null
 let audioChunks = []
 let recordingStream = null
 let recordingTimer = null
+let recordingStartTime = null
 let realtimeChannel = null
 let localIdCounter = 0
+
+// Détecter le meilleur format audio supporté
+const getSupportedMimeType = () => {
+  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg']
+  return types.find(t => MediaRecorder.isTypeSupported(t)) || ''
+}
+const getAudioExt = (mimeType) => {
+  if (mimeType.includes('mp4')) return 'mp4'
+  if (mimeType.includes('ogg')) return 'ogg'
+  return 'webm'
+}
 
 // Identifiant de session persistant : chaque visiteur a sa conversation privée
 const mySessionId = (() => {
@@ -377,25 +389,18 @@ const loadImamRoom = async () => {
 
     imamRoom.value = data
 
-    // Charger les messages : les miens (session ou user_id) + réponses de l'imam (connecté)
+    // Charger UNIQUEMENT les messages de cette session (filtré côté serveur + client)
     const { data: msgs } = await supabase
       .from('chat_messages')
       .select('*')
       .eq('room_id', data.id)
+      .eq('session_id', mySessionId)
       .is('deleted_at', null)
       .order('created_at', { ascending: true })
       .limit(100)
 
     if (msgs) {
-      messages.value = msgs.filter(m => {
-        if (isLoggedIn.value) {
-          // Connecté : mes messages (user_id) + réponses imam (autres connectés)
-          return m.user_id !== null
-        } else {
-          // Anonyme : ma session uniquement + réponses imam (connectés)
-          return m.session_id === mySessionId || m.user_id !== null
-        }
-      }).map(m => formatMsg(m))
+      messages.value = msgs.map(m => formatMsg(m))
     }
 
     subscribeToRoom(data.id)
@@ -421,17 +426,11 @@ const subscribeToRoom = (roomId) => {
     }, (payload) => {
       const raw = payload.new
 
-      if (isLoggedIn.value) {
-        // Connecté : ignorer ses propres messages (déjà ajoutés localement)
-        if (raw.user_id === currentUser.value?.id) return
-        // Ignorer les messages anonymes d'autres visiteurs
-        if (raw.user_id === null) return
-      } else {
-        // Anonyme : ignorer sa propre session (déjà gérée dans sendMessage/stopRecording)
-        if (raw.session_id === mySessionId) return
-        // Afficher uniquement les réponses de l'imam (utilisateurs connectés)
-        if (!raw.user_id) return
-      }
+      // Ignorer tout message qui n'appartient pas à ma session
+      if (raw.session_id !== mySessionId) return
+      // Ignorer mes propres messages (déjà ajoutés localement lors de l'envoi)
+      if (isLoggedIn.value && raw.user_id === currentUser.value?.id) return
+      if (!isLoggedIn.value && raw.sender_name !== 'Imam') return
 
       const msg = formatMsg({ ...raw })
       messages.value.push(msg)
@@ -474,12 +473,16 @@ const startRecording = async () => {
   try {
     recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true })
     audioChunks = []
-    mediaRecorder = new MediaRecorder(recordingStream)
+    const mimeType = getSupportedMimeType()
+    mediaRecorder = mimeType ? new MediaRecorder(recordingStream, { mimeType }) : new MediaRecorder(recordingStream)
     mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data) }
     mediaRecorder.start(100)
     isRecording.value = true
     recordingDuration.value = 0
-    recordingTimer = setInterval(() => recordingDuration.value++, 1000)
+    recordingStartTime = Date.now()
+    recordingTimer = setInterval(() => {
+      recordingDuration.value = Math.floor((Date.now() - recordingStartTime) / 1000)
+    }, 200)
   } catch {
     errorMsg.value = 'Microphone non accessible.'
   }
@@ -488,41 +491,53 @@ const startRecording = async () => {
 const stopRecording = () => {
   if (!mediaRecorder || mediaRecorder.state === 'inactive') return
   clearInterval(recordingTimer)
-  const duration = recordingDuration.value
+  const duration = Math.max(1, Math.round((Date.now() - (recordingStartTime || Date.now())) / 1000))
+  const mimeType = mediaRecorder.mimeType || 'audio/webm'
+  const ext = getAudioExt(mimeType)
+
   mediaRecorder.onstop = async () => {
-    const blob = new Blob(audioChunks, { type: 'audio/webm' })
+    const blob = new Blob(audioChunks, { type: mimeType })
     isRecording.value = false
     recordingDuration.value = 0
-    try {
-      // Connecté → dossier personnel / Anonyme → dossier anon-imam
-      const folder = isLoggedIn.value ? currentUser.value.id : 'anon-imam'
-      const path = `${folder}/imam_${Date.now()}.webm`
-      const { data: upData, error: upErr } = await supabase.storage
-        .from('chat-media').upload(path, blob, { contentType: 'audio/webm' })
-      if (upErr) throw upErr
-      const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(upData.path)
-      const mins = Math.floor(duration / 60)
-      const secs = duration % 60
-      const durationLabel = `${mins}:${secs.toString().padStart(2, '0')}`
+    recordingStartTime = null
 
-      const msgData = {
-        room_id: imamRoom.value.id,
-        user_id: isLoggedIn.value ? currentUser.value.id : null,
-        sender_name: myName.value,
-        session_id: isLoggedIn.value ? null : mySessionId,
-        type: 'audio',
-        file_url: urlData.publicUrl,
-        file_name: `vocal_${durationLabel}.webm`,
-        content: '',
-        duration: durationLabel,
+    const mins = Math.floor(duration / 60)
+    const secs = duration % 60
+    const durationLabel = `${mins}:${secs.toString().padStart(2, '0')}`
+
+    // Upload Supabase, fallback blob local si ça échoue
+    let fileUrl = URL.createObjectURL(blob)
+    try {
+      const folder = isLoggedIn.value ? currentUser.value.id : 'anon-imam'
+      const path = `${folder}/imam_${Date.now()}.${ext}`
+      const { data: upData, error: upErr } = await supabase.storage
+        .from('chat-media').upload(path, blob, { contentType: mimeType })
+      if (!upErr && upData) {
+        const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(upData.path)
+        fileUrl = urlData.publicUrl
       }
+    } catch {}
+
+    const msgData = {
+      room_id: imamRoom.value.id,
+      user_id: isLoggedIn.value ? currentUser.value.id : null,
+      sender_name: myName.value,
+      session_id: mySessionId,
+      type: 'audio',
+      file_url: fileUrl,
+      file_name: `vocal_${durationLabel}.${ext}`,
+      content: '',
+      duration: durationLabel,
+    }
+    try {
       const { data } = await supabase.from('chat_messages').insert(msgData).select().single()
       if (data) {
         messages.value.push(formatMsg(data, true))
         await scrollBottom()
       }
     } catch {
-      errorMsg.value = 'Erreur lors de l\'envoi du vocal.'
+      messages.value.push(formatMsg({ ...msgData, id: `local-${Date.now()}`, created_at: new Date() }, true))
+      await scrollBottom()
     }
     recordingStream?.getTracks().forEach(t => t.stop())
     recordingStream = null
@@ -531,16 +546,35 @@ const stopRecording = () => {
 }
 
 // ─── Upload fichier ──────────────────────────────────────────────────────────────
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+const ALLOWED_MIME_PREFIXES = ['image/', 'audio/']
+const ALLOWED_MIME_EXACT = ['application/pdf', 'text/plain',
+  'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+
 const uploadFile = async (file) => {
+  // Validation taille
+  if (file.size > MAX_FILE_SIZE) {
+    errorMsg.value = `Fichier trop volumineux (max 10 Mo). Le vôtre fait ${(file.size / 1024 / 1024).toFixed(1)} Mo.`
+    return null
+  }
+  // Validation type MIME
+  const mimeOk = ALLOWED_MIME_PREFIXES.some(p => file.type.startsWith(p)) || ALLOWED_MIME_EXACT.includes(file.type)
+  if (!mimeOk) {
+    errorMsg.value = 'Type de fichier non autorisé. Utilisez image, audio, PDF, DOC ou TXT.'
+    return null
+  }
   try {
     const folder = isLoggedIn.value ? currentUser.value.id : 'anon-imam'
-    const path = `${folder}/imam_${Date.now()}_${file.name}`
+    // Nom de fichier sécurisé (pas d'injection de chemin)
+    const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}`
+    const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `${folder}/imam_${safeName}.${ext}`
     const { data, error } = await supabase.storage.from('chat-media').upload(path, file, { upsert: false })
     if (error) throw error
     const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
     return {
       url: urlData.publicUrl,
-      name: file.name,
+      name: file.name.slice(0, 100), // Limite le nom affiché
       size: file.size,
       type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
     }
@@ -584,7 +618,7 @@ const sendMessage = async () => {
           room_id: imamRoom.value.id,
           user_id: isLoggedIn.value ? currentUser.value.id : null,
           sender_name: myName.value,
-          session_id: isLoggedIn.value ? null : mySessionId,
+          session_id: mySessionId,
           type: result.type,
           file_url: result.url,
           file_name: result.name,
@@ -607,7 +641,7 @@ const sendMessage = async () => {
         room_id: imamRoom.value.id,
         user_id: isLoggedIn.value ? currentUser.value.id : null,
         sender_name: myName.value,
-        session_id: isLoggedIn.value ? null : mySessionId,
+        session_id: mySessionId,
         type: 'text',
         content: text,
       }

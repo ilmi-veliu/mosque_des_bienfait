@@ -4,7 +4,6 @@
     <Navbar v-if="!$route.meta.hideNavbar" />
     <router-view />
     <Footer v-if="!$route.meta.hideFooter" />
-    <CookieBanner />
     <InstallBanner />
     <ChatImamWidget />
   </div>
@@ -13,7 +12,6 @@
 <script>
 import Navbar from './composants/Navbar.vue'
 import Footer from './composants/Footer.vue'
-import CookieBanner from './composants/CookieBanner.vue'
 import BetaBanner from './composants/BetaBanner.vue'
 import InstallBanner from './composants/InstallBanner.vue'
 import ChatImamWidget from './composants/ChatImamWidget.vue'
@@ -36,7 +34,6 @@ export default {
   components: {
     Navbar,
     Footer,
-    CookieBanner,
     BetaBanner,
     InstallBanner,
     ChatImamWidget

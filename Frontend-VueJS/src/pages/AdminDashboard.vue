@@ -121,6 +121,17 @@
           <Crown :size="18" />
           Gestion
         </button>
+        <button v-if="canSeeImamChat"
+          @click="activeTab = 'imam'; loadImamConversations()"
+          :class="activeTab === 'imam' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
+        >
+          <MessageSquare :size="18" />
+          Chat Imam
+          <span v-if="imamUnreadCount > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            {{ imamUnreadCount > 9 ? '9+' : imamUnreadCount }}
+          </span>
+        </button>
       </div>
     </div>
 
@@ -636,6 +647,121 @@
       </div>
     </div>
 
+    <!-- CHAT IMAM -->
+    <div v-if="activeTab === 'imam' && canSeeImamChat">
+      <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Chat Imam</h2>
+      <p class="text-sm text-gray-500 mb-6">Répondez aux messages des fidèles en tant qu'Imam.</p>
+
+      <div v-if="imamLoading" class="flex items-center justify-center py-20">
+        <div class="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+      </div>
+      <div v-else-if="!imamRoom" class="text-center py-20 text-gray-400">
+        <MessageSquare :size="48" class="mx-auto mb-4 opacity-30" />
+        <p>La room imam n'existe pas encore.</p>
+        <p class="text-xs mt-2">Exécutez le SQL de migration dans Supabase.</p>
+      </div>
+
+      <div v-else class="flex gap-4 h-[600px]">
+        <!-- Liste conversations -->
+        <div class="w-64 shrink-0 border rounded-2xl bg-white overflow-y-auto flex flex-col">
+          <div class="px-4 py-3 border-b bg-gray-50">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Conversations ({{ imamConversations.length }})</p>
+          </div>
+          <div v-if="imamConversations.length === 0" class="flex-1 flex items-center justify-center text-gray-400 text-sm p-4 text-center">
+            Aucun message reçu.
+          </div>
+          <button
+            v-for="conv in imamConversations" :key="conv.key"
+            @click="selectImamConversation(conv)"
+            class="w-full px-4 py-3 text-left border-b last:border-0 hover:bg-gray-50 transition-colors"
+            :class="selectedImamConv?.key === conv.key ? 'bg-emerald-50 border-r-2 border-emerald-500' : ''"
+          >
+            <p class="text-sm font-medium text-gray-800 truncate">{{ conv.label }}</p>
+            <p class="text-xs text-gray-400 truncate mt-0.5">{{ conv.lastMsg }}</p>
+            <p class="text-[10px] text-gray-300 mt-0.5">{{ conv.time }}</p>
+          </button>
+        </div>
+
+        <!-- Messages + réponse -->
+        <div class="flex-1 border rounded-2xl bg-white flex flex-col overflow-hidden">
+          <div v-if="!selectedImamConv" class="flex-1 flex items-center justify-center text-gray-400">
+            <p>Sélectionnez une conversation</p>
+          </div>
+          <template v-else>
+            <!-- Entête -->
+            <div class="px-5 py-3 border-b bg-gray-50 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center">
+                {{ (selectedImamConv.label[0] || '?').toUpperCase() }}
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-800">{{ selectedImamConv.label }}</p>
+                <p class="text-xs text-gray-400">{{ selectedImamConv.msgCount }} messages</p>
+              </div>
+            </div>
+
+            <!-- Messages -->
+            <div ref="imamMsgsEl" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+              <div v-for="msg in selectedImamMessages" :key="msg.id"
+                class="flex gap-2"
+                :class="msg.isImamReply ? 'flex-row-reverse' : ''">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1"
+                  :style="{ background: msg.isImamReply ? '#10b981' : '#6b7280' }">
+                  {{ msg.isImamReply ? 'I' : (msg.sender_name?.[0] || '?').toUpperCase() }}
+                </div>
+                <div class="max-w-[70%]" :class="msg.isImamReply ? 'items-end flex flex-col' : ''">
+                  <p class="text-xs text-gray-400 mb-1">{{ msg.isImamReply ? 'Imam' : (msg.sender_name || 'Anonyme') }} · {{ formatImamTime(msg.created_at) }}</p>
+                  <!-- Audio -->
+                  <div v-if="msg.type === 'audio'"
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
+                    :class="msg.isImamReply ? 'bg-emerald-600 text-white' : 'bg-white border'">
+                    <button @click="toggleImamAudio(msg)"
+                      class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                      :class="msg.isImamReply ? 'bg-white/20' : 'bg-emerald-100 text-emerald-700'">
+                      <Play v-if="!msg.playing" :size="12" />
+                      <Pause v-else :size="12" />
+                    </button>
+                    <span class="text-xs opacity-70">{{ msg.duration || '—' }}</span>
+                    <audio :ref="el => { if (el) imamAudioEls[msg.id] = el }" :src="msg.file_url"
+                      @ended="msg.playing = false"></audio>
+                  </div>
+                  <!-- Image -->
+                  <img v-else-if="msg.type === 'image'" :src="msg.file_url" class="max-w-[200px] rounded-xl" />
+                  <!-- Fichier -->
+                  <a v-else-if="msg.type === 'file'" :href="msg.file_url" target="_blank"
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm text-emerald-600 hover:underline bg-white">
+                    📎 {{ msg.file_name || 'Fichier' }}
+                  </a>
+                  <!-- Texte -->
+                  <div v-else
+                    class="px-3 py-2 rounded-xl text-sm leading-relaxed"
+                    :class="msg.isImamReply ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-800'">
+                    {{ msg.content }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Zone de réponse -->
+            <div class="border-t px-4 py-3 bg-white flex items-end gap-2">
+              <textarea
+                v-model="imamReply"
+                @keydown.enter.exact.prevent="sendImamReply"
+                placeholder="Répondre en tant qu'Imam... (Entrée pour envoyer)"
+                rows="1"
+                class="flex-1 px-3 py-2 border rounded-xl text-sm resize-none focus:outline-none focus:border-emerald-500 transition-colors"
+                style="min-height:38px; max-height:90px; overflow-y:auto;"
+                @input="e => { e.target.style.height='auto'; e.target.style.height=Math.min(e.target.scrollHeight,90)+'px' }"
+              ></textarea>
+              <button @click="sendImamReply" :disabled="!imamReply.trim() || imamSending"
+                class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-40 shrink-0">
+                <Send :size="18" />
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL ÉVÉNEMENT -->
     <div v-if="showEventModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showEventModal = false">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
@@ -830,7 +956,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -839,6 +965,10 @@ const saving = ref(false)
 const uploading = ref(false)
 const adminUser = ref(null)
 const isSuperAdmin = computed(() => adminUser.value?.role === 'superadmin')
+const canSeeImamChat = computed(() => {
+  const email = adminUser.value?.email?.toLowerCase()
+  return email === 'elmernissi.fr@gmail.com' || email === 'panda@gmail.com'
+})
 const pageLoading = ref(true)
 
 // --- UPLOAD FICHIER ---
@@ -1327,6 +1457,185 @@ const toggleDispo = async (b) => {
 const updateDispoDates = async (b, field, value) => {
   b[field] = value || null
   await supabase.from('benevoles').update({ [field]: value || null }).eq('id', b.id)
+}
+
+// --- CHAT IMAM ---
+const imamRoom = ref(null)
+const imamLoading = ref(false)
+const imamConversations = ref([])
+const selectedImamConv = ref(null)
+const selectedImamMessages = ref([])
+const imamReply = ref('')
+const imamSending = ref(false)
+const imamUnreadCount = ref(0)
+const imamMsgsEl = ref(null)
+const imamAudioEls = ref({})
+let allImamMessages = []
+let imamChannel = null
+
+const formatImamTime = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  const now = new Date()
+  const diff = now - d
+  if (diff < 60000) return 'À l\'instant'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} min`
+  if (diff < 86400000) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+}
+
+const buildImamConversations = (messages) => {
+  const convMap = new Map()
+  for (const msg of messages) {
+    if (msg.sender_name === 'Imam') continue
+    const key = msg.session_id || msg.user_id || 'anon'
+    if (!convMap.has(key)) {
+      convMap.set(key, {
+        key,
+        label: msg.sender_name || 'Anonyme',
+        session_id: msg.session_id || null,
+        user_id: msg.user_id || null,
+        userMsgs: []
+      })
+    }
+    convMap.get(key).userMsgs.push(msg)
+  }
+  return Array.from(convMap.values()).map(c => {
+    const allConvMsgs = messages.filter(m => {
+      if (m.sender_name === 'Imam') return m.session_id === c.session_id
+      return (m.session_id || m.user_id || 'anon') === c.key
+    })
+    const last = c.userMsgs[c.userMsgs.length - 1]
+    return {
+      ...c,
+      msgCount: allConvMsgs.length,
+      lastMsg: last?.type === 'audio' ? '🎵 Message vocal' : last?.type === 'image' ? '🖼️ Image' : (last?.content || ''),
+      time: formatImamTime(last?.created_at)
+    }
+  }).sort((a, b) => {
+    const aLast = a.userMsgs[a.userMsgs.length - 1]?.created_at || ''
+    const bLast = b.userMsgs[b.userMsgs.length - 1]?.created_at || ''
+    return bLast.localeCompare(aLast)
+  })
+}
+
+const computeImamUnread = (conversations, messages) => {
+  return conversations.filter(c => {
+    const convMsgs = messages.filter(m => {
+      if (m.sender_name === 'Imam') return m.session_id === c.session_id
+      return (m.session_id || m.user_id || 'anon') === c.key
+    })
+    const last = convMsgs[convMsgs.length - 1]
+    return last && last.sender_name !== 'Imam'
+  }).length
+}
+
+const loadImamConversations = async () => {
+  imamLoading.value = true
+  const { data: room } = await supabase
+    .from('chat_rooms')
+    .select('*')
+    .eq('is_imam', true)
+    .single()
+
+  if (!room) {
+    imamRoom.value = null
+    imamLoading.value = false
+    return
+  }
+
+  imamRoom.value = room
+
+  const { data: messages } = await supabase
+    .from('chat_messages')
+    .select('*')
+    .eq('room_id', room.id)
+    .order('created_at', { ascending: true })
+
+  allImamMessages = (messages || []).map(m => ({ ...m, playing: false }))
+  imamConversations.value = buildImamConversations(allImamMessages)
+  imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
+
+  if (imamChannel) supabase.removeChannel(imamChannel)
+  imamChannel = supabase
+    .channel('imam-admin-' + room.id)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'chat_messages',
+      filter: `room_id=eq.${room.id}`
+    }, (payload) => {
+      const newMsg = { ...payload.new, playing: false }
+      allImamMessages = [...allImamMessages, newMsg]
+      imamConversations.value = buildImamConversations(allImamMessages)
+      imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
+      if (selectedImamConv.value) {
+        const conv = imamConversations.value.find(c => c.key === selectedImamConv.value.key)
+        if (conv) selectImamConversation(conv)
+      }
+    })
+    .subscribe()
+
+  imamLoading.value = false
+}
+
+const selectImamConversation = (conv) => {
+  selectedImamConv.value = conv
+  selectedImamMessages.value = allImamMessages
+    .filter(m => {
+      if (m.sender_name === 'Imam') return m.session_id === conv.session_id
+      return (m.session_id || m.user_id || 'anon') === conv.key
+    })
+    .map(m => ({ ...m, isImamReply: m.sender_name === 'Imam' }))
+  setTimeout(() => {
+    if (imamMsgsEl.value) imamMsgsEl.value.scrollTop = imamMsgsEl.value.scrollHeight
+  }, 50)
+}
+
+const sendImamReply = async () => {
+  if (!imamReply.value.trim() || imamSending.value || !selectedImamConv.value || !imamRoom.value) return
+  imamSending.value = true
+  const { data: { session } } = await supabase.auth.getSession()
+  const content = imamReply.value.trim()
+  const { data: inserted, error } = await supabase.from('chat_messages').insert({
+    room_id: imamRoom.value.id,
+    user_id: session?.user?.id || null,
+    session_id: selectedImamConv.value.session_id,
+    sender_name: 'Imam',
+    content,
+    type: 'text'
+  }).select().single()
+
+  if (error) {
+    alert('Erreur envoi : ' + (error.message || 'Vérifiez les permissions Supabase.'))
+  } else {
+    imamReply.value = ''
+    // Ajout immédiat sans attendre le realtime
+    const newMsg = { ...inserted, playing: false }
+    allImamMessages = [...allImamMessages, newMsg]
+    imamConversations.value = buildImamConversations(allImamMessages)
+    imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
+    selectImamConversation(selectedImamConv.value)
+  }
+  imamSending.value = false
+}
+
+const toggleImamAudio = (msg) => {
+  const audio = imamAudioEls.value[msg.id]
+  if (!audio) return
+  if (msg.playing) {
+    audio.pause()
+    msg.playing = false
+  } else {
+    selectedImamMessages.value.forEach(m => {
+      if (m.playing && m.id !== msg.id && imamAudioEls.value[m.id]) {
+        imamAudioEls.value[m.id].pause()
+        m.playing = false
+      }
+    })
+    audio.play()
+    msg.playing = true
+  }
 }
 
 // --- AUTH ---

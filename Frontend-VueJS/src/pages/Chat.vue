@@ -659,7 +659,18 @@ let mediaRecorder = null
 let audioChunks = []
 let recordingStream = null
 let recordingTimer = null
+let recordingStartTime = null
 let typingTimer = null
+
+const getSupportedMimeType = () => {
+  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg']
+  return types.find(t => MediaRecorder.isTypeSupported(t)) || ''
+}
+const getAudioExt = (mimeType) => {
+  if (mimeType.includes('mp4')) return 'mp4'
+  if (mimeType.includes('ogg')) return 'ogg'
+  return 'webm'
+}
 let nextDemoId = 100
 
 const modeLabel = computed(() => supabaseMode ? 'Temps réel · Supabase' : 'Mode démonstration')
@@ -1099,12 +1110,16 @@ const startRecording = async () => {
   try {
     recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true })
     audioChunks = []
-    mediaRecorder = new MediaRecorder(recordingStream)
+    const mimeType = getSupportedMimeType()
+    mediaRecorder = mimeType ? new MediaRecorder(recordingStream, { mimeType }) : new MediaRecorder(recordingStream)
     mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data) }
     mediaRecorder.start(100)
     isRecording.value = true
     recordingDuration.value = 0
-    recordingTimer = setInterval(() => recordingDuration.value++, 1000)
+    recordingStartTime = Date.now()
+    recordingTimer = setInterval(() => {
+      recordingDuration.value = Math.floor((Date.now() - recordingStartTime) / 1000)
+    }, 200)
   } catch {
     alert('Microphone non accessible. Vérifiez les permissions.')
   }
@@ -1113,20 +1128,21 @@ const startRecording = async () => {
 const stopRecording = () => {
   if (!mediaRecorder || mediaRecorder.state === 'inactive') return
   clearInterval(recordingTimer)
-  const duration = recordingDuration.value
+  const duration = Math.max(1, Math.round((Date.now() - (recordingStartTime || Date.now())) / 1000))
+  const mimeType = mediaRecorder.mimeType || 'audio/webm'
+  const ext = getAudioExt(mimeType)
 
   mediaRecorder.onstop = async () => {
-    const blob = new Blob(audioChunks, { type: 'audio/webm' })
-    const audioUrl = URL.createObjectURL(blob)
+    const blob = new Blob(audioChunks, { type: mimeType })
+    let fileUrl = URL.createObjectURL(blob)
 
-    let fileUrl = audioUrl
     if (supabaseMode && currentUser) {
       try {
-        const path = `${currentUser.id}/audio_${Date.now()}.webm`
+        const path = `${currentUser.id}/audio_${Date.now()}.${ext}`
         const { data, error } = await supabase.storage
           .from('chat-media')
-          .upload(path, blob, { contentType: 'audio/webm' })
-        if (!error) {
+          .upload(path, blob, { contentType: mimeType })
+        if (!error && data) {
           const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
           fileUrl = urlData.publicUrl
         }
@@ -1138,12 +1154,13 @@ const stopRecording = () => {
     await pushMessage({
       type: 'audio',
       file_url: fileUrl,
-      file_name: 'Vocal',
+      file_name: `vocal.${ext}`,
       duration: `${mins}:${secs.toString().padStart(2, '0')}`,
     })
     await scrollBottom()
     recordingStream?.getTracks().forEach(t => t.stop())
     recordingStream = null
+    recordingStartTime = null
   }
 
   mediaRecorder.stop()
