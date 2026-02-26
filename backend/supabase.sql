@@ -1373,3 +1373,17 @@ CREATE POLICY "chat_media_insert_anon" ON storage.objects FOR INSERT TO anon WIT
 ALTER TABLE chat_messages REPLICA IDENTITY FULL;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id UUID;
 ALTER TABLE chat_messages REPLICA IDENTITY FULL;
+
+-- ─── Suppression automatique messages imam après 7 jours ─────────────────────
+SELECT cron.unschedule('cleanup-imam-messages') WHERE EXISTS (
+  SELECT 1 FROM cron.job WHERE jobname = 'cleanup-imam-messages'
+);
+SELECT cron.schedule(
+  'cleanup-imam-messages',
+  '0 3 * * *',
+  $$
+    DELETE FROM chat_messages
+    WHERE created_at < NOW() - INTERVAL '7 days'
+    AND room_id IN (SELECT id FROM chat_rooms WHERE is_imam = TRUE);
+  $$
+);
