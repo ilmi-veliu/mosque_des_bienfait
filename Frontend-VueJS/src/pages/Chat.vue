@@ -1014,7 +1014,10 @@ const pushMessage = async (msgData) => {
     }).select().single()
 
     if (!error && data) {
-      messagesMap.value[roomId].push(formatSupabaseMsg({ ...data, sender_name: senderName }))
+      // Éviter doublon si realtime a déjà ajouté ce message
+      if (!messagesMap.value[roomId].some(m => m.id === data.id)) {
+        messagesMap.value[roomId].push(formatSupabaseMsg({ ...data, sender_name: senderName }))
+      }
       return
     }
     if (error) {

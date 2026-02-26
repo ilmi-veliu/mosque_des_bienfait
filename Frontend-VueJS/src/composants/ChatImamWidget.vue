@@ -402,6 +402,9 @@ const subscribeToRoom = (roomId) => {
       if (isLoggedIn.value && raw.user_id === currentUser.value?.id) return
       if (!isLoggedIn.value && raw.sender_name !== 'Imam') return
 
+      // Éviter les doublons (message déjà ajouté localement)
+      if (messages.value.some(m => m.id === raw.id)) return
+
       const msg = formatMsg({ ...raw })
       messages.value.push(msg)
       if (!open.value) unreadCount.value++
@@ -554,7 +557,13 @@ const sendMessage = async () => {
       if (error) throw error
       if (data) {
         const idx = messages.value.findIndex(m => m.localId === localId)
-        if (idx !== -1) messages.value[idx] = formatMsg(data, true)
+        // Si realtime a déjà ajouté le vrai message, supprimer le placeholder
+        // Sinon remplacer le placeholder par le vrai message
+        if (messages.value.some(m => m.id === data.id)) {
+          if (idx !== -1) messages.value.splice(idx, 1)
+        } else {
+          if (idx !== -1) messages.value[idx] = formatMsg(data, true)
+        }
       }
     }
   } catch (err) {

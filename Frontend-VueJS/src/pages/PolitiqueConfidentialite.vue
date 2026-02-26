@@ -8,7 +8,7 @@
           Retour à l'accueil
         </router-link>
         <h1 class="text-3xl md:text-5xl font-semibold mb-4">Politique de Confidentialité</h1>
-        <p class="text-gray-400">Dernière mise à jour : 14 février 2025</p>
+        <p class="text-gray-400">Dernière mise à jour : 26 février 2026</p>
       </div>
     </div>
 
@@ -51,12 +51,12 @@
               <p class="text-gray-600 text-sm">Nom, prénom, adresse email, numéro de téléphone - collectées lorsque vous nous contactez via le formulaire ou le chat.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
-              <h3 class="font-semibold text-gray-800 mb-2">Données de conversation (Tawk.to)</h3>
-              <p class="text-gray-600 text-sm">Messages échangés via le chat en ligne, adresse IP, informations techniques du navigateur. Ces données sont traitées par notre sous-traitant Tawk.to.</p>
+              <h3 class="font-semibold text-gray-800 mb-2">Données de conversation (Chat Imam)</h3>
+              <p class="text-gray-600 text-sm">Messages échangés via le chat en ligne avec l'imam. Ces données sont stockées dans notre base de données hébergée par Supabase (région Frankfurt, Union Européenne) et sont <strong>automatiquement supprimées après 7 jours</strong>.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
-              <h3 class="font-semibold text-gray-800 mb-2">Cookies</h3>
-              <p class="text-gray-600 text-sm">Cookie de consentement (stocké localement dans votre navigateur) pour mémoriser votre choix concernant l'utilisation du chat en ligne.</p>
+              <h3 class="font-semibold text-gray-800 mb-2">Données de session (Chat)</h3>
+              <p class="text-gray-600 text-sm">Un identifiant de session anonyme est stocké localement dans votre navigateur (localStorage) afin de relier vos messages à votre conversation sans nécessiter de compte.</p>
             </div>
           </div>
         </section>
@@ -124,8 +124,8 @@
                   <td class="p-4 text-gray-600">3 ans après le dernier contact</td>
                 </tr>
                 <tr class="border-b border-gray-100 bg-gray-50">
-                  <td class="p-4 text-gray-700">Conversations Tawk.to</td>
-                  <td class="p-4 text-gray-600">Selon la politique de conservation de Tawk.to (<a href="https://www.tawk.to/privacy-policy/" target="_blank" rel="noopener" class="text-emerald-600 hover:underline">voir leur politique</a>)</td>
+                  <td class="p-4 text-gray-700">Messages du Chat Imam</td>
+                  <td class="p-4 text-gray-600">7 jours (suppression automatique)</td>
                 </tr>
                 <tr class="border-b border-gray-100">
                   <td class="p-4 text-gray-700">Cookie de consentement</td>
@@ -149,17 +149,12 @@
           <p class="text-gray-700 leading-relaxed mb-4">Nous faisons appel aux sous-traitants suivants :</p>
           <div class="space-y-4">
             <div class="bg-gray-50 rounded-xl p-6">
-              <h3 class="font-semibold text-gray-800">Tawk.to</h3>
-              <p class="text-gray-600 text-sm mt-1">Service de chat en ligne. Les données peuvent être transférées hors de l'Union Européenne. Tawk.to s'engage à respecter des garanties appropriées conformément au RGPD.</p>
-              <a href="https://www.tawk.to/privacy-policy/" target="_blank" rel="noopener" class="text-emerald-600 text-sm hover:underline mt-2 inline-block">Politique de confidentialité de Tawk.to</a>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">Vercel</h3>
               <p class="text-gray-600 text-sm mt-1">Hébergement du site web. Serveurs principalement situés aux États-Unis et en Europe.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">Supabase</h3>
-              <p class="text-gray-600 text-sm mt-1">Base de données hébergée dans l'Union Européenne (région Frankfurt). Les données restent dans l'UE.</p>
+              <p class="text-gray-600 text-sm mt-1">Base de données et chat en ligne hébergés dans l'Union Européenne (région Frankfurt, Allemagne). Les données restent dans l'UE. Les messages du chat imam sont automatiquement supprimés après 7 jours.</p>
             </div>
           </div>
         </section>
@@ -218,7 +213,7 @@
             8. Gestion des cookies
           </h2>
           <p class="text-gray-700 leading-relaxed mb-4">
-            Notre site utilise uniquement les cookies suivants :
+            Notre site utilise uniquement les données de stockage local suivantes :
           </p>
           <div class="bg-gray-50 rounded-xl p-6">
             <table class="w-full">
@@ -230,15 +225,10 @@
                 </tr>
               </thead>
               <tbody>
-                <tr class="border-b border-gray-100">
-                  <td class="p-3 text-sm text-gray-700">cookieConsent</td>
-                  <td class="p-3 text-sm text-gray-600">Mémoriser votre choix de consentement</td>
-                  <td class="p-3 text-sm text-gray-600">13 mois</td>
-                </tr>
                 <tr>
-                  <td class="p-3 text-sm text-gray-700">Cookies Tawk.to</td>
-                  <td class="p-3 text-sm text-gray-600">Fonctionnement du chat en ligne (chargés uniquement après votre consentement)</td>
-                  <td class="p-3 text-sm text-gray-600">Variable</td>
+                  <td class="p-3 text-sm text-gray-700">pwaInstallDismissed</td>
+                  <td class="p-3 text-sm text-gray-600">Mémoriser si vous avez refusé la bannière d'installation de l'application</td>
+                  <td class="p-3 text-sm text-gray-600">7 jours</td>
                 </tr>
               </tbody>
             </table>
