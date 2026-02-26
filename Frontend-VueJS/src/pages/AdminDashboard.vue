@@ -1572,6 +1572,7 @@ const loadImamConversations = async () => {
       filter: `room_id=eq.${room.id}`
     }, (payload) => {
       const newMsg = { ...payload.new, playing: false }
+      if (allImamMessages.some(m => m.id === newMsg.id)) return
       allImamMessages = [...allImamMessages, newMsg]
       imamConversations.value = buildImamConversations(allImamMessages)
       imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
