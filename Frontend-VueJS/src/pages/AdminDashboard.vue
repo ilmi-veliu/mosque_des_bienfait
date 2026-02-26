@@ -1598,8 +1598,11 @@ const loadImamConversations = async () => {
 
 const selectImamConversation = (conv) => {
   selectedImamConv.value = conv
-  unreadConvKeys.value.delete(conv.key)
-  unreadConvKeys.value = new Set(unreadConvKeys.value)
+  // Supprimer le point rouge uniquement pour l'admin rachid
+  if (adminUser.value?.email?.toLowerCase().includes('rachid')) {
+    unreadConvKeys.value.delete(conv.key)
+    unreadConvKeys.value = new Set(unreadConvKeys.value)
+  }
   selectedImamMessages.value = allImamMessages
     .filter(m => {
       if (m.sender_name === 'Imam') return m.session_id === conv.session_id
