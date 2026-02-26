@@ -674,10 +674,13 @@
           <button
             v-for="conv in imamConversations" :key="conv.key"
             @click="selectImamConversation(conv)"
-            class="w-full px-4 py-3 text-left border-b last:border-0 hover:bg-gray-50 transition-colors"
+            class="w-full px-4 py-3 text-left border-b last:border-0 hover:bg-gray-50 transition-colors relative"
             :class="selectedImamConv?.key === conv.key ? 'bg-emerald-50 border-r-2 border-emerald-500' : ''"
           >
-            <p class="text-sm font-medium text-gray-800 truncate">{{ conv.label }}</p>
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-sm font-medium text-gray-800 truncate">{{ conv.label }}</p>
+              <span v-if="unreadConvKeys.has(conv.key)" class="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0"></span>
+            </div>
             <p class="text-xs text-gray-400 truncate mt-0.5">{{ conv.lastMsg }}</p>
             <p class="text-[10px] text-gray-300 mt-0.5">{{ conv.time }}</p>
           </button>
@@ -1475,6 +1478,7 @@ const imamReply = ref('')
 const imamSending = ref(false)
 const imamUnreadCount = ref(0)
 const imamMsgsEl = ref(null)
+const unreadConvKeys = ref(new Set())
 const imamAudioEls = ref({})
 let allImamMessages = []
 let imamChannel = null
@@ -1511,18 +1515,17 @@ const buildImamConversations = (messages) => {
       if (m.sender_name === 'Imam') return m.session_id === c.session_id
       return (m.session_id || m.user_id || 'anon') === c.key
     })
-    const last = c.userMsgs[c.userMsgs.length - 1]
+    const lastMsg = allConvMsgs[allConvMsgs.length - 1]
+    const hasUnread = lastMsg && lastMsg.sender_name !== 'Imam'
     return {
       ...c,
       msgCount: allConvMsgs.length,
-      lastMsg: last?.type === 'audio' ? '🎵 Message vocal' : last?.type === 'image' ? '🖼️ Image' : (last?.content || ''),
-      time: formatImamTime(last?.created_at)
+      lastMsg: lastMsg?.type === 'audio' ? '🎵 Message vocal' : lastMsg?.type === 'image' ? '🖼️ Image' : (lastMsg?.content || ''),
+      time: formatImamTime(lastMsg?.created_at),
+      lastMsgAt: lastMsg?.created_at || '',
+      hasUnread
     }
-  }).sort((a, b) => {
-    const aLast = a.userMsgs[a.userMsgs.length - 1]?.created_at || ''
-    const bLast = b.userMsgs[b.userMsgs.length - 1]?.created_at || ''
-    return bLast.localeCompare(aLast)
-  })
+  }).sort((a, b) => b.lastMsgAt.localeCompare(a.lastMsgAt))
 }
 
 const computeImamUnread = (conversations, messages) => {
@@ -1561,6 +1564,8 @@ const loadImamConversations = async () => {
   allImamMessages = (messages || []).map(m => ({ ...m, playing: false }))
   imamConversations.value = buildImamConversations(allImamMessages)
   imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
+  // Marquer comme non lues les convs dont le dernier message vient d'un visiteur
+  unreadConvKeys.value = new Set(imamConversations.value.filter(c => c.hasUnread).map(c => c.key))
 
   if (imamChannel) supabase.removeChannel(imamChannel)
   imamChannel = supabase
@@ -1576,6 +1581,11 @@ const loadImamConversations = async () => {
       allImamMessages = [...allImamMessages, newMsg]
       imamConversations.value = buildImamConversations(allImamMessages)
       imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
+      // Marquer comme non lu si message d'un visiteur et conv pas sélectionnée
+      const msgKey = newMsg.session_id || newMsg.user_id || 'anon'
+      if (newMsg.sender_name !== 'Imam' && selectedImamConv.value?.key !== msgKey) {
+        unreadConvKeys.value = new Set([...unreadConvKeys.value, msgKey])
+      }
       if (selectedImamConv.value) {
         const conv = imamConversations.value.find(c => c.key === selectedImamConv.value.key)
         if (conv) selectImamConversation(conv)
@@ -1588,6 +1598,8 @@ const loadImamConversations = async () => {
 
 const selectImamConversation = (conv) => {
   selectedImamConv.value = conv
+  unreadConvKeys.value.delete(conv.key)
+  unreadConvKeys.value = new Set(unreadConvKeys.value)
   selectedImamMessages.value = allImamMessages
     .filter(m => {
       if (m.sender_name === 'Imam') return m.session_id === conv.session_id
