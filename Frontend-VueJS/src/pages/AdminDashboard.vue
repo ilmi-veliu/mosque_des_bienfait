@@ -1652,7 +1652,7 @@ const uploadImamFile = async (file) => {
     const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
     const path = `imam-admin/${safeName}.${ext}`
     const { data, error } = await supabase.storage.from('chat-media').upload(path, file, { upsert: false })
-    if (error) throw error
+    if (error) throw new Error(error.message || JSON.stringify(error))
     const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
     return {
       url: urlData.publicUrl,
@@ -1660,8 +1660,8 @@ const uploadImamFile = async (file) => {
       size: file.size,
       type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
     }
-  } catch {
-    imamFileError.value = 'Erreur lors de l\'upload.'
+  } catch (err) {
+    imamFileError.value = 'Erreur upload : ' + (err?.message || JSON.stringify(err))
     return null
   }
 }
