@@ -1317,3 +1317,59 @@ CREATE POLICY "msgs_insert" ON chat_messages FOR INSERT TO anon, authenticated W
     AND EXISTS (SELECT 1 FROM chat_rooms WHERE id = room_id AND is_imam = TRUE)
   )
 );
+-- Ajouter elmernissi.fr@gmail.com comme admin
+INSERT INTO benevoles (prenom, nom, email, telephone, domaine, statut, role)
+SELECT 'Admin', 'Elmernissi', 'elmernissi.fr@gmail.com', '0000000000', 'Administration', 'accepté', 'admin'
+WHERE NOT EXISTS (SELECT 1 FROM benevoles WHERE lower(email) = 'elmernissi.fr@gmail.com');
+
+-- S'assurer qu'il est bien admin si la ligne existe déjà
+UPDATE benevoles SET role = 'admin', statut = 'accepté' WHERE lower(email) = 'elmernissi.fr@gmail.com';
+-- 1. Ajouter colonne is_imam sur chat_rooms
+ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS is_imam BOOLEAN DEFAULT FALSE;
+
+-- 2. Ajouter session_id sur chat_messages
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id UUID;
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
+
+-- 3. Créer la room Chat Imam
+INSERT INTO chat_rooms (name, description, color, is_imam, gender, is_readonly)
+SELECT 'Chat Imam', 'Posez vos questions directement à l''imam.', '#10b981', TRUE, NULL, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM chat_rooms WHERE is_imam = TRUE);
+
+-- 4. Permettre aux anonymes de voir la room imam
+DROP POLICY IF EXISTS "rooms_select" ON chat_rooms;
+CREATE POLICY "rooms_select" ON chat_rooms FOR SELECT TO anon, authenticated USING (
+  is_imam = TRUE
+  OR (auth.uid() IS NOT NULL AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid())))
+);
+
+-- 5. Permettre aux anonymes de lire ET envoyer des messages dans la room imam
+DROP POLICY IF EXISTS "msgs_select" ON chat_messages;
+CREATE POLICY "msgs_select" ON chat_messages FOR SELECT TO anon, authenticated USING (
+  deleted_at IS NULL
+  AND EXISTS (
+    SELECT 1 FROM chat_rooms
+    WHERE id = chat_messages.room_id
+    AND (is_imam = TRUE OR (auth.uid() IS NOT NULL AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))))
+  )
+);
+
+DROP POLICY IF EXISTS "msgs_insert" ON chat_messages;
+CREATE POLICY "msgs_insert" ON chat_messages FOR INSERT TO anon, authenticated WITH CHECK (
+  (auth.uid() IS NOT NULL AND auth.uid() = user_id AND EXISTS (
+    SELECT 1 FROM chat_rooms WHERE id = room_id AND (is_imam = TRUE OR (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))) AND (is_readonly IS FALSE OR is_readonly IS NULL)
+  ))
+  OR
+  (auth.uid() IS NULL AND user_id IS NULL AND EXISTS (
+    SELECT 1 FROM chat_rooms WHERE id = room_id AND is_imam = TRUE AND (is_readonly IS FALSE OR is_readonly IS NULL)
+  ))
+);
+
+-- 6. Permettre aux anonymes d'uploader dans chat-media/anon-imam/
+DROP POLICY IF EXISTS "chat_media_insert_anon" ON storage.objects;
+CREATE POLICY "chat_media_insert_anon" ON storage.objects FOR INSERT TO anon WITH CHECK (
+  bucket_id = 'chat-media' AND (storage.foldername(name))[1] = 'anon-imam'
+);
+ALTER TABLE chat_messages REPLICA IDENTITY FULL;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id UUID;
+ALTER TABLE chat_messages REPLICA IDENTITY FULL;

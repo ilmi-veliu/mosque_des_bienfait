@@ -360,7 +360,9 @@ const loadProfile = async (user) => {
 
 // ─── Formatage message ──────────────────────────────────────────────────────────
 const formatMsg = (msg, forceOwn = false) => {
-  const isOwn = forceOwn || (isLoggedIn.value && msg.user_id === currentUser.value?.id)
+  const isOwn = forceOwn
+    || (isLoggedIn.value && msg.user_id === currentUser.value?.id)
+    || (msg.session_id === mySessionId && msg.sender_name !== 'Imam')
   return {
     ...msg,
     isOwn,
@@ -422,11 +424,14 @@ const subscribeToRoom = (roomId) => {
       event: 'INSERT',
       schema: 'public',
       table: 'chat_messages',
-      filter: `room_id=eq.${roomId}`,
+      // Pas de filtre serveur : le filtre room_id ne fonctionne pas
+      // pour les anonymes sans REPLICA IDENTITY FULL.
+      // On filtre côté client ci-dessous.
     }, (payload) => {
       const raw = payload.new
 
-      // Ignorer tout message qui n'appartient pas à ma session
+      // Mauvaise room ou mauvaise session → ignorer
+      if (raw.room_id !== roomId) return
       if (raw.session_id !== mySessionId) return
       // Ignorer mes propres messages (déjà ajoutés localement lors de l'envoi)
       if (isLoggedIn.value && raw.user_id === currentUser.value?.id) return
