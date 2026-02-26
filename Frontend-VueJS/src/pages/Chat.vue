@@ -951,8 +951,9 @@ const subscribeToRoom = (roomId) => {
       }
       const msg = formatSupabaseMsg({ ...raw, chat_reactions: [] })
       if (!messagesMap.value[roomId]) messagesMap.value[roomId] = []
-      // Éviter les doublons si on est l'expéditeur (ajouté localement)
-      if (!msg.isOwn) {
+      // Éviter les doublons : vérifier si l'ID existe déjà (ajout local ou doublon realtime)
+      const alreadyExists = messagesMap.value[roomId].some(m => m.id === msg.id)
+      if (!alreadyExists) {
         messagesMap.value[roomId].push(msg)
         scrollBottom()
       }
