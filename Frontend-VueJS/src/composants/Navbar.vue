@@ -17,9 +17,13 @@
           <router-link to="/evenements" class="hover:text-gray-600 transition-colors">Événements</router-link>
           <router-link to="/contact" class="hover:text-gray-600 transition-colors">Contact Imam</router-link>
           <router-link v-if="isLoggedIn" to="/chat"
-            class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-medium">
+            class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-medium relative">
             <MessagesSquare :size="15" />
-            Chat
+            Chat Général
+            <span v-if="chatUnread > 0"
+              class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px] px-1">
+              {{ chatUnread > 9 ? '9+' : chatUnread }}
+            </span>
           </router-link>
 
           <!-- Connecté : avatar dropdown -->
@@ -134,9 +138,13 @@
           <MessageSquare :size="18" class="text-gray-400" />
           Contact Imam
         </router-link>
-        <router-link v-if="isLoggedIn" @click="mobileOpen = false" to="/chat" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-emerald-50 transition-colors text-sm text-emerald-700 font-medium">
+        <router-link v-if="isLoggedIn" @click="mobileOpen = false" to="/chat" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-emerald-50 transition-colors text-sm text-emerald-700 font-medium relative">
           <MessagesSquare :size="18" class="text-emerald-500" />
-          Chat communautaire
+          Chat Général
+          <span v-if="chatUnread > 0"
+            class="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px] px-1">
+            {{ chatUnread > 9 ? '9+' : chatUnread }}
+          </span>
         </router-link>
 
         <!-- Connecté : section compte -->
@@ -190,12 +198,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import { Building2, Home, Video, Calendar, MessageSquare, MessagesSquare, HandHelping, UserPlus, LogIn, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X } from 'lucide-vue-next'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { Building2, Home, Video, Calendar, MessageSquare, MessagesSquare, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
+const route = useRoute()
 const isLoggedIn = ref(false)
 const isAdmin = ref(false)
 const isBenevole = ref(false)
@@ -204,6 +213,26 @@ const dropdownOpen = ref(false)
 const dropdownRef = ref(null)
 const avatarUrl = ref('')
 const userInitiales = ref('')
+const chatUnread = ref(0)
+let chatChannel = null
+let currentUserId = null
+
+// Réinitialiser le badge quand on arrive sur /chat
+watch(() => route.path, (newPath) => {
+  if (newPath.startsWith('/chat')) chatUnread.value = 0
+})
+
+const subscribeToChatNotifs = () => {
+  if (chatChannel) { supabase.removeChannel(chatChannel); chatChannel = null }
+  chatChannel = supabase
+    .channel('navbar-chat-notifs')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+      if (payload.new.user_id === currentUserId) return
+      if (route.path.startsWith('/chat')) return
+      chatUnread.value++
+    })
+    .subscribe()
+}
 
 const checkBenevole = async (email) => {
   if (!email) {
@@ -240,14 +269,19 @@ const loadProfile = async (userId) => {
 const updateAuthState = async (session) => {
   isLoggedIn.value = !!session
   if (session) {
+    currentUserId = session.user.id
     await checkBenevole(session.user.email)
     loadProfile(session.user.id)
+    subscribeToChatNotifs()
   } else {
+    currentUserId = null
     isAdmin.value = false
     isBenevole.value = false
     avatarUrl.value = ''
     userInitiales.value = ''
     lastCheckedEmail = null
+    chatUnread.value = 0
+    if (chatChannel) { supabase.removeChannel(chatChannel); chatChannel = null }
   }
 }
 
@@ -287,6 +321,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   authSub?.unsubscribe()
   document.removeEventListener('click', handleClickOutside)
+  if (chatChannel) supabase.removeChannel(chatChannel)
 })
 </script>
 

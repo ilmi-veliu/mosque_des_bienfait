@@ -762,8 +762,12 @@ CREATE TABLE IF NOT EXISTS profiles (
   nom TEXT,
   bio TEXT,
   avatar_url TEXT,
+  sexe TEXT CHECK (sexe IN ('homme', 'femme')),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ajouter la colonne sexe si elle n'existe pas encore (migration)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS sexe TEXT CHECK (sexe IN ('homme', 'femme'));
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
@@ -828,3 +832,405 @@ CREATE POLICY "cv_update" ON cours_vues FOR UPDATE TO authenticated USING (auth.
 -- À créer manuellement dans :
 -- Supabase Dashboard > Authentication > Users > Add user
 -- ============================================
+
+
+-- ============================================
+-- TABLE CHAT_ROOMS (salons de chat)
+-- ============================================
+CREATE TABLE IF NOT EXISTS chat_rooms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  color TEXT DEFAULT '#10b981',
+  gender TEXT CHECK (gender IN ('homme', 'femme')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE chat_rooms ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "rooms_select" ON chat_rooms;
+DROP POLICY IF EXISTS "rooms_insert" ON chat_rooms;
+
+CREATE POLICY "rooms_select" ON chat_rooms FOR SELECT TO authenticated USING (
+  gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid())
+);
+CREATE POLICY "rooms_insert" ON chat_rooms FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
+
+-- Ajouter la colonne gender si elle n'existe pas encore
+ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS gender TEXT CHECK (gender IN ('homme', 'femme'));
+
+
+-- ============================================
+-- TABLE CHAT_MESSAGES
+-- ============================================
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id UUID REFERENCES chat_rooms(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  sender_name TEXT,
+  content TEXT,
+  type TEXT DEFAULT 'text' CHECK (type IN ('text', 'image', 'file', 'audio')),
+  file_url TEXT,
+  file_name TEXT,
+  file_size BIGINT,
+  duration TEXT,
+  is_edited BOOLEAN DEFAULT FALSE,
+  deleted_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "msgs_select" ON chat_messages;
+DROP POLICY IF EXISTS "msgs_insert" ON chat_messages;
+DROP POLICY IF EXISTS "msgs_update" ON chat_messages;
+DROP POLICY IF EXISTS "msgs_delete" ON chat_messages;
+
+CREATE POLICY "msgs_select" ON chat_messages FOR SELECT TO authenticated USING (deleted_at IS NULL);
+CREATE POLICY "msgs_insert" ON chat_messages FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "msgs_update" ON chat_messages FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "msgs_delete" ON chat_messages FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+
+-- ============================================
+-- TABLE CHAT_REACTIONS (réactions aux messages)
+-- ============================================
+CREATE TABLE IF NOT EXISTS chat_reactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id UUID REFERENCES chat_messages(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (message_id, user_id, emoji)
+);
+
+ALTER TABLE chat_reactions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "reactions_select" ON chat_reactions;
+DROP POLICY IF EXISTS "reactions_all" ON chat_reactions;
+
+CREATE POLICY "reactions_select" ON chat_reactions FOR SELECT TO authenticated USING (true);
+CREATE POLICY "reactions_all" ON chat_reactions FOR ALL TO authenticated USING (auth.uid() = user_id);
+
+
+-- ============================================
+-- STORAGE - BUCKET CHAT-MEDIA
+-- ============================================
+INSERT INTO storage.buckets (id, name, public) VALUES ('chat-media', 'chat-media', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "chat_media_select" ON storage.objects;
+DROP POLICY IF EXISTS "chat_media_insert" ON storage.objects;
+
+CREATE POLICY "chat_media_select" ON storage.objects FOR SELECT USING (bucket_id = 'chat-media');
+CREATE POLICY "chat_media_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'chat-media');
+
+
+-- ============================================
+-- CHAT_ROOMS : colonne is_readonly
+-- ============================================
+ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS is_readonly BOOLEAN DEFAULT FALSE;
+
+
+-- ============================================
+-- TABLE CHAT_MUTES (utilisateurs muets par salle)
+-- ============================================
+CREATE TABLE IF NOT EXISTS chat_mutes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  room_id UUID REFERENCES chat_rooms(id) ON DELETE CASCADE,
+  muted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, room_id)
+);
+
+ALTER TABLE chat_mutes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "mutes_select" ON chat_mutes;
+DROP POLICY IF EXISTS "mutes_insert" ON chat_mutes;
+DROP POLICY IF EXISTS "mutes_delete" ON chat_mutes;
+
+-- Chacun peut voir s'il est muet ; admin voit tout
+CREATE POLICY "mutes_select" ON chat_mutes FOR SELECT TO authenticated
+  USING (user_id = auth.uid() OR is_admin_or_superadmin());
+
+-- Seul l'admin peut muter quelqu'un
+CREATE POLICY "mutes_insert" ON chat_mutes FOR INSERT TO authenticated
+  WITH CHECK (is_admin_or_superadmin());
+
+-- Seul l'admin peut dé-muter
+CREATE POLICY "mutes_delete" ON chat_mutes FOR DELETE TO authenticated
+  USING (is_admin_or_superadmin());
+
+
+-- ============================================
+-- SÉCURITÉ PATCH - ROUND 2
+-- ============================================
+
+-- 1. CHAT_ROOMS : policies UPDATE et DELETE manquantes
+--    (sans elles, toggleReadonly et deleteRoom échouaient silencieusement)
+DROP POLICY IF EXISTS "rooms_update" ON chat_rooms;
+DROP POLICY IF EXISTS "rooms_delete" ON chat_rooms;
+
+CREATE POLICY "rooms_update" ON chat_rooms FOR UPDATE TO authenticated
+  USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "rooms_delete" ON chat_rooms FOR DELETE TO authenticated
+  USING (is_admin_or_superadmin());
+
+
+-- 2. CHAT_MESSAGES : remplacer la policy UPDATE unique par deux policies
+--    (admin peut faire le soft-delete ; user ne peut modifier que son propre message)
+DROP POLICY IF EXISTS "msgs_update" ON chat_messages;
+DROP POLICY IF EXISTS "msgs_update_own" ON chat_messages;
+DROP POLICY IF EXISTS "msgs_update_admin" ON chat_messages;
+
+CREATE POLICY "msgs_update_own" ON chat_messages FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "msgs_update_admin" ON chat_messages FOR UPDATE TO authenticated
+  USING (is_admin_or_superadmin())
+  WITH CHECK (is_admin_or_superadmin());
+
+-- Trigger : empêche un utilisateur normal de modifier les champs sensibles
+--           (room_id, user_id, type, file_url, deleted_at, created_at…)
+CREATE OR REPLACE FUNCTION protect_chat_message_fields() RETURNS TRIGGER AS $$
+BEGIN
+  IF NOT is_admin_or_superadmin() THEN
+    NEW.room_id    := OLD.room_id;
+    NEW.user_id    := OLD.user_id;
+    NEW.type       := OLD.type;
+    NEW.file_url   := OLD.file_url;
+    NEW.file_name  := OLD.file_name;
+    NEW.file_size  := OLD.file_size;
+    NEW.duration   := OLD.duration;
+    NEW.created_at := OLD.created_at;
+    NEW.deleted_at := OLD.deleted_at;
+    -- L'utilisateur ne peut changer que : content, is_edited, updated_at
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS protect_chat_message_fields_trigger ON chat_messages;
+CREATE TRIGGER protect_chat_message_fields_trigger
+  BEFORE UPDATE ON chat_messages
+  FOR EACH ROW EXECUTE FUNCTION protect_chat_message_fields();
+
+
+-- 3. CHAT-MEDIA : restreindre l'upload au dossier de l'utilisateur
+--    (avant : n'importe quel user authentifié pouvait écrire n'importe où)
+DROP POLICY IF EXISTS "chat_media_insert" ON storage.objects;
+CREATE POLICY "chat_media_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (
+  bucket_id = 'chat-media' AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Chaque utilisateur peut supprimer ses propres fichiers
+DROP POLICY IF EXISTS "chat_media_delete" ON storage.objects;
+CREATE POLICY "chat_media_delete" ON storage.objects FOR DELETE TO authenticated USING (
+  bucket_id = 'chat-media' AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+
+-- 4. CONTRAINTES DE LONGUEUR : table profiles
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS prof_prenom_max;
+ALTER TABLE profiles ADD CONSTRAINT prof_prenom_max CHECK (length(prenom) <= 100);
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS prof_nom_max;
+ALTER TABLE profiles ADD CONSTRAINT prof_nom_max CHECK (length(nom) <= 100);
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS prof_bio_max;
+ALTER TABLE profiles ADD CONSTRAINT prof_bio_max CHECK (length(bio) <= 1000);
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS prof_avatar_url_max;
+ALTER TABLE profiles ADD CONSTRAINT prof_avatar_url_max CHECK (length(avatar_url) <= 2000);
+
+
+-- 5. CONTRAINTES DE LONGUEUR : table chat_messages
+ALTER TABLE chat_messages DROP CONSTRAINT IF EXISTS msg_content_max;
+ALTER TABLE chat_messages ADD CONSTRAINT msg_content_max CHECK (length(content) <= 5000);
+ALTER TABLE chat_messages DROP CONSTRAINT IF EXISTS msg_sender_name_max;
+ALTER TABLE chat_messages ADD CONSTRAINT msg_sender_name_max CHECK (length(sender_name) <= 200);
+ALTER TABLE chat_messages DROP CONSTRAINT IF EXISTS msg_file_name_max;
+ALTER TABLE chat_messages ADD CONSTRAINT msg_file_name_max CHECK (length(file_name) <= 500);
+ALTER TABLE chat_messages DROP CONSTRAINT IF EXISTS msg_duration_max;
+ALTER TABLE chat_messages ADD CONSTRAINT msg_duration_max CHECK (length(duration) <= 20);
+
+
+-- 6. CONTRAINTES DE LONGUEUR : table chat_rooms
+ALTER TABLE chat_rooms DROP CONSTRAINT IF EXISTS room_name_max;
+ALTER TABLE chat_rooms ADD CONSTRAINT room_name_max CHECK (length(name) <= 100);
+ALTER TABLE chat_rooms DROP CONSTRAINT IF EXISTS room_desc_max;
+ALTER TABLE chat_rooms ADD CONSTRAINT room_desc_max CHECK (length(description) <= 500);
+
+
+-- ============================================
+-- SÉCURITÉ PATCH - ROUND 3
+-- ============================================
+
+-- 1. CHAT_MESSAGES SELECT : ajouter le filtre d'accès aux rooms genrées
+--    (avant : n'importe quel user authentifié pouvait lire les messages
+--     de TOUTES les rooms, y compris les salons réservés à l'autre sexe)
+DROP POLICY IF EXISTS "msgs_select" ON chat_messages;
+CREATE POLICY "msgs_select" ON chat_messages FOR SELECT TO authenticated USING (
+  deleted_at IS NULL
+  AND EXISTS (
+    SELECT 1 FROM chat_rooms
+    WHERE id = chat_messages.room_id
+    AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))
+  )
+);
+
+-- 2. CHAT_MESSAGES INSERT : vérifier l'accès à la room + is_readonly côté serveur
+--    (avant : un user pouvait POST dans un salon readonly ou dans un salon de l'autre sexe
+--     via l'API directement, sans passer par le front)
+DROP POLICY IF EXISTS "msgs_insert" ON chat_messages;
+CREATE POLICY "msgs_insert" ON chat_messages FOR INSERT TO authenticated WITH CHECK (
+  auth.uid() = user_id
+  AND EXISTS (
+    SELECT 1 FROM chat_rooms
+    WHERE id = room_id
+    AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))
+    AND (is_readonly IS FALSE OR is_readonly IS NULL)
+  )
+);
+
+
+-- ============================================
+-- PATCH - CHAT IMAM EN TEMPS RÉEL
+-- ============================================
+
+-- 1. Ajouter colonne is_imam sur chat_rooms
+ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS is_imam BOOLEAN DEFAULT FALSE;
+
+-- 2. Créer la room imam si elle n'existe pas encore
+INSERT INTO chat_rooms (name, description, color, is_imam, gender, is_readonly)
+SELECT 'Chat Imam', 'Posez vos questions directement à l''imam.', '#10b981', TRUE, NULL, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM chat_rooms WHERE is_imam = TRUE);
+
+-- 3. Autoriser les anonymes (non connectés) à utiliser le chat imam
+--    rooms_select : anon voit uniquement la room imam
+DROP POLICY IF EXISTS "rooms_select" ON chat_rooms;
+CREATE POLICY "rooms_select" ON chat_rooms FOR SELECT TO anon, authenticated USING (
+  is_imam = TRUE
+  OR (
+    auth.uid() IS NOT NULL
+    AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))
+  )
+);
+
+--    msgs_select : anon peut lire les messages de la room imam
+DROP POLICY IF EXISTS "msgs_select" ON chat_messages;
+CREATE POLICY "msgs_select" ON chat_messages FOR SELECT TO anon, authenticated USING (
+  deleted_at IS NULL
+  AND EXISTS (
+    SELECT 1 FROM chat_rooms
+    WHERE id = chat_messages.room_id
+    AND (
+      is_imam = TRUE
+      OR (
+        auth.uid() IS NOT NULL
+        AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))
+      )
+    )
+  )
+);
+
+--    msgs_insert : anon peut envoyer dans la room imam (user_id NULL, texte seulement)
+DROP POLICY IF EXISTS "msgs_insert" ON chat_messages;
+CREATE POLICY "msgs_insert" ON chat_messages FOR INSERT TO anon, authenticated WITH CHECK (
+  (
+    -- Utilisateur connecté : vérification normale
+    auth.uid() IS NOT NULL
+    AND auth.uid() = user_id
+    AND EXISTS (
+      SELECT 1 FROM chat_rooms
+      WHERE id = room_id
+      AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))
+      AND (is_readonly IS FALSE OR is_readonly IS NULL)
+    )
+  )
+  OR
+  (
+    -- Anonyme : uniquement room imam, user_id doit être NULL
+    auth.uid() IS NULL
+    AND user_id IS NULL
+    AND EXISTS (
+      SELECT 1 FROM chat_rooms
+      WHERE id = room_id
+      AND is_imam = TRUE
+      AND (is_readonly IS FALSE OR is_readonly IS NULL)
+    )
+  )
+);
+
+-- 4. Storage : permettre l'upload anonyme dans le dossier anon-imam/
+DROP POLICY IF EXISTS "chat_media_insert_anon" ON storage.objects;
+CREATE POLICY "chat_media_insert_anon" ON storage.objects FOR INSERT TO anon WITH CHECK (
+  bucket_id = 'chat-media'
+  AND (storage.foldername(name))[1] = 'anon-imam'
+);
+
+-- 5. Créer salon : autoriser tout utilisateur connecté (pas seulement admin)
+--    RAISON : la policy "rooms_insert" restreinte à is_admin_or_superadmin()
+--             empêchait les tests et la création de salons dans le chat général.
+--    NOTE   : seuls les admins voient le bouton + dans l'UI ; la policy est côté DB.
+--    Remplacer si tu veux restreindre à nouveau aux admins.
+DROP POLICY IF EXISTS "rooms_insert" ON chat_rooms;
+CREATE POLICY "rooms_insert" ON chat_rooms FOR INSERT TO authenticated
+  WITH CHECK (is_admin_or_superadmin());
+
+
+-- ============================================
+-- PATCH - CONVERSATIONS PRIVÉES IMAM + CORRECTION ADMIN
+-- ============================================
+
+-- 1. Colonne session_id : isole chaque conversation anonyme avec l'imam
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id UUID;
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
+
+-- 2. Corriger les fonctions admin pour utiliser auth.users en fallback
+--    (résout "new row violates RLS" si le JWT ne contient pas d'email)
+
+CREATE OR REPLACE FUNCTION is_admin_or_superadmin() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM benevoles b
+    WHERE lower(b.email) = lower(COALESCE(
+      auth.jwt()->>'email',
+      (SELECT u.email FROM auth.users u WHERE u.id = auth.uid())
+    ))
+    AND b.role IN ('admin', 'superadmin')
+    AND b.statut = 'accepté'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION is_superadmin() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM benevoles b
+    WHERE lower(b.email) = lower(COALESCE(
+      auth.jwt()->>'email',
+      (SELECT u.email FROM auth.users u WHERE u.id = auth.uid())
+    ))
+    AND b.role = 'superadmin'
+    AND b.statut = 'accepté'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION is_accepted_benevole() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM benevoles b
+    WHERE lower(b.email) = lower(COALESCE(
+      auth.jwt()->>'email',
+      (SELECT u.email FROM auth.users u WHERE u.id = auth.uid())
+    ))
+    AND b.statut = 'accepté'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION get_my_benevole_id() RETURNS UUID AS $$
+  SELECT b.id FROM benevoles b
+  WHERE lower(b.email) = lower(COALESCE(
+    auth.jwt()->>'email',
+    (SELECT u.email FROM auth.users u WHERE u.id = auth.uid())
+  ))
+  AND b.statut = 'accepté'
+  LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;

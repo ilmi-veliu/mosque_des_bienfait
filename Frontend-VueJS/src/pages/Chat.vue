@@ -18,32 +18,74 @@
 
       <!-- ====== SIDEBAR SALONS ====== -->
       <div class="w-64 bg-white border-r flex flex-col shrink-0 overflow-hidden">
-        <div class="px-4 py-3 border-b bg-gray-50">
+        <div class="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Salons</p>
+          <button v-if="isAdmin" @click="showCreateRoom = true" title="Créer un salon"
+            class="p-1 rounded-lg hover:bg-emerald-100 text-emerald-600 transition-colors">
+            <Plus :size="14" />
+          </button>
         </div>
         <div class="flex-1 overflow-y-auto">
 
-          <button
-            v-for="room in rooms"
-            :key="room.id"
-            @click="selectRoom(room)"
-            class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-50"
-            :class="currentRoom?.id === room.id ? 'bg-emerald-50 border-r-2 border-emerald-600' : ''"
-          >
-            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-              :style="{ background: room.color }">
-              {{ room.name[0].toUpperCase() }}
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-800 truncate">{{ room.name }}</p>
-              <p class="text-xs text-gray-400 truncate">{{ room.lastMessage || room.description }}</p>
-            </div>
-            <span v-if="room.unread > 0"
-              class="bg-emerald-600 text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center px-1 shrink-0">
-              {{ room.unread }}
-            </span>
-          </button>
+          <div v-for="room in rooms" :key="room.id" class="relative group/room border-b border-gray-50">
+            <button
+              @click="selectRoom(room)"
+              class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors"
+              :class="currentRoom?.id === room.id ? 'bg-emerald-50 border-r-2 border-emerald-600' : ''"
+            >
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+                :style="{ background: room.color }">
+                {{ room.name[0].toUpperCase() }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate flex items-center gap-1">
+                  {{ room.name }}
+                  <Lock v-if="room.is_readonly" :size="10" class="text-orange-400 shrink-0" />
+                </p>
+                <p class="text-xs text-gray-400 truncate">{{ room.lastMessage || room.description }}</p>
+              </div>
+              <span v-if="room.unread > 0"
+                class="bg-emerald-600 text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center px-1 shrink-0">
+                {{ room.unread }}
+              </span>
+            </button>
+            <!-- Admin: supprimer salon -->
+            <button v-if="isAdmin" @click="deleteRoom(room)"
+              class="absolute right-2 top-1/2 -translate-y-1/2 hidden group-hover/room:flex p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+              title="Supprimer le salon">
+              <Trash2 :size="13" class="text-red-400" />
+            </button>
+          </div>
         </div>
+
+        <!-- Modal créer salon -->
+        <Teleport to="body">
+          <div v-if="showCreateRoom" class="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4" @click.self="showCreateRoom = false">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+              <h3 class="font-semibold text-gray-900 mb-4">Créer un salon</h3>
+              <div class="space-y-3">
+                <input v-model="newRoomName" type="text" placeholder="Nom du salon *"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
+                <input v-model="newRoomDesc" type="text" placeholder="Description (optionnel)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
+                <select v-model="newRoomGender"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:border-emerald-500 text-gray-600">
+                  <option value="">Tous (sans restriction)</option>
+                  <option value="homme">Hommes uniquement</option>
+                  <option value="femme">Femmes uniquement</option>
+                </select>
+              </div>
+              <p v-if="createRoomError" class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2 mt-3">{{ createRoomError }}</p>
+              <div class="flex gap-2 mt-4">
+                <button @click="showCreateRoom = false; createRoomError = ''" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">Annuler</button>
+                <button @click="createRoom" :disabled="!newRoomName.trim() || creatingRoom"
+                  class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50">
+                  {{ creatingRoom ? 'Création...' : 'Créer' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
 
         <!-- Profil utilisateur connecté (bas de sidebar) -->
         <div v-if="myProfile.name" class="border-t px-4 py-3 flex items-center gap-3 bg-gray-50 shrink-0">
@@ -71,9 +113,24 @@
             :style="{ background: currentRoom.color }">
             {{ currentRoom.name[0].toUpperCase() }}
           </div>
-          <div>
-            <p class="font-semibold text-gray-900 text-sm">{{ currentRoom.name }}</p>
-            <p class="text-xs text-gray-400">{{ currentRoom.description }}</p>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-900 text-sm flex items-center gap-2">
+              {{ currentRoom.name }}
+              <span v-if="currentRoom.is_readonly" class="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium shrink-0">Lecture seule</span>
+            </p>
+            <p class="text-xs text-gray-400 truncate">{{ currentRoom.description }}</p>
+          </div>
+          <!-- Contrôles admin -->
+          <div v-if="isAdmin" class="flex items-center gap-0.5 shrink-0">
+            <button @click="toggleReadonly" :title="currentRoom.is_readonly ? 'Désactiver lecture seule' : 'Activer lecture seule'"
+              class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+              <Unlock v-if="currentRoom.is_readonly" :size="15" class="text-orange-500" />
+              <Lock v-else :size="15" class="text-gray-400" />
+            </button>
+            <button @click="deleteRoom(currentRoom)" title="Supprimer le salon"
+              class="p-1.5 rounded-lg hover:bg-red-50 transition-colors">
+              <Trash2 :size="15" class="text-red-400" />
+            </button>
           </div>
         </div>
 
@@ -99,8 +156,14 @@
 
             <!-- Contenu -->
             <div class="max-w-[70%] flex flex-col" :class="msg.isOwn ? 'items-end' : 'items-start'">
-              <span class="text-xs text-gray-400 mb-1">
-                {{ msg.isOwn ? myProfile.name || 'Vous' : msg.senderName }} · {{ formatTime(msg.created_at) }}
+              <span class="text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+                {{ msg.isOwn ? (myProfile.name?.split(' ')[0] || 'Vous') : (msg.senderName?.split(' ')[0] || 'Anonyme') }} · {{ formatTime(msg.created_at) }}
+                <!-- Admin: muter l'utilisateur -->
+                <button v-if="isAdmin && !msg.isOwn && msg.user_id" @click="muteUser(msg)"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity hover:text-orange-500"
+                  title="Rendre muet">
+                  <VolumeX :size="11" />
+                </button>
               </span>
 
               <!-- Vocal -->
@@ -201,6 +264,15 @@
                   title="Modifier (5 min)">
                   <Pencil :size="11" class="text-gray-500" />
                 </button>
+                <!-- Admin: supprimer message -->
+                <button
+                  v-if="isAdmin"
+                  @click="deleteMessage(msg)"
+                  class="absolute -top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white border shadow-sm rounded-full p-1 hover:bg-red-50"
+                  :class="msg.isOwn ? '-left-16' : '-right-16'"
+                  title="Supprimer (admin)">
+                  <Trash2 :size="11" class="text-red-400" />
+                </button>
               </div>
 
               <!-- Réactions -->
@@ -280,6 +352,22 @@
 
         <!-- Zone de saisie -->
         <div class="bg-white border-t px-4 py-3 shrink-0">
+
+          <!-- Erreur envoi (debug) -->
+          <div v-if="sendError" class="bg-red-50 border border-red-300 text-red-700 text-xs px-3 py-2 rounded-xl mb-2 whitespace-pre-wrap select-all">{{ sendError }}</div>
+
+          <!-- Lecture seule (non-admin) -->
+          <div v-if="currentRoom.is_readonly && !isAdmin" class="flex items-center justify-center gap-2 py-2 text-sm text-orange-600">
+            <Lock :size="14" />
+            Ce salon est en lecture seule. Seul l'admin peut écrire.
+          </div>
+
+          <!-- Muet -->
+          <div v-else-if="isMuted" class="flex items-center justify-center gap-2 py-2 text-sm text-red-500">
+            <VolumeX :size="14" />
+            Vous êtes muet dans ce salon.
+          </div>
+
           <!-- Fichiers en attente -->
           <div v-if="pendingFiles.length" class="flex gap-2 mb-2 flex-wrap">
             <div v-for="(f, i) in pendingFiles" :key="i"
@@ -292,12 +380,12 @@
           </div>
 
           <!-- Indicateur enregistrement vocal -->
-          <div v-if="isRecording" class="flex items-center gap-2 mb-2 text-red-500">
+          <div v-if="isRecording && !(currentRoom.is_readonly && !isAdmin) && !isMuted" class="flex items-center gap-2 mb-2 text-red-500">
             <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
             <span class="text-xs font-medium">Enregistrement... {{ recordingDuration }}s — Relâchez pour envoyer</span>
           </div>
 
-          <div class="flex items-end gap-2">
+          <div v-if="!(currentRoom.is_readonly && !isAdmin) && !isMuted" class="flex items-end gap-2">
             <!-- Emoji -->
             <button
               @click="showEmojiPicker = !showEmojiPicker"
@@ -368,7 +456,8 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import {
   ChevronLeft, MessageSquare, Send, Mic, Smile, Paperclip,
-  Play, Pause, FileText, Download, X, Pencil, Check
+  Play, Pause, FileText, Download, X, Pencil, Check,
+  Trash2, Plus, VolumeX, Lock, Unlock
 } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
@@ -408,10 +497,12 @@ const initialsFor = (name) => {
 
 // ─── Données démo ───────────────────────────────────────────────────────────────
 const DEMO_ROOMS = [
-  { id: 'demo-1', name: 'Général', description: 'Discussion générale', color: '#10b981', lastMessage: 'Bienvenue ! 🌿', unread: 0 },
-  { id: 'demo-2', name: 'Cours & Formation', description: 'Questions sur les cours', color: '#3b82f6', lastMessage: '', unread: 2 },
-  { id: 'demo-3', name: 'Annonces', description: 'Annonces officielles', color: '#f59e0b', lastMessage: '', unread: 0 },
-  { id: 'demo-4', name: 'Entraide', description: 'Aide et conseils', color: '#8b5cf6', lastMessage: '', unread: 0 },
+  { id: 'demo-1', name: 'Général', description: 'Discussion générale', color: '#10b981', lastMessage: 'Bienvenue ! 🌿', unread: 0, gender: null, is_readonly: false },
+  { id: 'demo-2', name: 'Cours & Formation', description: 'Questions sur les cours', color: '#3b82f6', lastMessage: '', unread: 2, gender: null, is_readonly: false },
+  { id: 'demo-3', name: 'Annonces', description: 'Annonces officielles', color: '#f59e0b', lastMessage: '', unread: 0, gender: null, is_readonly: true },
+  { id: 'demo-4', name: 'Entraide', description: 'Aide et conseils', color: '#8b5cf6', lastMessage: '', unread: 0, gender: null, is_readonly: false },
+  { id: 'demo-5', name: 'Salle Frères', description: 'Salon réservé aux frères', color: '#0ea5e9', lastMessage: '', unread: 0, gender: 'homme', is_readonly: false },
+  { id: 'demo-6', name: 'Salle Sœurs', description: 'Salon réservé aux sœurs', color: '#ec4899', lastMessage: '', unread: 0, gender: 'femme', is_readonly: false },
 ]
 
 const makeDemoMsg = (id, content, sender, minsAgo, isOwn = false, type = 'text', extra = {}) => ({
@@ -448,6 +539,7 @@ const currentRoom = ref(null)
 const messagesMap = ref({ ...DEMO_MESSAGES })
 const newMessage = ref('')
 const sending = ref(false)
+const sendError = ref('')
 const loadingMessages = ref(false)
 const showEmojiPicker = ref(false)
 const pendingFiles = ref([])
@@ -470,8 +562,98 @@ const EDIT_WINDOW_MS = 5 * 60 * 1000 // 5 minutes
 // Cache des profils des autres utilisateurs { userId: { name, avatarUrl, initials, color } }
 const profilesCache = ref({})
 
+// ─── Admin ───────────────────────────────────────────────────────────────────
+const isAdmin = ref(false)
+const showCreateRoom = ref(false)
+const newRoomName = ref('')
+const newRoomDesc = ref('')
+const newRoomGender = ref('')
+const creatingRoom = ref(false)
+const mutedUserIds = ref([]) // user_ids mutés dans le salon courant
+
+const isMuted = computed(() => mutedUserIds.value.includes(currentUser?.id))
+
+const checkAdmin = async (email) => {
+  if (!email) return
+  try {
+    const { data } = await supabase.from('benevoles').select('role').ilike('email', email).eq('statut', 'accepté').single()
+    isAdmin.value = ['admin', 'superadmin'].includes(data?.role)
+  } catch { isAdmin.value = false }
+}
+
+const loadMutes = async (roomId) => {
+  mutedUserIds.value = []
+  if (!supabaseMode || !roomId) return
+  try {
+    const { data } = await supabase.from('chat_mutes').select('user_id').or(`room_id.eq.${roomId},room_id.is.null`)
+    mutedUserIds.value = data?.map(m => m.user_id) || []
+  } catch {}
+}
+
+const createRoomError = ref('')
+
+const createRoom = async () => {
+  if (!newRoomName.value.trim()) return
+  creatingRoom.value = true
+  createRoomError.value = ''
+  const newRoom = {
+    name: newRoomName.value.trim(),
+    description: newRoomDesc.value.trim() || '',
+    color: colorFor(newRoomName.value),
+    gender: newRoomGender.value || null,
+    is_readonly: false,
+  }
+  if (supabaseMode) {
+    const { data, error } = await supabase.from('chat_rooms').insert(newRoom).select().single()
+    if (error) {
+      createRoomError.value = error.message || 'Droits insuffisants. Vérifiez que votre compte est bien admin dans la table benevoles.'
+      creatingRoom.value = false
+      return
+    }
+    if (data) rooms.value.push({ ...data, lastMessage: '', unread: 0 })
+  } else {
+    rooms.value.push({ id: 'demo-' + Date.now(), ...newRoom, lastMessage: '', unread: 0 })
+  }
+  newRoomName.value = ''; newRoomDesc.value = ''; newRoomGender.value = ''; showCreateRoom.value = false; creatingRoom.value = false
+}
+
+const deleteRoom = async (room) => {
+  if (!confirm(`Supprimer le salon "${room.name}" et tous ses messages ?`)) return
+  if (supabaseMode) await supabase.from('chat_rooms').delete().eq('id', room.id)
+  rooms.value = rooms.value.filter(r => r.id !== room.id)
+  if (currentRoom.value?.id === room.id) currentRoom.value = null
+}
+
+const deleteMessage = async (msg) => {
+  if (!confirm('Supprimer ce message ?')) return
+  const msgs = messagesMap.value[currentRoom.value?.id]
+  if (!msgs) return
+  const idx = msgs.findIndex(m => m.id === msg.id)
+  if (idx !== -1) msgs.splice(idx, 1)
+  if (supabaseMode && !String(msg.id).startsWith('local')) {
+    await supabase.from('chat_messages').update({ deleted_at: new Date().toISOString() }).eq('id', msg.id)
+  }
+}
+
+const muteUser = async (msg) => {
+  if (!msg.user_id) return
+  if (!confirm(`Rendre muet "${msg.senderName}" dans ce salon ?`)) return
+  if (supabaseMode) {
+    await supabase.from('chat_mutes').upsert({ user_id: msg.user_id, room_id: currentRoom.value?.id, muted_by: currentUser?.id }, { onConflict: 'user_id,room_id' })
+  }
+  if (!mutedUserIds.value.includes(msg.user_id)) mutedUserIds.value.push(msg.user_id)
+}
+
+const toggleReadonly = async () => {
+  const room = currentRoom.value
+  if (!room) return
+  room.is_readonly = !room.is_readonly
+  if (supabaseMode) await supabase.from('chat_rooms').update({ is_readonly: room.is_readonly }).eq('id', room.id)
+}
+
 let currentUser = null
 let supabaseMode = false   // true quand les tables Supabase existent
+let userGender = null      // 'homme' | 'femme' | null
 let realtimeChannel = null
 let mediaRecorder = null
 let audioChunks = []
@@ -540,6 +722,7 @@ const selectRoom = async (room) => {
   if (supabaseMode) {
     await loadMessagesFromSupabase(room.id)
     subscribeToRoom(room.id)
+    await loadMutes(room.id)
   }
 
   await scrollBottom()
@@ -565,7 +748,7 @@ const loadMyProfile = async (user) => {
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('prenom, nom, avatar_url')
+      .select('prenom, nom, avatar_url, sexe')
       .eq('id', user.id)
       .single()
 
@@ -573,7 +756,7 @@ const loadMyProfile = async (user) => {
       const fullName = [data.prenom, data.nom].filter(Boolean).join(' ') || fallbackName
       myProfile.value = {
         name: fullName,
-        avatarUrl: data.avatar_url || '',
+        avatarUrl: data.sexe === 'femme' ? '' : (data.avatar_url || ''),
         initials: initialsFor(fullName),
         color: colorFor(user.id),
       }
@@ -589,7 +772,7 @@ const loadProfilesBatch = async (userIds) => {
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('id, prenom, nom, avatar_url')
+      .select('id, prenom, nom, avatar_url, sexe')
       .in('id', toLoad)
 
     if (data) {
@@ -597,7 +780,7 @@ const loadProfilesBatch = async (userIds) => {
         const fullName = [p.prenom, p.nom].filter(Boolean).join(' ') || '...'
         profilesCache.value[p.id] = {
           name: fullName,
-          avatarUrl: p.avatar_url || '',
+          avatarUrl: p.sexe === 'femme' ? '' : (p.avatar_url || ''),
           initials: initialsFor(fullName),
           color: colorFor(p.id),
         }
@@ -612,8 +795,15 @@ const initSupabase = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     currentUser = session?.user || null
 
-    // Charger le profil de l'utilisateur connecté
-    if (currentUser) await loadMyProfile(currentUser)
+    // Charger le profil de l'utilisateur connecté (genre inclus)
+    if (currentUser) {
+      await loadMyProfile(currentUser)
+      await checkAdmin(currentUser.email)
+      try {
+        const { data: profileData } = await supabase.from('profiles').select('sexe').eq('id', currentUser.id).single()
+        userGender = profileData?.sexe || null
+      } catch {}
+    }
 
     // Tenter de charger les salons depuis Supabase
     const { data: roomsData, error } = await supabase
@@ -629,12 +819,14 @@ const initSupabase = async () => {
     runDailyCleanup()
 
     if (roomsData?.length) {
-      rooms.value = roomsData.map(r => ({
-        ...r,
-        color: r.color || colorFor(r.name),
-        lastMessage: '',
-        unread: 0,
-      }))
+      rooms.value = roomsData
+        .filter(r => !r.gender || r.gender === userGender)
+        .map(r => ({
+          ...r,
+          color: r.color || colorFor(r.name),
+          lastMessage: '',
+          unread: 0,
+        }))
     } else {
       // Tables existent mais vides → insérer les salons de démo
       await seedDefaultRooms()
@@ -648,8 +840,15 @@ const initSupabase = async () => {
       if (session?.user) {
         currentUser = session.user
         await loadMyProfile(session.user)
+        await checkAdmin(session.user.email)
+        try {
+          const { data: pd } = await supabase.from('profiles').select('sexe').eq('id', session.user.id).single()
+          userGender = pd?.sexe || null
+        } catch {}
       }
     } catch {}
+    // Filtrer les salons de démo selon le genre
+    rooms.value = [...DEMO_ROOMS].filter(r => !r.gender || r.gender === userGender)
   }
 }
 
@@ -671,10 +870,12 @@ const runDailyCleanup = async () => {
 }
 
 const seedDefaultRooms = async () => {
-  const defaults = DEMO_ROOMS.map(r => ({ name: r.name, description: r.description, color: r.color }))
+  const defaults = DEMO_ROOMS.map(r => ({ name: r.name, description: r.description, color: r.color, gender: r.gender || null }))
   const { data } = await supabase.from('chat_rooms').insert(defaults).select()
   if (data) {
-    rooms.value = data.map(r => ({ ...r, lastMessage: '', unread: 0 }))
+    rooms.value = data
+      .filter(r => !r.gender || r.gender === userGender)
+      .map(r => ({ ...r, lastMessage: '', unread: 0 }))
   }
 }
 
@@ -766,9 +967,16 @@ const subscribeToRoom = (roomId) => {
 }
 
 // ─── Envoi de message ────────────────────────────────────────────────────────────
+const MAX_MSG_LENGTH = 5000
+
 const sendMessage = async () => {
   const text = newMessage.value.trim()
   if (!text && !pendingFiles.value.length) return
+  if ((currentRoom.value?.is_readonly && !isAdmin.value) || isMuted.value) return
+  if (text.length > MAX_MSG_LENGTH) {
+    alert(`Message trop long (max ${MAX_MSG_LENGTH} caractères).`)
+    return
+  }
 
   showEmojiPicker.value = false
   sending.value = true
@@ -834,6 +1042,11 @@ const pushMessage = async (msgData) => {
       messagesMap.value[roomId].push(formatSupabaseMsg({ ...data, sender_name: senderName }))
       return
     }
+    if (error) {
+      console.error('[chat] insert error:', error)
+      sendError.value = 'code=' + (error.code || '?') + ' | ' + (error.message || '?') + (error.details ? ' | ' + error.details : '') + (error.hint ? ' | hint: ' + error.hint : '')
+      return
+    }
   }
 
   // Mode démo : ajout local
@@ -841,7 +1054,7 @@ const pushMessage = async (msgData) => {
 
   // Mise à jour lastMessage dans la sidebar
   const room = rooms.value.find(r => r.id === roomId)
-  if (room) room.lastMessage = msgData.content || (msgData.type === 'audio' ? '🎤 Vocal' : '📎 Fichier')
+  if (room) room.lastMessage = msgData.content || (msgData.type === 'audio' ? 'Message vocal' : 'Fichier')
 }
 
 // ─── Fichiers ────────────────────────────────────────────────────────────────────
@@ -870,12 +1083,14 @@ const sendFile = async (file) => {
     } catch {}
   }
 
+  const isAudio = file.type.startsWith('audio/')
   await pushMessage({
-    type: isImage ? 'image' : 'file',
+    type: isImage ? 'image' : isAudio ? 'audio' : 'file',
     content: '',
     file_url: fileUrl,
     file_name: file.name,
     file_size: file.size,
+    duration: null,
   })
 }
 

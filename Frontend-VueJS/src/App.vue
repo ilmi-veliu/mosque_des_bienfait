@@ -6,6 +6,7 @@
     <Footer v-if="!$route.meta.hideFooter" />
     <CookieBanner />
     <InstallBanner />
+    <ChatImamWidget />
   </div>
 </template>
 
@@ -15,6 +16,7 @@ import Footer from './composants/Footer.vue'
 import CookieBanner from './composants/CookieBanner.vue'
 import BetaBanner from './composants/BetaBanner.vue'
 import InstallBanner from './composants/InstallBanner.vue'
+import ChatImamWidget from './composants/ChatImamWidget.vue'
 
 const RELOAD_AFTER_MS = 5 * 60 * 1000 // 5 minutes d'absence
 let hiddenAt = null
@@ -36,7 +38,8 @@ export default {
     Footer,
     CookieBanner,
     BetaBanner,
-    InstallBanner
+    InstallBanner,
+    ChatImamWidget
   }
 }
 </script>

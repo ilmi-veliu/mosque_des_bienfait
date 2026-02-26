@@ -128,6 +128,24 @@
                 <p v-if="passwordError" class="text-xs text-red-500 mt-1">{{ passwordError }}</p>
               </div>
 
+              <!-- Genre -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Genre *</label>
+                <div class="grid grid-cols-2 gap-3">
+                  <button type="button" @click="form.sexe = 'homme'"
+                    class="py-2.5 rounded-xl border-2 text-sm font-medium transition-all"
+                    :class="form.sexe === 'homme' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
+                    Homme
+                  </button>
+                  <button type="button" @click="form.sexe = 'femme'"
+                    class="py-2.5 rounded-xl border-2 text-sm font-medium transition-all"
+                    :class="form.sexe === 'femme' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
+                    Femme
+                  </button>
+                </div>
+                <p v-if="sexeError" class="text-xs text-red-500 mt-1">{{ sexeError }}</p>
+              </div>
+
               <button
                 type="submit"
                 :disabled="loading"
@@ -165,12 +183,14 @@ const loading = ref(false)
 const errorMsg = ref('')
 const emailError = ref('')
 const passwordError = ref('')
+const sexeError = ref('')
 const showPassword = ref(false)
 const form = ref({
   prenom: '',
   nom: '',
   email: '',
-  password: ''
+  password: '',
+  sexe: ''
 })
 
 const validateEmail = () => {
@@ -198,10 +218,16 @@ const validatePassword = () => {
 const handleSignup = async () => {
   loading.value = true
   errorMsg.value = ''
+  sexeError.value = ''
 
-  // Validation email + mot de passe
+  // Validation email + mot de passe + genre
   validateEmail()
   validatePassword()
+  if (!form.value.sexe) {
+    sexeError.value = 'Veuillez sélectionner votre genre.'
+    loading.value = false
+    return
+  }
   if (emailError.value || passwordError.value) {
     loading.value = false
     return
@@ -213,7 +239,8 @@ const handleSignup = async () => {
     options: {
       data: {
         prenom: form.value.prenom,
-        nom: form.value.nom
+        nom: form.value.nom,
+        sexe: form.value.sexe
       }
     }
   })
@@ -235,6 +262,16 @@ const handleSignup = async () => {
     errorMsg.value = 'Si cette adresse est disponible, votre compte a été créé. Vérifiez votre email ou connectez-vous.'
     loading.value = false
     return
+  }
+
+  // Sauvegarder le genre dans le profil
+  if (data?.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      prenom: form.value.prenom,
+      nom: form.value.nom,
+      sexe: form.value.sexe
+    }, { onConflict: 'id' })
   }
 
   // Connexion automatique après inscription

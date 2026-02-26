@@ -137,19 +137,6 @@
                   <span>{{ vuesMap[c.id] || 0 }} vue{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }} unique{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }}</span>
                 </div>
               </div>
-              <!-- Bouton inscription Stripe -->
-              <div class="mt-5 pt-4 border-t border-gray-100">
-                <button
-                  @click="inscrireAuCours(c)"
-                  :disabled="inscriptionEnCours[c.id]"
-                  class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-2.5 rounded-xl text-sm font-semibold hover:from-emerald-700 hover:to-teal-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <CreditCard v-if="!inscriptionEnCours[c.id]" :size="16" />
-                  <span v-if="inscriptionEnCours[c.id]">Redirection...</span>
-                  <span v-else>S'inscrire au cours — {{ (c.prix || PRIX_DEFAUT) }}€</span>
-                </button>
-              </div>
-
               <!-- Lecteur audio avec reprise -->
               <div v-if="c.audio_url" class="mt-4 pt-4 border-t border-gray-100">
                 <button v-if="currentUserId && getAudioStart(c.id) > 0" @click="resumeAudio(c.id)" class="flex items-center gap-2 mb-2 hover:opacity-70 transition-opacity cursor-pointer">
@@ -182,56 +169,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { ChevronLeft, Search, Calendar, MapPin, User, RotateCcw, Eye, CreditCard } from 'lucide-vue-next'
+import { ChevronLeft, Search, Calendar, MapPin, User, RotateCcw, Eye } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import { store, preloadCours } from '../store'
 
 const isAdmin = ref(false)
-
-// --- Paiement Stripe ---
-const PRIX_DEFAUT = 15 // prix en euros si le cours n'a pas de champ prix
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
-const inscriptionEnCours = ref({}) // { cours_id: true } pendant la redirection
-
-const inscrireAuCours = async (cours) => {
-  inscriptionEnCours.value[cours.id] = true
-
-  const prix = cours.prix || PRIX_DEFAUT
-  const prix_centimes = Math.round(prix * 100)
-
-  // Récupérer l'email de l'utilisateur connecté si dispo
-  let user_email = ''
-  try {
-    const { data: { session } } = await supabase.auth.getSession()
-    user_email = session?.user?.email || ''
-  } catch {}
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/paiement/create-checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cours_id: cours.id,
-        titre: cours.titre,
-        prix_centimes,
-        user_email,
-      }),
-    })
-
-    if (!res.ok) {
-      const err = await res.json()
-      alert(err.message || 'Erreur lors de la création du paiement')
-      inscriptionEnCours.value[cours.id] = false
-      return
-    }
-
-    const { url } = await res.json()
-    window.location.href = url
-  } catch (e) {
-    alert('Impossible de joindre le serveur de paiement. Vérifiez que le backend est lancé.')
-    inscriptionEnCours.value[cours.id] = false
-  }
-}
 
 const searchQuery = ref('')
 const selectedCategorie = ref('')

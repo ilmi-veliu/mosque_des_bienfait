@@ -1,11 +1,10 @@
 <template>
   <div>
-    <!-- Contact Section -->
     <section class="py-20 px-4 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
       <div class="max-w-7xl mx-auto">
-        
+
         <!-- Bouton retour -->
-        <router-link 
+        <router-link
           to="/"
           class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm mb-6 shadow-sm hover:bg-gray-50 hover:-translate-x-1 transition-all"
         >
@@ -14,7 +13,7 @@
           </svg>
           Retour à l'accueil
         </router-link>
-        
+
         <!-- En-tête -->
         <div class="text-center max-w-2xl mx-auto mb-10">
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-emerald-700">
@@ -28,14 +27,14 @@
 
         <!-- Grille -->
         <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          
+
           <!-- Infos Contact -->
           <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-8">
             <h2 class="text-2xl font-semibold text-gray-900 mb-2">Informations de Contact</h2>
             <p class="text-gray-500 text-sm mb-6">Plusieurs moyens pour nous joindre</p>
-            
+
             <div class="space-y-4 mb-6">
-              
+
               <!-- Téléphone -->
               <a href="tel:+33699025472" class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:-translate-y-1 hover:shadow-md transition-all">
                 <div class="w-11 h-11 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -95,10 +94,10 @@
             </div>
             <h2 class="text-2xl font-semibold mb-3">Chat Direct avec l'Imam</h2>
             <p class="text-lg opacity-90 mb-5">Pour toute question urgente ou consultation rapide</p>
-            
+
             <div class="bg-white/10 backdrop-blur-lg rounded-xl p-5 mb-5">
               <p class="text-sm leading-relaxed mb-4">
-                Cliquez sur le bouton de chat en bas à droite de votre écran pour démarrer une conversation directe avec l'Imam.
+                Cliquez sur le bouton de chat en bas à droite de votre écran pour démarrer une conversation et envoyer un message à l'Imam.
               </p>
               <div class="animate-bounce">
                 <ChevronDown :size="36" />
@@ -106,18 +105,12 @@
             </div>
 
             <button
-              @click="openChat"
+              @click="ouvrirChat"
               class="bg-white text-emerald-700 px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all"
             >
               <MessageSquare :size="20" />
               Démarrer le chat
             </button>
-
-            <p v-if="chatUnavailable" class="mt-4 text-sm bg-white/10 rounded-xl px-4 py-3">
-              Le chat n'est pas disponible. Contactez-nous par
-              <a href="mailto:mosquee.perigueux@gmail.com" class="underline font-medium">email</a>
-              ou par <a href="tel:+33699025472" class="underline font-medium">téléphone</a>.
-            </p>
           </div>
 
         </div>
@@ -127,17 +120,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { Phone, Mail, MessageSquare, ChevronDown } from 'lucide-vue-next'
 
-const chatUnavailable = ref(false)
-
-const openChat = () => {
-  if (window.Tawk_API && window.Tawk_API.maximize) {
-    chatUnavailable.value = false
-    window.Tawk_API.maximize()
-  } else {
-    chatUnavailable.value = true
-  }
+const ouvrirChat = () => {
+  // Déclenche l'ouverture du widget flottant via un événement custom
+  window.dispatchEvent(new CustomEvent('ouvrir-chat-imam'))
 }
 </script>

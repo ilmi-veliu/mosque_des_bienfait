@@ -18,6 +18,40 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ── Vérification d'authentification ──────────────────────────────────────
+    // Cette fonction utilise service_role (accès total) → seul un admin peut l'appeler
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return json({ error: 'Non autorisé' }, 401)
+    }
+
+    const userJwt = authHeader.replace('Bearer ', '')
+
+    // Créer un client avec le JWT de l'appelant pour vérifier son rôle
+    const supabaseUser = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: `Bearer ${userJwt}` } } }
+    )
+
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser()
+    if (authError || !user) {
+      return json({ error: 'Non autorisé' }, 401)
+    }
+
+    // Vérifier que l'utilisateur est admin ou superadmin
+    const { data: benevole } = await supabaseUser
+      .from('benevoles')
+      .select('role')
+      .ilike('email', user.email || '')
+      .eq('statut', 'accepté')
+      .maybeSingle()
+
+    if (!['admin', 'superadmin'].includes(benevole?.role || '')) {
+      return json({ error: 'Accès refusé' }, 403)
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Client admin avec service_role (fourni automatiquement par Supabase)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,

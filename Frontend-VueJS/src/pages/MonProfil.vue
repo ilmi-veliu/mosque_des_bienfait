@@ -17,8 +17,8 @@
 
       <div v-else class="space-y-6">
 
-        <!-- Photo de profil -->
-        <div class="bg-white rounded-2xl shadow-sm p-6">
+        <!-- Photo de profil (hommes uniquement) -->
+        <div v-if="userSexe !== 'femme'" class="bg-white rounded-2xl shadow-sm p-6">
           <h2 class="text-base font-semibold text-gray-800 mb-4">Photo de profil</h2>
           <div class="flex items-center gap-5">
             <div class="relative">
@@ -138,6 +138,7 @@ const uploadingAvatar = ref(false)
 const uploadError = ref('')
 const userEmail = ref('')
 const userId = ref(null)
+const userSexe = ref(null) // 'homme' | 'femme' | null
 
 const form = ref({
   prenom: '',
@@ -229,11 +230,12 @@ onMounted(async () => {
     .single()
 
   if (data) {
+    userSexe.value = data.sexe || null
     form.value = {
       prenom: data.prenom || '',
       nom: data.nom || '',
       bio: data.bio || '',
-      avatar_url: data.avatar_url || ''
+      avatar_url: data.sexe === 'femme' ? '' : (data.avatar_url || '')
     }
   }
   loading.value = false
