@@ -356,15 +356,9 @@ const loadImamRoom = async () => {
 
     imamRoom.value = data
 
-    // Charger UNIQUEMENT les messages de cette session (filtré côté serveur + client)
+    // RPC sécurisée : seuls les messages de cette session sont retournés côté DB
     const { data: msgs } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('room_id', data.id)
-      .eq('session_id', mySessionId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: true })
-      .limit(100)
+      .rpc('get_imam_messages', { p_session_id: mySessionId, p_room_id: data.id })
 
     if (msgs) {
       messages.value = msgs.map(m => formatMsg(m))

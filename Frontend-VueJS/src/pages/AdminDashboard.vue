@@ -1634,7 +1634,7 @@ const selectImamConversation = (conv) => {
   }, 50)
 }
 
-const uploadImamFile = async (file) => {
+const uploadImamFile = async (file, userId) => {
   const MAX = 10 * 1024 * 1024
   if (file.size > MAX) {
     imamFileError.value = `Fichier trop volumineux (max 10 Mo).`
@@ -1650,7 +1650,8 @@ const uploadImamFile = async (file) => {
   try {
     const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}`
     const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
-    const path = `imam-admin/${safeName}.${ext}`
+    // Le premier dossier DOIT être l'UUID auth (politique RLS chat_media_insert)
+    const path = `${userId}/imam-admin/${safeName}.${ext}`
     const { data, error } = await supabase.storage.from('chat-media').upload(path, file, { upsert: false })
     if (error) throw new Error(error.message || JSON.stringify(error))
     const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
@@ -1696,7 +1697,7 @@ const sendImamReply = async () => {
 
   // Envoi des fichiers
   for (const file of imamPendingFiles.value) {
-    const result = await uploadImamFile(file)
+    const result = await uploadImamFile(file, session?.user?.id)
     if (result) {
       await insertMsg({
         room_id: imamRoom.value.id,
