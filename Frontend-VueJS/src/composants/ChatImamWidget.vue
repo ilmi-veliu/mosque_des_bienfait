@@ -30,7 +30,7 @@
 
         <!-- Room introuvable -->
         <div v-else-if="roomNotFound" class="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <p class="text-sm text-gray-500">Le chat avec l'imam n'est pas encore disponible. Revenez bientôt.</p>
+          <p class="text-sm text-gray-500">Le chat n'est pas disponible actuellement, revenez plus tard.</p>
         </div>
 
         <!-- Chat -->
@@ -561,7 +561,7 @@ const sendMessage = async () => {
       }
     }
   } catch (err) {
-    errorMsg.value = 'Erreur lors de l\'envoi. Réessayez.'
+    errorMsg.value = 'Le chat n\'est pas disponible actuellement, revenez plus tard.'
     console.error('Imam chat error:', err)
   }
 
