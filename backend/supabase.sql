@@ -1438,3 +1438,17 @@ SELECT cron.schedule(
     AND room_id IN (SELECT id FROM chat_rooms WHERE is_imam = TRUE);
   $$
 );
+
+-- ─── Suppression des rooms imam en doublon (garder la plus ancienne) ──────────
+DELETE FROM chat_rooms
+WHERE is_imam = TRUE
+  AND id NOT IN (
+    SELECT id FROM chat_rooms
+    WHERE is_imam = TRUE
+    ORDER BY created_at ASC
+    LIMIT 1
+  );
+
+-- ─── Contrainte unicité : une seule room imam possible ────────────────────────
+ALTER TABLE chat_rooms DROP CONSTRAINT IF EXISTS unique_imam_room;
+CREATE UNIQUE INDEX IF NOT EXISTS unique_imam_room ON chat_rooms ((true)) WHERE is_imam = TRUE;

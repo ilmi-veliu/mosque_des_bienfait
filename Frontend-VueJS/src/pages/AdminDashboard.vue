@@ -1561,11 +1561,13 @@ const computeImamUnread = (conversations, messages) => {
 
 const loadImamConversations = async () => {
   imamLoading.value = true
-  const { data: room } = await supabase
+  const { data: roomList } = await supabase
     .from('chat_rooms')
     .select('*')
     .eq('is_imam', true)
-    .single()
+    .order('created_at', { ascending: true })
+    .limit(1)
+  const room = roomList?.[0] ?? null
 
   if (!room) {
     imamRoom.value = null

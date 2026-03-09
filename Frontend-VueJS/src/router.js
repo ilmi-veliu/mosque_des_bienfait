@@ -110,6 +110,12 @@ const routes = [
     name: 'PaiementAnnule',
     component: () => import('./pages/PaiementAnnule.vue'),
     meta: { title: 'Paiement annulé | Mosquée des Bienfaisants' }
+  },
+  {
+    path: '/chat',
+    name: 'Chat',
+    component: () => import('./pages/Chat.vue'),
+    meta: { requiresAuth: true, hideNavbar: true, hideFooter: true, title: 'Chat | Mosquée des Bienfaisants' }
   }
 ]
 
