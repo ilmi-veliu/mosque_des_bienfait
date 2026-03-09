@@ -16,16 +16,6 @@
           <router-link to="/cours" class="hover:text-gray-600 transition-colors">Cours Vidéo</router-link>
           <router-link to="/evenements" class="hover:text-gray-600 transition-colors">Événements</router-link>
           <router-link to="/contact" class="hover:text-gray-600 transition-colors">Contact Imam</router-link>
-          <router-link v-if="isLoggedIn" to="/chat"
-            class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-medium relative">
-            <MessagesSquare :size="15" />
-            Chat Général
-            <span v-if="chatUnread > 0"
-              class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px] px-1">
-              {{ chatUnread > 9 ? '9+' : chatUnread }}
-            </span>
-          </router-link>
-
           <!-- Connecté : avatar dropdown -->
           <template v-if="isLoggedIn">
             <div class="relative" ref="dropdownRef">
@@ -138,15 +128,6 @@
           <MessageSquare :size="18" class="text-gray-400" />
           Contact Imam
         </router-link>
-        <router-link v-if="isLoggedIn" @click="mobileOpen = false" to="/chat" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-emerald-50 transition-colors text-sm text-emerald-700 font-medium relative">
-          <MessagesSquare :size="18" class="text-emerald-500" />
-          Chat Général
-          <span v-if="chatUnread > 0"
-            class="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px] px-1">
-            {{ chatUnread > 9 ? '9+' : chatUnread }}
-          </span>
-        </router-link>
-
         <!-- Connecté : section compte -->
         <template v-if="isLoggedIn">
           <div class="pt-2 mt-2 border-t border-gray-100">
