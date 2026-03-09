@@ -1374,57 +1374,6 @@ ALTER TABLE chat_messages REPLICA IDENTITY FULL;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id UUID;
 ALTER TABLE chat_messages REPLICA IDENTITY FULL;
 
--- ─── SÉCURITÉ CHAT : corrections complètes ────────────────────────────────────
--- Vulnérabilités corrigées :
--- 1. Anonymes pouvaient lire toutes les convos imam via REST API
--- 2. N'importe quel compte créé pouvait lire toutes les convos imam
--- 3. Listing des fichiers storage accessible à tous
-
--- POLITIQUE SELECT chat_messages :
--- - Anonymes : aucun accès direct REST (ils passent par la RPC)
--- - Authentifiés imam : seulement leurs propres messages OU admin
--- - Authentifiés chat général : selon genre
-DROP POLICY IF EXISTS "msgs_select" ON chat_messages;
-CREATE POLICY "msgs_select" ON chat_messages FOR SELECT TO authenticated USING (
-  deleted_at IS NULL
-  AND (
-    (
-      EXISTS (SELECT 1 FROM chat_rooms WHERE id = chat_messages.room_id AND is_imam = TRUE)
-      AND (auth.uid() = user_id OR is_admin_or_superadmin())
-    )
-    OR
-    EXISTS (
-      SELECT 1 FROM chat_rooms
-      WHERE id = chat_messages.room_id
-      AND is_imam = FALSE
-      AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid()))
-    )
-  )
-);
-
--- RPC sécurisée : un anonyme ne lit QUE les messages de SA session
-CREATE OR REPLACE FUNCTION get_imam_messages(p_session_id UUID, p_room_id UUID)
-RETURNS SETOF chat_messages
-LANGUAGE sql
-SECURITY DEFINER
-AS $$
-  SELECT * FROM chat_messages
-  WHERE room_id = p_room_id
-    AND session_id = p_session_id
-    AND deleted_at IS NULL
-  ORDER BY created_at ASC
-  LIMIT 100;
-$$;
-GRANT EXECUTE ON FUNCTION get_imam_messages TO anon;
-GRANT EXECUTE ON FUNCTION get_imam_messages TO authenticated;
-
--- STORAGE : interdire le listing anonyme de chat-media
-DROP POLICY IF EXISTS "chat_media_select" ON storage.objects;
-CREATE POLICY "chat_media_select" ON storage.objects FOR SELECT USING (
-  bucket_id = 'chat-media'
-  AND auth.role() = 'authenticated'
-);
-
 -- ─── Suppression automatique messages imam après 7 jours ─────────────────────
 SELECT cron.unschedule('cleanup-imam-messages') WHERE EXISTS (
   SELECT 1 FROM cron.job WHERE jobname = 'cleanup-imam-messages'
@@ -1438,17 +1387,3 @@ SELECT cron.schedule(
     AND room_id IN (SELECT id FROM chat_rooms WHERE is_imam = TRUE);
   $$
 );
-
--- ─── Suppression des rooms imam en doublon (garder la plus ancienne) ──────────
-DELETE FROM chat_rooms
-WHERE is_imam = TRUE
-  AND id NOT IN (
-    SELECT id FROM chat_rooms
-    WHERE is_imam = TRUE
-    ORDER BY created_at ASC
-    LIMIT 1
-  );
-
--- ─── Contrainte unicité : une seule room imam possible ────────────────────────
-ALTER TABLE chat_rooms DROP CONSTRAINT IF EXISTS unique_imam_room;
-CREATE UNIQUE INDEX IF NOT EXISTS unique_imam_room ON chat_rooms ((true)) WHERE is_imam = TRUE;
