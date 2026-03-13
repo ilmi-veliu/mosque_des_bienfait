@@ -12,30 +12,25 @@ router.post('/login', async (req, res) => {
     // Vérifier si l'utilisateur avec cet email existe dans la base de données
     const user = await User.findOne({ where: { email } });
     
+    // Message générique pour ne pas révéler si l'email existe ou non
+    const invalidMsg = { success: false, message: 'Email ou mot de passe incorrect' };
+
     if (!user) {
-      // Si aucun utilisateur n'est trouvé, retourne une erreur 404
-      return res.status(404).json({ 
-        success: false,
-        message: 'Aucun compte trouvé avec cet email' 
-      });
+      return res.status(401).json(invalidMsg);
     }
 
-    // Vérifier si le mot de passe fourni correspond au mot de passe haché dans la base de données
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    
+
     if (!isPasswordValid) {
-      // Si le mot de passe est incorrect, retourne une erreur 401
-      return res.status(401).json({ 
-        success: false,
-        message: 'Mot de passe incorrect' 
-      });
+      return res.status(401).json(invalidMsg);
     }
 
     // Générer un token JWT pour l'utilisateur
     const token = jwt.sign(
-      { 
-        id: user.id, // Identifiant unique de l'utilisateur
-        email: user.email // Email de l'utilisateur
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role
       },
       process.env.JWT_SECRET, // Clé secrète utilisée pour signer le token (stockée dans les variables d'environnement)
       { expiresIn: '7d' } // Le token expire après 7 jours
@@ -57,10 +52,9 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     // En cas d'erreur serveur, retourne une erreur 500 avec un message d'erreur
     console.error('Erreur login:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Erreur serveur', 
-      error: error.message // Message détaillé de l'erreur
+      message: 'Erreur serveur'
     });
   }
 });
