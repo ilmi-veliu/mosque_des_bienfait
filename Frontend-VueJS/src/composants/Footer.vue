@@ -1,84 +1,47 @@
 <template>
-  <footer class="bg-[#030213] text-white px-4 sm:px-6 py-10 sm:py-12 mt-20">
-    <div class="flex flex-wrap justify-between gap-6 sm:gap-10 max-w-[75rem] mx-auto">
+  <footer class="bg-[#0d0a04] border-t border-[#c9a84c]/15 px-6 py-14">
+    <div class="max-w-6xl mx-auto">
+      <!-- Ornement -->
+      <div class="text-center text-[#c9a84c]/20 text-xl mb-10 select-none">❋ ❋ ❋</div>
 
-      <!-- Colonne 1 : Description -->
-      <div class="flex-1 min-w-[160px] sm:min-w-[220px]">
-        <h3 class="mb-4 text-base font-semibold">Mosquée des Bienfaisants — Périgueux</h3>
-        <p class="text-sm leading-[1.7] text-[#717182]">
-          La mosquée de Périgueux au service des musulmans de Dordogne. Un lieu de paix, de spiritualité et de fraternité ouvert à tous ceux qui souhaitent découvrir ou pratiquer l'Islam.
-        </p>
+      <div class="grid sm:grid-cols-4 gap-10 mb-12">
+        <div class="sm:col-span-2">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="text-[#c9a84c] text-lg">☽</span>
+            <h3 class="text-[14px] font-semibold text-[#f0dea0]">Mosquée des Bienfaisants</h3>
+          </div>
+          <p class="text-sm text-[#f0dea0]/25 leading-relaxed max-w-xs">Un lieu de paix, de prière et de fraternité au cœur de Périgueux, ouvert à tous.</p>
+        </div>
+        <div>
+          <h4 class="text-[11px] font-semibold text-[#c9a84c]/50 uppercase tracking-widest mb-4">Pages</h4>
+          <ul class="space-y-2.5">
+            <li><router-link to="/" class="text-[13px] text-[#f0dea0]/25 hover:text-[#c9a84c] transition-colors">Accueil</router-link></li>
+            <li><router-link to="/evenements" class="text-[13px] text-[#f0dea0]/25 hover:text-[#c9a84c] transition-colors">Événements</router-link></li>
+            <li><router-link to="/cours" class="text-[13px] text-[#f0dea0]/25 hover:text-[#c9a84c] transition-colors">Cours</router-link></li>
+            <li><router-link to="/benevole" class="text-[13px] text-[#f0dea0]/25 hover:text-[#c9a84c] transition-colors">Bénévolat</router-link></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-[11px] font-semibold text-[#c9a84c]/50 uppercase tracking-widest mb-4">Contact</h4>
+          <ul class="space-y-2.5">
+            <li><a href="tel:+33780299839" class="text-[13px] text-[#f0dea0]/25 hover:text-[#c9a84c] transition-colors">0780299839</a></li>
+            <li><a href="mailto:mosquee.perigueux@gmail.com" class="text-[13px] text-[#f0dea0]/25 hover:text-[#c9a84c] transition-colors">mosquee.perigueux@gmail.com</a></li>
+            <li><span class="text-[13px] text-[#f0dea0]/25">18 Rue du Tennis, Périgueux</span></li>
+          </ul>
+        </div>
       </div>
 
-      <!-- Colonne 2 : Contact -->
-      <div class="flex-1 min-w-[160px] sm:min-w-[220px]">
-        <h3 class="mb-4 text-base font-semibold">Contact</h3>
-        <p class="text-sm leading-[1.7] text-[#717182] mb-2">📍 18 Rue du Tennis, 24000 Périgueux</p>
-        <p class="text-sm leading-[1.7] text-[#717182] mb-2">📞 <a href="tel:+33699025472" class="hover:text-white transition-colors">06 99 02 54 72</a></p>
-        <p class="text-sm leading-[1.7] text-[#717182] break-all">📧 <a href="mailto:mosquee.perigueux@gmail.com" class="hover:text-white transition-colors">mosquee.perigueux@gmail.com</a></p>
+      <div class="border-t border-[#c9a84c]/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p class="text-[12px] text-[#f0dea0]/15">&copy; 2025 Mosquée des Bienfaisants. Tous droits réservés.</p>
+        <div class="flex gap-6">
+          <router-link to="/politique-confidentialite" class="text-[12px] text-[#f0dea0]/15 hover:text-[#c9a84c]/60 transition-colors">Confidentialité</router-link>
+          <router-link to="/mentions-legales" class="text-[12px] text-[#f0dea0]/15 hover:text-[#c9a84c]/60 transition-colors">Mentions légales</router-link>
+        </div>
       </div>
-
-      <!-- Colonne 3 : Horaires -->
-      <div class="flex-1 min-w-[160px] sm:min-w-[220px]">
-        <h3 class="mb-4 text-base font-semibold">Horaires d'Ouverture</h3>
-        <p class="text-sm leading-[1.7] text-[#717182]">
-          Ouvert tous les jours pour les prières<br>
-          20 minutes avant et après la prière
-        </p>
-      </div>
-
-      <!-- Colonne 4 : Liens Rapides -->
-      <div class="flex-1 min-w-[160px] sm:min-w-[220px]">
-        <h3 class="mb-4 text-base font-semibold">Liens Rapides</h3>
-        <ul class="list-none p-0">
-          <li class="mb-2">
-            <router-link to="/" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
-              Accueil
-            </router-link>
-          </li>
-          <li class="mb-2">
-            <router-link to="/contact" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
-              Contacter l'Imam
-            </router-link>
-          </li>
-          <li class="mb-2">
-            <router-link to="/evenements" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
-              Événements
-            </router-link>
-          </li>
-          <li class="mb-2">
-            <router-link to="/horaires" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
-              Horaires des Prières
-            </router-link>
-          </li>
-          <li class="mb-2">
-            <router-link to="/benevole" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
-              Devenir Bénévole
-            </router-link>
-          </li>
-        </ul>
-      </div>
-      
-    </div>
-    
-    <!-- Footer Bottom -->
-    <div class="text-center mt-10 text-[0.8125rem] border-t border-white/10 pt-5 text-[#717182]">
-      <div class="flex justify-center gap-4 mb-3">
-        <router-link to="/politique-confidentialite" class="text-[#717182] no-underline hover:text-white transition-colors duration-200">
-          Politique de confidentialité
-        </router-link>
-        <span class="text-white/20">|</span>
-        <router-link to="/mentions-legales" class="text-[#717182] no-underline hover:text-white transition-colors duration-200">
-          Mentions légales
-        </router-link>
-      </div>
-      <p>&copy; 2025 Mosquée des Bienfaisants. Tous droits réservés.</p>
     </div>
   </footer>
 </template>
 
 <script>
-export default {
-  name: 'Footer'
-}
+export default { name: 'Footer' }
 </script>
