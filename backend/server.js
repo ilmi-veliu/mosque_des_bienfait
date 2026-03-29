@@ -50,6 +50,9 @@ app.use('/api/auth', require('./routes/login'));
 // Routes paiement Stripe
 app.use('/api/paiement', require('./routes/paiement'));
 
+// Routes push notifications
+app.use('/api/push', require('./routes/push'));
+
 // Route de test
 app.get('/api', (req, res) => {
   res.json({ message: 'API fonctionne avec PostgreSQL !' });

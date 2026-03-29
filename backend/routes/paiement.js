@@ -51,6 +51,77 @@ router.post('/create-checkout', async (req, res) => {
   }
 })
 
+// POST /api/paiement/create-checkout-ecole
+// Crée une session Stripe pour la cotisation école coranique
+router.post('/create-checkout-ecole', async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({ message: 'Stripe non configuré. Ajoutez STRIPE_SECRET_KEY dans le .env' })
+  }
+
+  const { inscription_id, montant, user_email, enfant_prenom, enfant_nom } = req.body
+
+  if (!inscription_id || !montant) {
+    return res.status(400).json({ message: 'inscription_id et montant sont requis' })
+  }
+
+  const montantsValides = [15000, 6000, 4500] // 150€, 60€, 45€ en centimes
+  if (!montantsValides.includes(montant)) {
+    return res.status(400).json({ message: 'Montant invalide' })
+  }
+
+  const labels = { 15000: 'Cotisation annuelle', 6000: '1er versement (60 €)', 4500: 'Versement (45 €)' }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      customer_email: user_email || undefined,
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `École – ${labels[montant]}`,
+              description: `${enfant_prenom || ''} ${enfant_nom || ''} – Mosquée des Bienfaisants`.trim(),
+            },
+            unit_amount: montant,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/paiement/succes-ecole?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/inscription-ecole`,
+      metadata: {
+        inscription_id: String(inscription_id),
+        user_email: user_email || '',
+      },
+    })
+
+    res.json({ url: session.url })
+  } catch (error) {
+    console.error('Erreur Stripe école:', error)
+    res.status(500).json({ message: 'Erreur lors de la création de la session de paiement' })
+  }
+})
+
+// GET /api/paiement/verify-ecole?session_id=xxx
+router.get('/verify-ecole', async (req, res) => {
+  if (!stripe) return res.status(503).json({ message: 'Stripe non configuré' })
+
+  const { session_id } = req.query
+  if (!session_id) return res.status(400).json({ message: 'session_id requis' })
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(session_id)
+    res.json({
+      statut: session.payment_status,
+      inscription_id: session.metadata?.inscription_id,
+    })
+  } catch (error) {
+    res.status(500).json({ message: 'Impossible de vérifier le paiement' })
+  }
+})
+
 // GET /api/paiement/verify?session_id=xxx
 // Vérifie qu'un paiement est bien complété
 router.get('/verify', async (req, res) => {

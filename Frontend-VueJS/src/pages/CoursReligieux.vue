@@ -137,6 +137,26 @@
                   <span>{{ vuesMap[c.id] || 0 }} vue{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }} unique{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }}</span>
                 </div>
               </div>
+              <!-- Inscription -->
+              <div class="mt-4 pt-4 border-t border-gray-100">
+                <div v-if="!c.prix || c.prix === 0" class="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-semibold bg-emerald-50 px-3 py-1.5 rounded-full">
+                  ✓ Gratuit — Fisabilillah
+                </div>
+                <div v-else>
+                  <div v-if="inscriptions[c.id]" class="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-semibold bg-emerald-50 px-3 py-1.5 rounded-full">
+                    ✓ Inscrit
+                  </div>
+                  <button v-else @click="sInscrire(c)" :disabled="inscriptionLoading === c.id"
+                    class="w-full mt-1 bg-[#030213] text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
+                    <span v-if="inscriptionLoading === c.id" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span v-else>S'inscrire — {{ c.prix }}€</span>
+                  </button>
+                  <p v-if="!currentUserId" class="text-xs text-gray-400 mt-1 text-center">
+                    <router-link to="/connexion" class="text-emerald-600 underline">Connectez-vous</router-link> pour vous inscrire
+                  </p>
+                </div>
+              </div>
+
               <!-- Lecteur audio avec reprise -->
               <div v-if="c.audio_url" class="mt-4 pt-4 border-t border-gray-100">
                 <button v-if="currentUserId && getAudioStart(c.id) > 0" @click="resumeAudio(c.id)" class="flex items-center gap-2 mb-2 hover:opacity-70 transition-opacity cursor-pointer">
@@ -173,6 +193,8 @@ import { ChevronLeft, Search, Calendar, MapPin, User, RotateCcw, Eye } from 'luc
 import { supabase } from '../supabase'
 import { store, preloadCours } from '../store'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 const isAdmin = ref(false)
 
 const searchQuery = ref('')
@@ -189,6 +211,46 @@ const currentUserId = ref(null)
 const progressMap = ref({})
 const audioRefs = ref({})
 let saveTimer = null
+
+// --- Inscriptions ---
+const inscriptions = ref({}) // { cours_id: true } si l'utilisateur est inscrit
+const inscriptionLoading = ref(null)
+
+const fetchInscriptions = async (userId) => {
+  const { data } = await supabase
+    .from('inscriptions')
+    .select('cours_id')
+    .eq('user_id', userId)
+    .eq('statut', 'payé')
+  if (data) {
+    data.forEach(i => { inscriptions.value[i.cours_id] = true })
+  }
+}
+
+const sInscrire = async (cours) => {
+  if (!currentUserId.value) return
+  inscriptionLoading.value = cours.id
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(`${API_URL}/api/paiement/create-checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cours_id: cours.id,
+        titre: cours.titre,
+        prix_centimes: Math.round(cours.prix * 100),
+        user_email: session?.user?.email || ''
+      })
+    })
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
+    }
+  } catch (e) {
+    console.error('Erreur inscription:', e)
+  }
+  inscriptionLoading.value = null
+}
 
 // --- Vues ---
 const vuesMap = ref({}) // { cours_id: nombre_vues_uniques }
@@ -300,6 +362,7 @@ const fetchProgress = async () => {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
   currentUserId.value = session.user.id
+  fetchInscriptions(session.user.id)
 
   const { data: ben } = await supabase
     .from('benevoles')

@@ -147,6 +147,10 @@
                   <Users :size="18" class="text-gray-400" />
                   <span>{{ event.participants_max }} participants attendus</span>
                 </div>
+                <div v-if="event.recurrence && event.recurrence !== 'ponctuel'" class="flex items-center gap-2.5 text-sm text-emerald-700 font-medium">
+                  <span>🔁</span>
+                  <span>{{ formatRecurrence(event.recurrence) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -199,6 +203,22 @@ const filteredEvents = computed(() => {
 
   return filtered
 })
+
+const formatRecurrence = (r) => {
+  const map = {
+    apres_fajr: 'Tous les jours après Fajr',
+    apres_dhuhr: 'Tous les jours après Dhuhr',
+    apres_asr: 'Tous les jours après Asr',
+    apres_maghrib: 'Tous les jours après Maghrib',
+    apres_isha: 'Tous les jours après Isha',
+    chaque_vendredi: 'Chaque vendredi (Jumu\'ah)',
+    chaque_samedi: 'Chaque samedi',
+    chaque_dimanche: 'Chaque dimanche',
+    hebdomadaire: 'Hebdomadaire',
+    mensuel: 'Mensuel',
+  }
+  return map[r] || r
+}
 
 const formatDate = (dateString) => {
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }

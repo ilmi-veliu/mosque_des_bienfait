@@ -23,7 +23,36 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Stratégie : Network first, fallback cache
+// ── Push Notifications ──────────────────────────────────────────
+self.addEventListener('push', (event) => {
+  if (!event.data) return
+  const data = event.data.json()
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Mosquée des Bienfaisants', {
+      body: data.body || '',
+      icon: data.icon || '/favicon.png',
+      badge: data.badge || '/favicon.png',
+      vibrate: [200, 100, 200],
+      data: { url: data.url || '/admin/dashboard' },
+      requireInteraction: true
+    })
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = event.notification.data?.url || '/admin/dashboard'
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(url) && 'focus' in client) return client.focus()
+      }
+      return clients.openWindow(url)
+    })
+  )
+})
+
+// ── Stratégie : Network first, fallback cache ────────────────────
 self.addEventListener('fetch', (event) => {
   // Ignorer les requêtes non-GET et les APIs externes
   if (event.request.method !== 'GET') return;

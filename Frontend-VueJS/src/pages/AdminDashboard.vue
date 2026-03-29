@@ -563,7 +563,29 @@
       </div>
 
       <div v-if="activeTab === 'gestion' && isSuperAdmin">
-        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion des bénévoles</h2>
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion</h2>
+
+        <!-- Utilisateurs inscrits -->
+        <div class="mb-10">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-700">Utilisateurs inscrits <span class="text-sm font-normal text-gray-400">({{ allUsers.length }})</span></h3>
+          </div>
+          <div v-if="allUsers.length === 0" class="text-center py-8 text-gray-400 text-sm">Aucun utilisateur inscrit.</div>
+          <div v-else class="space-y-2">
+            <div v-for="u in allUsers" :key="u.id" class="bg-white rounded-xl border p-4 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                {{ (u.prenom?.[0] || '?') }}{{ (u.nom?.[0] || '') }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-gray-800 text-sm">{{ u.prenom }} {{ u.nom }}</p>
+                <p class="text-xs text-gray-400">{{ u.email }}</p>
+              </div>
+              <p class="text-xs text-gray-300 hidden sm:block">{{ u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Bénévoles <span class="text-sm font-normal text-gray-400">({{ allBenevolesForRole.length }})</span></h3>
         <p class="text-sm text-gray-500 mb-6">Gérez les rôles, la disponibilité et supprimez des bénévoles.</p>
 
         <!-- Barre de recherche -->
@@ -847,6 +869,26 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">URL vidéo YouTube</label>
             <input v-model="eventForm.video_url" type="url" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Récurrence</label>
+            <select v-model="eventForm.recurrence" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600">
+              <option value="ponctuel">Ponctuel (une seule fois)</option>
+              <optgroup label="Quotidien après prière">
+                <option value="apres_fajr">Après Fajr</option>
+                <option value="apres_dhuhr">Après Dhuhr</option>
+                <option value="apres_asr">Après Asr</option>
+                <option value="apres_maghrib">Après Maghrib</option>
+                <option value="apres_isha">Après Isha</option>
+              </optgroup>
+              <optgroup label="Hebdomadaire">
+                <option value="chaque_vendredi">Chaque vendredi (Jumu'ah)</option>
+                <option value="chaque_samedi">Chaque samedi</option>
+                <option value="chaque_dimanche">Chaque dimanche</option>
+              </optgroup>
+              <option value="hebdomadaire">Hebdomadaire (même jour)</option>
+              <option value="mensuel">Mensuel</option>
+            </select>
+          </div>
 
           <div v-if="eventForm.image_url" class="rounded-xl overflow-hidden border">
             <img :src="eventForm.image_url" class="w-full h-48 object-cover" @error="eventForm.image_url = ''" />
@@ -956,6 +998,14 @@
             <input v-model="coursForm.actif" type="checkbox" id="actif" class="w-4 h-4 accent-emerald-600" />
             <label for="actif" class="text-sm font-medium text-gray-700">Cours actif (visible sur le site)</label>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Prix d'inscription (€)</label>
+            <div class="flex items-center gap-3">
+              <input v-model.number="coursForm.prix" type="number" min="0" step="0.50" placeholder="0"
+                class="w-32 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <span class="text-sm text-gray-400">0 = cours gratuit</span>
+            </div>
+          </div>
 
           <div class="flex justify-end gap-3 pt-2">
             <button type="button" @click="showCoursModal = false" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors">
@@ -976,6 +1026,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Shield, LogOut, Calendar, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip } from 'lucide-vue-next'
 import { supabase } from '../supabase'
+import { subscribeToPush, notifyImam } from '../composables/usePushNotifications'
 
 const router = useRouter()
 const activeTab = ref('evenements')
@@ -1102,7 +1153,8 @@ const showEventModal = ref(false)
 const editingEvent = ref(null)
 const eventForm = ref({
   titre: '', description: '', categorie: 'Religieux', date: '', heure: '',
-  lieu: 'Mosquée des Bienfaisants', participants_max: null, image_url: '', video_url: ''
+  lieu: 'Mosquée des Bienfaisants', participants_max: null, image_url: '', video_url: '',
+  recurrence: 'ponctuel'
 })
 
 const fetchEvents = async () => {
@@ -1117,7 +1169,7 @@ const openEventForm = (event = null) => {
   if (event) {
     eventForm.value = { ...event }
   } else {
-    eventForm.value = { titre: '', description: '', categorie: 'Religieux', date: '', heure: '', lieu: 'Mosquée des Bienfaisants', participants_max: null, image_url: '', video_url: '' }
+    eventForm.value = { titre: '', description: '', categorie: 'Religieux', date: '', heure: '', lieu: 'Mosquée des Bienfaisants', participants_max: null, image_url: '', video_url: '', recurrence: 'ponctuel' }
   }
   showEventModal.value = true
 }
@@ -1159,7 +1211,8 @@ const editingCours = ref(null)
 const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const coursForm = ref({
   titre: '', description: '', enseignant: '', jour: '', heure: '',
-  lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true
+  lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true,
+  prix: 0
 })
 
 const fetchCours = async () => {
@@ -1174,7 +1227,7 @@ const openCoursForm = (c = null) => {
   if (c) {
     coursForm.value = { ...c }
   } else {
-    coursForm.value = { titre: '', description: '', enseignant: '', jour: '', heure: '', lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true }
+    coursForm.value = { titre: '', description: '', enseignant: '', jour: '', heure: '', lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true, prix: 0 }
   }
   showCoursModal.value = true
 }
@@ -1428,13 +1481,20 @@ const allBenevolesForRole = ref([])
 const allBenevolesLoading = ref(false)
 const roleSearch = ref('')
 
+const allUsers = ref([])
+
 const fetchAllBenevoles = async () => {
   allBenevolesLoading.value = true
   try {
-    const { data } = await supabase.from('benevoles').select('*').order('prenom')
-    allBenevolesForRole.value = data || []
+    const [benRes, userRes] = await Promise.all([
+      supabase.from('benevoles').select('*').order('prenom'),
+      supabase.from('profiles').select('id, prenom, nom, email, created_at').order('created_at', { ascending: false })
+    ])
+    allBenevolesForRole.value = benRes.data || []
+    allUsers.value = userRes.data || []
   } catch (e) {
     allBenevolesForRole.value = []
+    allUsers.value = []
   }
   allBenevolesLoading.value = false
 }
@@ -1597,13 +1657,8 @@ const loadImamConversations = async () => {
       const msgKey = newMsg.session_id || newMsg.user_id || 'anon'
       if (newMsg.sender_name !== 'Imam' && selectedImamConv.value?.key !== msgKey) {
         unreadConvKeys.value = new Set([...unreadConvKeys.value, msgKey])
-        // Notification navigateur si onglet en arrière-plan
-        if (document.hidden && Notification.permission === 'granted') {
-          new Notification('💬 Nouveau message pour l\'Imam', {
-            body: `${newMsg.sender_name || 'Visiteur'} : ${newMsg.content || '📎 Fichier'}`,
-            icon: '/mosque-icon.png'
-          })
-        }
+        // Push notification (fonctionne même si le site est fermé)
+        notifyImam(newMsg.sender_name || 'Visiteur', newMsg.content || '📎 Fichier')
       }
       if (selectedImamConv.value) {
         const conv = imamConversations.value.find(c => c.key === selectedImamConv.value.key)
@@ -1758,11 +1813,6 @@ const handleLogout = async () => {
 }
 
 onMounted(async () => {
-  // Demander permission notifications navigateur
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission()
-  }
-
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
@@ -1771,6 +1821,9 @@ onMounted(async () => {
     }
 
     const email = session.user.email
+
+    // S'abonner aux push notifications
+    subscribeToPush(session.user.id)
 
     // Charger le profil admin ET les données en parallèle
     const [adminResult] = await Promise.all([

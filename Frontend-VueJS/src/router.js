@@ -16,10 +16,10 @@ const routes = [
     meta: { title: 'Événements | Mosquée des Bienfaisants Périgueux' }
   },
   {
-    path: '/contact',
-    name: 'Contact',
-    component: () => import('./pages/Contact.vue'),
-    meta: { title: "Contacter l'Imam | Mosquée des Bienfaisants Périgueux" }
+    path: '/inscription-ecole',
+    name: 'InscriptionEcole',
+    component: () => import('./pages/InscriptionEcole.vue'),
+    meta: { title: "Inscription École | Mosquée des Bienfaisants Périgueux" }
   },
   {
     path: '/cours',
@@ -110,6 +110,12 @@ const routes = [
     name: 'PaiementAnnule',
     component: () => import('./pages/PaiementAnnule.vue'),
     meta: { title: 'Paiement annulé | Mosquée des Bienfaisants' }
+  },
+  {
+    path: '/paiement/succes-ecole',
+    name: 'PaiementSuccesEcole',
+    component: () => import('./pages/PaiementSuccesEcole.vue'),
+    meta: { title: 'Paiement reçu | Mosquée des Bienfaisants' }
   }
 ]
 

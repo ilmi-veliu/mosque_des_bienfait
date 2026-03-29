@@ -22,8 +22,12 @@ CREATE TABLE IF NOT EXISTS evenements (
   participants_max INTEGER,
   image_url TEXT,
   video_url TEXT,
+  recurrence TEXT DEFAULT 'ponctuel',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ajout colonne recurrence si elle existe pas encore
+ALTER TABLE evenements ADD COLUMN IF NOT EXISTS recurrence TEXT DEFAULT 'ponctuel';
 
 
 -- ============================================
@@ -47,6 +51,8 @@ CREATE TABLE IF NOT EXISTS cours_religieux (
 
 -- Ajout colonne audio si elle existe pas encore
 ALTER TABLE cours_religieux ADD COLUMN IF NOT EXISTS audio_url TEXT;
+-- Ajout colonne prix pour les cours payants
+ALTER TABLE cours_religieux ADD COLUMN IF NOT EXISTS prix DECIMAL(10,2) DEFAULT 0;
 
 
 -- ============================================
@@ -1373,6 +1379,63 @@ CREATE POLICY "chat_media_insert_anon" ON storage.objects FOR INSERT TO anon WIT
 ALTER TABLE chat_messages REPLICA IDENTITY FULL;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id UUID;
 ALTER TABLE chat_messages REPLICA IDENTITY FULL;
+
+-- ============================================
+-- TABLE INSCRIPTIONS ÉCOLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS inscriptions_ecole (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  -- Enfant
+  enfant_nom TEXT NOT NULL,
+  enfant_prenom TEXT NOT NULL,
+  enfant_naissance DATE NOT NULL,
+  enfant_sexe TEXT NOT NULL,
+  enfant_adresse TEXT NOT NULL,
+  enfant_code_postal TEXT NOT NULL,
+  enfant_commune TEXT NOT NULL,
+  enfant_sante TEXT,
+  niveau TEXT DEFAULT 'debutant',
+  -- Représentant légal 1
+  parent1_nom TEXT NOT NULL,
+  parent1_prenom TEXT NOT NULL,
+  parent1_telephone TEXT NOT NULL,
+  parent1_email TEXT NOT NULL,
+  parent1_adresse TEXT,
+  -- Représentant légal 2 (optionnel)
+  parent2_nom TEXT,
+  parent2_prenom TEXT,
+  parent2_telephone TEXT,
+  parent2_email TEXT,
+  -- Contact urgence
+  urgence_nom TEXT NOT NULL,
+  urgence_telephone TEXT NOT NULL,
+  urgence_autorisation BOOLEAN NOT NULL,
+  -- Divers
+  droit_image BOOLEAN NOT NULL,
+  assurance BOOLEAN NOT NULL,
+  accept_rgpd BOOLEAN DEFAULT false,
+  statut TEXT DEFAULT 'en_attente',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE inscriptions_ecole ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "insert own" ON inscriptions_ecole;
+DROP POLICY IF EXISTS "select own" ON inscriptions_ecole;
+DROP POLICY IF EXISTS "admin select all" ON inscriptions_ecole;
+
+CREATE POLICY "insert own" ON inscriptions_ecole FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "select own" ON inscriptions_ecole FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "admin select all" ON inscriptions_ecole FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM benevoles
+    WHERE email ILIKE (SELECT email FROM auth.users WHERE id = auth.uid())
+    AND statut = 'accepté'
+    AND role IN ('admin','superadmin')
+  )
+);
+
 
 -- ─── Suppression automatique messages imam après 7 jours ─────────────────────
 SELECT cron.unschedule('cleanup-imam-messages') WHERE EXISTS (
