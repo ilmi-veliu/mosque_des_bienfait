@@ -94,14 +94,6 @@
           <HandHelping :size="18" />
           Bénévoles
         </button>
-        <button
-          @click="activeTab = 'ramadan'; fetchRamadanData()"
-          :class="activeTab === 'ramadan' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
-        >
-          <Moon :size="18" />
-          Ramadan
-        </button>
         <button v-if="isSuperAdmin"
           @click="activeTab = 'signalements'; fetchBugReports()"
           :class="activeTab === 'signalements' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -332,8 +324,8 @@
         </div>
       </div>
 
-      <!-- RAMADAN -->
-      <div v-if="activeTab === 'ramadan'">
+      <!-- RAMADAN SUPPRIMÉ -->
+      <div v-if="false">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <!-- Calendrier + Détails -->
           <div class="lg:col-span-2">
@@ -982,7 +974,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Moon, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -1584,8 +1576,8 @@ const loadImamConversations = async () => {
   allImamMessages = (messages || []).map(m => ({ ...m, playing: false }))
   imamConversations.value = buildImamConversations(allImamMessages)
   imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
-  // Toutes les conversations ont un point rouge jusqu'à ce que Rachid clique dessus
-  unreadConvKeys.value = new Set(imamConversations.value.map(c => c.key))
+  // Seulement les conversations dont le dernier message n'est pas de l'imam
+  unreadConvKeys.value = new Set(imamConversations.value.filter(c => c.hasUnread).map(c => c.key))
 
   if (imamChannel) supabase.removeChannel(imamChannel)
   imamChannel = supabase
@@ -1605,6 +1597,13 @@ const loadImamConversations = async () => {
       const msgKey = newMsg.session_id || newMsg.user_id || 'anon'
       if (newMsg.sender_name !== 'Imam' && selectedImamConv.value?.key !== msgKey) {
         unreadConvKeys.value = new Set([...unreadConvKeys.value, msgKey])
+        // Notification navigateur si onglet en arrière-plan
+        if (document.hidden && Notification.permission === 'granted') {
+          new Notification('💬 Nouveau message pour l\'Imam', {
+            body: `${newMsg.sender_name || 'Visiteur'} : ${newMsg.content || '📎 Fichier'}`,
+            icon: '/mosque-icon.png'
+          })
+        }
       }
       if (selectedImamConv.value) {
         const conv = imamConversations.value.find(c => c.key === selectedImamConv.value.key)
@@ -1618,11 +1617,9 @@ const loadImamConversations = async () => {
 
 const selectImamConversation = (conv) => {
   selectedImamConv.value = conv
-  // Supprimer le point rouge uniquement pour l'admin rachid
-  if (adminUser.value?.email?.toLowerCase().includes('rachid')) {
-    unreadConvKeys.value.delete(conv.key)
-    unreadConvKeys.value = new Set(unreadConvKeys.value)
-  }
+  // Supprimer le point rouge quand on clique sur la conversation
+  unreadConvKeys.value.delete(conv.key)
+  unreadConvKeys.value = new Set(unreadConvKeys.value)
   selectedImamMessages.value = allImamMessages
     .filter(m => {
       if (m.sender_name === 'Imam') return m.session_id === conv.session_id
@@ -1761,6 +1758,11 @@ const handleLogout = async () => {
 }
 
 onMounted(async () => {
+  // Demander permission notifications navigateur
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
