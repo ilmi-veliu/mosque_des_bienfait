@@ -1,79 +1,79 @@
 <template>
-  <nav class="bg-[#1a1208]/95 backdrop-blur-xl border-b border-[#c9a84c]/20 sticky top-0 z-50">
+  <nav class="bg-white/95 backdrop-blur-xl border-b border-[#c9a84c]/20 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6">
       <div class="flex justify-between items-center h-16">
 
         <!-- Logo -->
         <router-link to="/" class="flex items-center gap-3 flex-shrink-0">
-          <div class="w-9 h-9 rounded-full border border-[#c9a84c]/40 bg-[#c9a84c]/10 flex items-center justify-center">
+          <div class="w-9 h-9 rounded-full border-2 border-[#c9a84c]/40 bg-[#c9a84c]/10 flex items-center justify-center">
             <span class="text-[#c9a84c] font-bold text-base">☽</span>
           </div>
           <div class="flex flex-col leading-tight">
-            <span class="text-[#f0dea0] font-semibold text-[14px] hidden sm:block">Mosquée des Bienfaisants</span>
-            <span class="text-[#f0dea0] font-semibold text-[14px] sm:hidden">Mosquée</span>
-            <span class="text-[#c9a84c]/60 text-[10px] hidden sm:block tracking-widest uppercase">Périgueux</span>
+            <span class="text-[#1a3d2e] font-semibold text-[14px] hidden sm:block">Mosquée des Bienfaisants</span>
+            <span class="text-[#1a3d2e] font-semibold text-[14px] sm:hidden">Mosquée</span>
+            <span class="text-[#c9a84c] text-[10px] hidden sm:block tracking-widest uppercase">Périgueux</span>
           </div>
         </router-link>
 
         <!-- Desktop nav -->
-        <div class="hidden lg:flex items-center gap-8 text-[13px] text-[#f0dea0]/60">
-          <router-link to="/" class="hover:text-[#f0dea0] transition-colors">Accueil</router-link>
-          <router-link to="/cours" class="hover:text-[#f0dea0] transition-colors">Cours</router-link>
-          <router-link to="/evenements" class="hover:text-[#f0dea0] transition-colors">Événements</router-link>
-          <router-link to="/contact" class="hover:text-[#f0dea0] transition-colors">Contact</router-link>
+        <div class="hidden lg:flex items-center gap-8 text-[13px] text-gray-500">
+          <router-link to="/" class="hover:text-[#1a3d2e] transition-colors">Accueil</router-link>
+          <router-link to="/cours" class="hover:text-[#1a3d2e] transition-colors">Cours</router-link>
+          <router-link to="/evenements" class="hover:text-[#1a3d2e] transition-colors">Événements</router-link>
+          <router-link to="/contact" class="hover:text-[#1a3d2e] transition-colors">Contact</router-link>
 
           <template v-if="isLoggedIn">
             <div class="relative" ref="dropdownRef">
-              <button @click="dropdownOpen = !dropdownOpen" class="flex items-center gap-1.5 hover:text-[#f0dea0] transition-colors">
+              <button @click="dropdownOpen = !dropdownOpen" class="flex items-center gap-1.5 hover:text-[#1a3d2e] transition-colors">
                 <span v-if="avatarUrl" class="w-7 h-7 rounded-full overflow-hidden ring-1 ring-[#c9a84c]/30"><img :src="avatarUrl" alt="avatar" class="w-full h-full object-cover" /></span>
                 <span v-else-if="userInitiales" class="w-7 h-7 rounded-full bg-[#c9a84c]/15 text-[#c9a84c] text-[11px] font-semibold flex items-center justify-center border border-[#c9a84c]/30">{{ userInitiales }}</span>
-                <span v-else class="w-7 h-7 rounded-full bg-[#c9a84c]/10 flex items-center justify-center"><UserCircle :size="16" class="text-[#c9a84c]/60" /></span>
-                <ChevronDown :size="12" :class="dropdownOpen ? 'rotate-180' : ''" class="transition-transform text-[#c9a84c]/40" />
+                <span v-else class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center"><UserCircle :size="16" class="text-gray-400" /></span>
+                <ChevronDown :size="12" :class="dropdownOpen ? 'rotate-180' : ''" class="transition-transform" />
               </button>
               <Transition name="dropdown">
-                <div v-if="dropdownOpen" class="absolute right-0 top-full mt-2 w-52 bg-[#1e1508] rounded-2xl shadow-2xl border border-[#c9a84c]/20 py-1 z-50">
-                  <router-link to="/profil" @click="dropdownOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#f0dea0]/60 hover:text-[#f0dea0] hover:bg-[#c9a84c]/5"><UserCircle :size="14" /> Mon Profil</router-link>
-                  <router-link v-if="isBenevole" to="/espace-benevole" @click="dropdownOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#f0dea0]/60 hover:text-[#f0dea0] hover:bg-[#c9a84c]/5"><HandHelping :size="14" /> Bénévolat</router-link>
-                  <router-link v-else to="/benevole" @click="dropdownOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#f0dea0]/60 hover:text-[#f0dea0] hover:bg-[#c9a84c]/5"><HandHelping :size="14" /> Devenir bénévole</router-link>
-                  <router-link v-if="isAdmin" to="/admin/dashboard" @click="dropdownOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#c9a84c] font-medium hover:bg-[#c9a84c]/5"><Shield :size="14" /> Admin</router-link>
+                <div v-if="dropdownOpen" class="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl shadow-[#c9a84c]/10 border border-[#c9a84c]/15 py-1 z-50">
+                  <router-link to="/profil" @click="dropdownOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-600 hover:text-[#1a3d2e] hover:bg-[#c9a84c]/5"><UserCircle :size="14" /> Mon Profil</router-link>
+                  <router-link v-if="isBenevole" to="/espace-benevole" @click="dropdownOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-600 hover:text-[#1a3d2e] hover:bg-[#c9a84c]/5"><HandHelping :size="14" /> Bénévolat</router-link>
+                  <router-link v-else to="/benevole" @click="dropdownOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-600 hover:text-[#1a3d2e] hover:bg-[#c9a84c]/5"><HandHelping :size="14" /> Devenir bénévole</router-link>
+                  <router-link v-if="isAdmin" to="/admin/dashboard" @click="dropdownOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#1a3d2e] font-medium hover:bg-[#c9a84c]/5"><Shield :size="14" /> Admin</router-link>
                   <hr class="my-1 border-[#c9a84c]/15">
-                  <button @click="handleLogout" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-red-400/70 hover:bg-[#c9a84c]/5 w-full text-left"><LogOut :size="14" /> Déconnexion</button>
+                  <button @click="handleLogout" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-red-500 hover:bg-[#c9a84c]/5 w-full text-left"><LogOut :size="14" /> Déconnexion</button>
                 </div>
               </Transition>
             </div>
           </template>
 
           <template v-else>
-            <router-link to="/connexion" class="hover:text-[#f0dea0] transition-colors">Connexion</router-link>
-            <router-link to="/inscription" class="border border-[#c9a84c]/50 text-[#c9a84c] text-[13px] px-5 py-2 rounded-full hover:bg-[#c9a84c]/10 transition-colors font-medium">S'inscrire</router-link>
+            <router-link to="/connexion" class="hover:text-[#1a3d2e] transition-colors">Connexion</router-link>
+            <router-link to="/inscription" class="bg-[#1a3d2e] text-white text-[13px] px-5 py-2 rounded-full hover:bg-[#22503c] transition-colors font-medium">S'inscrire</router-link>
           </template>
         </div>
 
-        <button @click="mobileOpen = !mobileOpen" class="lg:hidden p-2 -mr-2 text-[#c9a84c]/70">
+        <button @click="mobileOpen = !mobileOpen" class="lg:hidden p-2 -mr-2 text-[#1a3d2e]">
           <X v-if="mobileOpen" :size="22" />
           <MenuIcon v-else :size="22" />
         </button>
       </div>
     </div>
 
-    <div v-if="mobileOpen" class="lg:hidden border-t border-[#c9a84c]/15 bg-[#1a1208]">
+    <div v-if="mobileOpen" class="lg:hidden border-t border-[#c9a84c]/15 bg-white">
       <div class="px-6 py-4 space-y-0.5">
-        <router-link @click="mobileOpen = false" to="/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-[#f0dea0]/60 hover:text-[#f0dea0]">Accueil</router-link>
-        <router-link @click="mobileOpen = false" to="/cours" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-[#f0dea0]/60 hover:text-[#f0dea0]">Cours</router-link>
-        <router-link @click="mobileOpen = false" to="/evenements" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-[#f0dea0]/60 hover:text-[#f0dea0]">Événements</router-link>
-        <router-link @click="mobileOpen = false" to="/contact" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-[#f0dea0]/60 hover:text-[#f0dea0]">Contact</router-link>
+        <router-link @click="mobileOpen = false" to="/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-gray-600 hover:text-[#1a3d2e]">Accueil</router-link>
+        <router-link @click="mobileOpen = false" to="/cours" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-gray-600 hover:text-[#1a3d2e]">Cours</router-link>
+        <router-link @click="mobileOpen = false" to="/evenements" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-gray-600 hover:text-[#1a3d2e]">Événements</router-link>
+        <router-link @click="mobileOpen = false" to="/contact" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-gray-600 hover:text-[#1a3d2e]">Contact</router-link>
         <template v-if="isLoggedIn">
           <div class="pt-3 mt-2 border-t border-[#c9a84c]/15">
-            <router-link @click="mobileOpen = false" to="/profil" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-[#f0dea0]/60 hover:text-[#f0dea0]">Mon Profil</router-link>
-            <router-link @click="mobileOpen = false" :to="isBenevole ? '/espace-benevole' : '/benevole'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-[#f0dea0]/60 hover:text-[#f0dea0]">{{ isBenevole ? 'Espace Bénévole' : 'Devenir bénévole' }}</router-link>
-            <router-link v-if="isAdmin" @click="mobileOpen = false" to="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-[#c9a84c] font-medium">Admin</router-link>
-            <button @click="handleLogout(); mobileOpen = false" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-red-400/70 w-full text-left">Déconnexion</button>
+            <router-link @click="mobileOpen = false" to="/profil" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-gray-600 hover:text-[#1a3d2e]">Mon Profil</router-link>
+            <router-link @click="mobileOpen = false" :to="isBenevole ? '/espace-benevole' : '/benevole'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-gray-600 hover:text-[#1a3d2e]">{{ isBenevole ? 'Espace Bénévole' : 'Devenir bénévole' }}</router-link>
+            <router-link v-if="isAdmin" @click="mobileOpen = false" to="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-[#1a3d2e] font-medium">Admin</router-link>
+            <button @click="handleLogout(); mobileOpen = false" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#c9a84c]/5 text-[14px] text-red-500 w-full text-left">Déconnexion</button>
           </div>
         </template>
         <template v-else>
           <div class="pt-3 mt-2 border-t border-[#c9a84c]/15 flex gap-2">
-            <router-link @click="mobileOpen = false" to="/connexion" class="flex-1 text-center px-4 py-2.5 rounded-full border border-[#c9a84c]/30 text-[13px] text-[#f0dea0]/60 hover:text-[#f0dea0]">Connexion</router-link>
-            <router-link @click="mobileOpen = false" to="/inscription" class="flex-1 text-center px-4 py-2.5 rounded-full border border-[#c9a84c]/50 text-[#c9a84c] text-[13px] font-medium hover:bg-[#c9a84c]/10">S'inscrire</router-link>
+            <router-link @click="mobileOpen = false" to="/connexion" class="flex-1 text-center px-4 py-2.5 rounded-full border border-gray-200 text-[13px] text-gray-600 hover:bg-gray-50">Connexion</router-link>
+            <router-link @click="mobileOpen = false" to="/inscription" class="flex-1 text-center px-4 py-2.5 rounded-full bg-[#1a3d2e] text-white text-[13px] font-medium hover:bg-[#22503c]">S'inscrire</router-link>
           </div>
         </template>
       </div>
