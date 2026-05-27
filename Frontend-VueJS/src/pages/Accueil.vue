@@ -39,18 +39,18 @@
     </div>
 
     <!-- Donation Section -->
-    <section class="py-16 bg-gradient-to-br from-emerald-50 to-teal-50">
+    <section class="py-16 bg-stone-50">
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
           <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="md:flex">
               <!-- Left side - Icon & Message -->
-              <div class="md:w-1/2 bg-gradient-to-br from-emerald-600 to-teal-700 p-8 md:p-12 flex flex-col justify-center items-center text-white text-center">
+              <div class="md:w-1/2 bg-slate-800 p-8 md:p-12 flex flex-col justify-center items-center text-white text-center">
                 <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm">
                   <Heart :size="40" fill="currentColor" />
                 </div>
                 <h2 class="text-3xl mb-4">Soutenez la Mosquée</h2>
-                <p class="text-emerald-100 leading-relaxed">
+                <p class="text-slate-300 leading-relaxed">
                   Votre générosité aide à maintenir et développer les activités de notre mosquée
                 </p>
               </div>
@@ -67,7 +67,7 @@
                     </p>
                   </div>
                   
-                  <div class="bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded">
+                  <div class="bg-stone-50 border-l-4 border-stone-400 p-4 rounded">
                     <p class="text-sm text-gray-700 italic">
                       "La sadaqa éteint les péchés comme l'eau éteint le feu"
                     </p>
@@ -76,7 +76,7 @@
                   
                   <button
                     @click="handleDonation"
-                    class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 group"
+                    class="w-full bg-slate-800 hover:bg-slate-900 text-white py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 group"
                   >
                     <Heart :size="20" fill="currentColor" />
                     Faire un don - Sadaqa

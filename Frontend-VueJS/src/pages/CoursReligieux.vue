@@ -304,7 +304,7 @@ const fetchProgress = async () => {
   const { data: ben } = await supabase
     .from('benevoles')
     .select('role')
-    .ilike('email', session.user.email)
+    .eq('email', session.user.email.toLowerCase().trim())
     .eq('statut', 'accepté')
     .maybeSingle()
   isAdmin.value = ['admin', 'superadmin'].includes(ben?.role)

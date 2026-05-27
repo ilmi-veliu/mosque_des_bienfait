@@ -164,3 +164,142 @@ CREATE POLICY "chat_reactions_delete" ON public.chat_reactions FOR DELETE USING 
 --  ✅ Soft delete (deleted_at) pour les modérations futures
 --  ✅ Réactions avec UNIQUE par (message, user, emoji)
 -- ============================================================
+
+
+-- ============================================================
+--  PRIVACY FIX — Isolation des conversations imam
+--  PROBLÈME : les réponses de l'imam étaient visibles par TOUS
+--  les visiteurs à cause d'un wildcard sender_name='Imam' dans
+--  le RPC et d'une politique RLS trop permissive pour les anon.
+-- ============================================================
+
+-- Colonnes nécessaires (idempotentes)
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id UUID;
+ALTER TABLE chat_rooms    ADD COLUMN IF NOT EXISTS is_imam    BOOLEAN DEFAULT FALSE;
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
+
+-- Salon imam par défaut (créé une seule fois)
+INSERT INTO chat_rooms (name, description, color, is_imam, is_readonly)
+SELECT 'Chat Imam', 'Posez vos questions à l''imam', '#059669', TRUE, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM chat_rooms WHERE is_imam = TRUE);
+
+-- ─── 1. Remplacer msgs_select : isoler les anon par session_id ───────────────
+DROP POLICY IF EXISTS "msgs_select"      ON chat_messages;
+DROP POLICY IF EXISTS "msgs_select_anon" ON chat_messages;
+DROP POLICY IF EXISTS "msgs_select_auth" ON chat_messages;
+
+-- Anon : uniquement les messages imam avec session_id défini
+-- (le RPC get_imam_messages filtre ensuite par session_id exact)
+CREATE POLICY "msgs_select_anon" ON chat_messages FOR SELECT TO anon USING (
+  deleted_at IS NULL
+  AND session_id IS NOT NULL
+  AND EXISTS (
+    SELECT 1 FROM chat_rooms
+    WHERE id = chat_messages.room_id AND is_imam = TRUE
+  )
+);
+
+-- Authentifié : salons normaux selon genre, salon imam pour admin seulement
+CREATE POLICY "msgs_select_auth" ON chat_messages FOR SELECT TO authenticated USING (
+  deleted_at IS NULL
+  AND EXISTS (
+    SELECT 1 FROM chat_rooms
+    WHERE id = chat_messages.room_id
+    AND (
+      (is_imam = FALSE)
+      OR (is_imam = TRUE AND EXISTS (
+        SELECT 1 FROM benevoles
+        WHERE email = (SELECT email FROM auth.users WHERE id = auth.uid())
+          AND role IN ('admin', 'superadmin')
+          AND statut = 'accepté'
+      ))
+    )
+  )
+);
+
+-- ─── 2. Corriger get_imam_messages : strict par session_id ───────────────────
+--  AVANT : OR sender_name = 'Imam'  → exposait toutes les réponses imam à tous
+--  APRÈS : uniquement session_id = p_session_id
+CREATE OR REPLACE FUNCTION get_imam_messages(p_session_id UUID, p_room_id UUID)
+RETURNS SETOF chat_messages
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT * FROM chat_messages
+  WHERE room_id     = p_room_id
+    AND deleted_at  IS NULL
+    AND session_id  = p_session_id
+  ORDER BY created_at ASC;
+$$;
+
+-- ─── 3. RPC admin : liste des sessions actives ───────────────────────────────
+CREATE OR REPLACE FUNCTION get_imam_sessions(p_room_id UUID)
+RETURNS TABLE(
+  session_id   UUID,
+  last_message TEXT,
+  last_at      TIMESTAMPTZ,
+  msg_count    BIGINT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  -- Réservé aux admins
+  IF NOT EXISTS (
+    SELECT 1 FROM benevoles
+    WHERE email = (SELECT email FROM auth.users WHERE id = auth.uid())
+      AND role IN ('admin', 'superadmin')
+      AND statut = 'accepté'
+  ) THEN
+    RETURN;
+  END IF;
+
+  RETURN QUERY
+    SELECT
+      m.session_id,
+      (
+        SELECT cm.content FROM chat_messages cm
+        WHERE cm.room_id = p_room_id
+          AND cm.session_id = m.session_id
+          AND cm.deleted_at IS NULL
+        ORDER BY cm.created_at DESC
+        LIMIT 1
+      ) AS last_message,
+      MAX(m.created_at) AS last_at,
+      COUNT(*)::BIGINT  AS msg_count
+    FROM chat_messages m
+    WHERE m.room_id    = p_room_id
+      AND m.session_id IS NOT NULL
+      AND m.deleted_at IS NULL
+    GROUP BY m.session_id
+    ORDER BY last_at DESC;
+END;
+$$;
+
+-- ─── 4. RPC admin : messages d'une session spécifique ────────────────────────
+CREATE OR REPLACE FUNCTION get_session_messages(p_session_id UUID, p_room_id UUID)
+RETURNS SETOF chat_messages
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM benevoles
+    WHERE email = (SELECT email FROM auth.users WHERE id = auth.uid())
+      AND role IN ('admin', 'superadmin')
+      AND statut = 'accepté'
+  ) THEN
+    RETURN;
+  END IF;
+
+  RETURN QUERY
+    SELECT * FROM chat_messages
+    WHERE room_id    = p_room_id
+      AND deleted_at IS NULL
+      AND session_id = p_session_id
+    ORDER BY created_at ASC;
+END;
+$$;

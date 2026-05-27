@@ -983,10 +983,7 @@ const saving = ref(false)
 const uploading = ref(false)
 const adminUser = ref(null)
 const isSuperAdmin = computed(() => adminUser.value?.role === 'superadmin')
-const canSeeImamChat = computed(() => {
-  const email = adminUser.value?.email?.toLowerCase()
-  return email === 'elmernissi.fr@gmail.com' || email === 'panda@gmail.com'
-})
+const canSeeImamChat = computed(() => isSuperAdmin.value)
 const pageLoading = ref(true)
 
 // --- UPLOAD FICHIER ---
@@ -1021,11 +1018,15 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
 }
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
+const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/webm', 'audio/x-m4a']
 
 const uploadFile = async (file, forceAudio = false) => {
   if (!file) return null
 
-  // Validation image uniquement (pas pour audio)
+  if (forceAudio && !ALLOWED_AUDIO_TYPES.includes(file.type)) {
+    alert('Format audio non supporté. Utilisez MP3, MP4, OGG, WAV ou WebM.')
+    return null
+  }
   if (!forceAudio && !ALLOWED_IMAGE_TYPES.includes(file.type) && !file.type.startsWith('image/')) {
     alert('Format image non supporté. Utilisez JPG, PNG, WebP ou GIF.')
     return null
@@ -1036,7 +1037,7 @@ const uploadFile = async (file, forceAudio = false) => {
   uploadProgress.value = `Upload (${sizeMB} MB)...`
 
   let uploadBlob = file
-  let ext = file.name.split('.').pop().toLowerCase()
+  let ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
   let contentType = file.type || 'application/octet-stream'
 
   // Compresser les images (inclut HEIC → JPEG via canvas)
@@ -1233,7 +1234,9 @@ const fetchBenevoles = async () => {
   benevolesLoading.value = false
 }
 
+const STATUTS_AUTORISES = ['nouveau', 'contacté', 'accepté', 'refusé']
 const updateBenevoleStatut = async (id, statut) => {
+  if (!STATUTS_AUTORISES.includes(statut)) return
   await supabase.from('benevoles').update({ statut }).eq('id', id)
   fetchBenevoles()
 }
@@ -1417,9 +1420,8 @@ const deleteBugReport = async (id) => {
 
 const deleteAllBugReports = async () => {
   if (!confirm('Supprimer tous les signalements ?')) return
-  for (const bug of bugReports.value) {
-    await supabase.from('bug_reports').delete().eq('id', bug.id)
-  }
+  const ids = bugReports.value.map(b => b.id)
+  await supabase.from('bug_reports').delete().in('id', ids)
   bugReports.value = []
 }
 
@@ -1447,7 +1449,9 @@ const filteredRoleBenevoles = computed(() => {
   )
 })
 
+const ROLES_AUTORISES = ['benevole', 'admin']
 const updateRole = async (b, newRole) => {
+  if (!ROLES_AUTORISES.includes(newRole)) return
   b.role = newRole
   await supabase.from('benevoles').update({ role: newRole }).eq('id', b.id)
 }
@@ -1473,6 +1477,7 @@ const toggleDispo = async (b) => {
 }
 
 const updateDispoDates = async (b, field, value) => {
+  if (!['dispo_debut', 'dispo_fin'].includes(field)) return
   b[field] = value || null
   await supabase.from('benevoles').update({ [field]: value || null }).eq('id', b.id)
 }
@@ -1751,7 +1756,8 @@ const handleLogout = async () => {
   const { error } = await supabase.auth.signOut()
   if (error) {
     // Forcer la déconnexion locale même si le serveur échoue
-    localStorage.removeItem('sb-ibisrjtnzblzfaodlzgs-auth-token')
+    const projectId = import.meta.env.VITE_SUPABASE_URL?.match(/https:\/\/([^.]+)\./)?.[1]
+    if (projectId) localStorage.removeItem(`sb-${projectId}-auth-token`)
   }
   adminUser.value = null
   router.push('/admin')
@@ -1774,7 +1780,7 @@ onMounted(async () => {
 
     // Charger le profil admin ET les données en parallèle
     const [adminResult] = await Promise.all([
-      supabase.from('benevoles').select('*').ilike('email', email).eq('statut', 'accepté'),
+      supabase.from('benevoles').select('*').eq('email', email.toLowerCase().trim()).eq('statut', 'accepté'),
       fetchEvents(),
       fetchCours(),
       fetchBenevoles(),

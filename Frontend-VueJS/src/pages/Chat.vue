@@ -134,6 +134,47 @@
           </div>
         </div>
 
+        <!-- Imam : sélecteur de conversations (admin seulement) -->
+        <div v-if="isImamRoom && isAdmin" class="border-b bg-amber-50 shrink-0">
+          <div class="px-5 py-2.5 flex items-center justify-between">
+            <p class="text-xs font-semibold text-amber-800">
+              Conversations visiteurs
+              <span v-if="selectedImamSession" class="ml-1 text-amber-600 font-normal">
+                — répondre à la session sélectionnée
+              </span>
+            </p>
+            <button v-if="selectedImamSession" @click="selectImamSession(null)"
+              class="text-xs text-amber-600 hover:text-amber-800 underline">
+              ← Toutes les sessions
+            </button>
+          </div>
+
+          <!-- Liste des sessions -->
+          <div v-if="!selectedImamSession" class="px-5 pb-3 flex gap-2 flex-wrap">
+            <div v-if="loadingImamSessions" class="text-xs text-amber-600 italic">Chargement…</div>
+            <div v-else-if="!imamSessions.length" class="text-xs text-amber-600 italic">Aucune conversation active.</div>
+            <button
+              v-for="session in imamSessions"
+              :key="session.session_id"
+              @click="selectImamSession(session)"
+              class="flex flex-col text-left px-3 py-2 bg-white border border-amber-200 rounded-xl hover:bg-amber-50 hover:border-amber-400 transition-colors max-w-xs"
+            >
+              <span class="text-xs font-medium text-gray-700 truncate max-w-[200px]">{{ formatSessionLabel(session) }}</span>
+              <span class="text-[10px] text-amber-600 mt-0.5">
+                {{ formatSessionTime(session.last_at) }} · {{ session.msg_count }} msg
+              </span>
+            </button>
+          </div>
+
+          <!-- Session sélectionnée : badge -->
+          <div v-else class="px-5 pb-2.5 flex items-center gap-2">
+            <span class="text-[10px] bg-amber-200 text-amber-900 rounded-full px-2.5 py-1 font-mono">
+              session: {{ selectedImamSession.session_id.slice(0, 8) }}…
+            </span>
+            <span class="text-xs text-amber-700">{{ selectedImamSession.msg_count }} messages</span>
+          </div>
+        </div>
+
         <!-- Messages list -->
         <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-3">
           <div v-if="loadingMessages" class="flex justify-center py-10">
@@ -402,9 +443,12 @@
               v-model="newMessage"
               @keydown.enter.exact.prevent="sendMessage"
               @input="onTyping($event)"
-              placeholder="Écrire un message... (Entrée pour envoyer, Maj+Entrée pour saut de ligne)"
+              :placeholder="isImamRoom && isAdmin && !selectedImamSession
+                ? 'Sélectionnez une conversation ci-dessus pour répondre…'
+                : 'Écrire un message… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)'"
+              :disabled="isImamRoom && isAdmin && !selectedImamSession"
               rows="1"
-              class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors resize-none text-sm"
+              class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors resize-none text-sm disabled:bg-gray-50 disabled:text-gray-400"
               style="min-height:42px; max-height:110px; overflow-y:auto;"
               @keyup="autoResize($event.target)"
             ></textarea>
@@ -551,10 +595,73 @@ const mutedUserIds = ref([]) // user_ids mutés dans le salon courant
 
 const isMuted = computed(() => mutedUserIds.value.includes(currentUser?.id))
 
+// ─── Gestion des sessions imam (admin) ──────────────────────────────────────
+const isImamRoom = computed(() => currentRoom.value?.is_imam === true)
+const imamSessions = ref([])
+const selectedImamSession = ref(null)
+const loadingImamSessions = ref(false)
+const imamSessionChannel = ref(null)
+
+const loadImamSessions = async (roomId) => {
+  loadingImamSessions.value = true
+  try {
+    const { data } = await supabase.rpc('get_imam_sessions', { p_room_id: roomId })
+    imamSessions.value = data || []
+  } catch {
+    imamSessions.value = []
+  }
+  loadingImamSessions.value = false
+}
+
+const selectImamSession = async (session) => {
+  selectedImamSession.value = session
+  const roomId = currentRoom.value?.id
+
+  // Canal broadcast pour pousser les réponses de l'imam vers le visiteur
+  if (imamSessionChannel.value) {
+    supabase.removeChannel(imamSessionChannel.value)
+    imamSessionChannel.value = null
+  }
+  if (session) {
+    const ch = supabase.channel(`imam-session:${session.session_id}`)
+    ch.subscribe()
+    imamSessionChannel.value = ch
+  }
+
+  if (!session || !roomId) { messagesMap.value[roomId] = []; return }
+  loadingMessages.value = true
+  try {
+    const { data } = await supabase.rpc('get_session_messages', {
+      p_session_id: session.session_id,
+      p_room_id: roomId,
+    })
+    if (data) {
+      const uniqueIds = [...new Set(data.map(m => m.user_id).filter(Boolean))]
+      await loadProfilesBatch(uniqueIds)
+      messagesMap.value[roomId] = data.map(formatSupabaseMsg)
+    }
+  } catch {
+    messagesMap.value[roomId] = []
+  }
+  loadingMessages.value = false
+  await scrollBottom()
+}
+
+const formatSessionLabel = (session) => {
+  const msg = session.last_message?.slice(0, 35) || '(fichier)'
+  return msg.length < (session.last_message?.length || 0) ? msg + '…' : msg
+}
+
+const formatSessionTime = (ts) => {
+  if (!ts) return ''
+  const d = new Date(ts)
+  return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
 const checkAdmin = async (email) => {
   if (!email) return
   try {
-    const { data } = await supabase.from('benevoles').select('role').ilike('email', email).eq('statut', 'accepté').single()
+    const { data } = await supabase.from('benevoles').select('role').eq('email', email.toLowerCase().trim()).eq('statut', 'accepté').single()
     isAdmin.value = ['admin', 'superadmin'].includes(data?.role)
   } catch { isAdmin.value = false }
 }
@@ -688,13 +795,25 @@ const selectRoom = async (room) => {
   showEmojiPicker.value = false
   currentRoom.value = room
   room.unread = 0
+  selectedImamSession.value = null
+  imamSessions.value = []
+  if (imamSessionChannel.value) {
+    supabase.removeChannel(imamSessionChannel.value)
+    imamSessionChannel.value = null
+  }
 
   if (!messagesMap.value[room.id]) {
     messagesMap.value[room.id] = []
   }
 
   if (supabaseMode) {
-    await loadMessagesFromSupabase(room.id)
+    if (room.is_imam && isAdmin.value) {
+      // Salon imam : charger les sessions (conversations) plutôt que tous les messages
+      messagesMap.value[room.id] = []
+      await loadImamSessions(room.id)
+    } else {
+      await loadMessagesFromSupabase(room.id)
+    }
     subscribeToRoom(room.id)
     await loadMutes(room.id)
   }
@@ -952,6 +1071,11 @@ const sendMessage = async () => {
     alert(`Message trop long (max ${MAX_MSG_LENGTH} caractères).`)
     return
   }
+  // En room imam (admin) : impossible d'envoyer sans sélectionner une conversation
+  if (isImamRoom.value && isAdmin.value && !selectedImamSession.value) {
+    sendError.value = 'Sélectionnez une conversation (session visiteur) avant de répondre.'
+    return
+  }
 
   showEmojiPicker.value = false
   sending.value = true
@@ -1011,6 +1135,10 @@ const pushMessage = async (msgData) => {
       file_name: msgData.file_name || null,
       file_size: msgData.file_size || null,
       duration: msgData.duration || null,
+      // En room imam, attacher la session_id du visiteur qu'on répond
+      session_id: (isImamRoom.value && selectedImamSession.value)
+        ? selectedImamSession.value.session_id
+        : null,
     }).select().single()
 
     if (!error && data) {
@@ -1018,11 +1146,19 @@ const pushMessage = async (msgData) => {
       if (!messagesMap.value[roomId].some(m => m.id === data.id)) {
         messagesMap.value[roomId].push(formatSupabaseMsg({ ...data, sender_name: senderName }))
       }
+      // Pousser la réponse imam au visiteur via broadcast (évite msgs_select_anon RLS)
+      if (isImamRoom.value && imamSessionChannel.value) {
+        imamSessionChannel.value.send({
+          type: 'broadcast',
+          event: 'imam_reply',
+          payload: { ...data, sender_name: senderName }
+        })
+      }
       return
     }
     if (error) {
       console.error('[chat] insert error:', error)
-      sendError.value = 'code=' + (error.code || '?') + ' | ' + (error.message || '?') + (error.details ? ' | ' + error.details : '') + (error.hint ? ' | hint: ' + error.hint : '')
+      sendError.value = 'Erreur lors de l\'envoi. Réessayez.'
       return
     }
   }
@@ -1044,6 +1180,15 @@ const onFilesSelected = (e) => {
 }
 
 const sendFile = async (file) => {
+  const MAX_SIZE = 10 * 1024 * 1024
+  const ALLOWED_PREFIXES = ['image/', 'audio/', 'video/']
+  const ALLOWED_EXACT = ['application/pdf', 'text/plain',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+  if (file.size > MAX_SIZE) { sendError.value = 'Fichier trop volumineux (max 10 Mo).'; return }
+  const mimeOk = ALLOWED_PREFIXES.some(p => file.type.startsWith(p)) || ALLOWED_EXACT.includes(file.type)
+  if (!mimeOk) { sendError.value = 'Type de fichier non autorisé.'; return }
+
   const isImage = file.type.startsWith('image/')
   let fileUrl = URL.createObjectURL(file) // fallback local
 

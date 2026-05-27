@@ -228,7 +228,7 @@ const checkBenevole = async (email) => {
     const { data } = await supabase
       .from('benevoles')
       .select('id, role')
-      .ilike('email', email)
+      .eq('email', email.toLowerCase().trim())
       .eq('statut', 'accepté')
     const row = data?.[0]
     isBenevole.value = !!row

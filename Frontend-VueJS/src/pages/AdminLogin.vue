@@ -96,7 +96,7 @@ const handleLogin = async () => {
   // Vérifier que l'utilisateur a un rôle admin dans la base de données
   const { data: benevoleRows } = await supabase.from('benevoles')
     .select('role')
-    .ilike('email', email.value)
+    .eq('email', email.value.toLowerCase().trim())
     .eq('statut', 'accepté')
 
   const benevoleData = benevoleRows?.find(r => ['admin', 'superadmin'].includes(r.role))

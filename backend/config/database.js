@@ -1,12 +1,5 @@
 const { Sequelize } = require('sequelize'); // Importation de Sequelize pour gérer la base de données
 
-// Affiche dans la console les informations de configuration de la base de données
-console.log('🧩 Chargement config Sequelize :', {
-  db: process.env.DB_NAME, // Nom de la base de données
-  user: process.env.DB_USER, // Nom d'utilisateur pour la base de données
-  host: process.env.DB_HOST, // Hôte de la base de données
-  port: process.env.DB_PORT // Port utilisé pour la connexion
-});
 
 // Création d'une instance Sequelize pour se connecter à la base de données
 const sequelize = new Sequelize(

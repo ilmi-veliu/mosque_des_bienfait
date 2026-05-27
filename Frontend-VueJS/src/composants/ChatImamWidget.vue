@@ -342,65 +342,63 @@ const formatMsg = (msg, forceOwn = false) => {
 const loadImamRoom = async () => {
   loadingRoom.value = true
   try {
-    const { data, error } = await supabase
+    // Chercher d'abord par is_imam = true, puis par nom en fallback
+    let roomData = null
+
+    const { data: d1, error: e1 } = await supabase
       .from('chat_rooms')
       .select('*')
       .eq('is_imam', true)
-      .single()
+      .maybeSingle()
 
-    if (error || !data) {
+    if (d1) {
+      roomData = d1
+    }
+
+    if (!roomData) {
+      console.error('[ChatImam] Salon imam introuvable. e1=', e1)
       roomNotFound.value = true
       loadingRoom.value = false
       return
     }
 
-    imamRoom.value = data
+    imamRoom.value = roomData
 
-    // RPC sécurisée : seuls les messages de cette session sont retournés côté DB
-    const { data: msgs } = await supabase
-      .rpc('get_imam_messages', { p_session_id: mySessionId, p_room_id: data.id })
-
-    if (msgs) {
-      messages.value = msgs.map(m => formatMsg(m))
+    // RPC sécurisée : ne bloque pas le chat si la fonction n'existe pas encore
+    try {
+      const { data: msgs, error: rpcErr } = await supabase
+        .rpc('get_imam_messages', { p_session_id: mySessionId, p_room_id: roomData.id })
+      if (!rpcErr && msgs) {
+        messages.value = msgs.map(m => formatMsg(m))
+      }
+    } catch {
+      // Fonction RPC absente : chat disponible mais sans historique
     }
 
-    subscribeToRoom(data.id)
+    subscribeToRoom()
     loadingRoom.value = false
     await scrollBottom()
-  } catch {
+  } catch (err) {
+    console.error('[ChatImam] Erreur loadImamRoom:', err)
     roomNotFound.value = true
     loadingRoom.value = false
   }
 }
 
 // ─── Realtime ───────────────────────────────────────────────────────────────────
-const subscribeToRoom = (roomId) => {
+const subscribeToRoom = () => {
   if (realtimeChannel) supabase.removeChannel(realtimeChannel)
 
+  // Broadcast uniquement : l'admin pousse ses réponses via imam-session:<session_id>
+  // Cela évite d'avoir besoin d'une RLS SELECT pour les anon, qui permettrait
+  // une lecture directe de TOUTES les conversations imam via l'API REST.
   realtimeChannel = supabase
-    .channel(`imam-widget:${roomId}`)
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'chat_messages',
-      // Pas de filtre serveur : le filtre room_id ne fonctionne pas
-      // pour les anonymes sans REPLICA IDENTITY FULL.
-      // On filtre côté client ci-dessous.
-    }, (payload) => {
-      const raw = payload.new
-
-      // Mauvaise room ou mauvaise session → ignorer
-      if (raw.room_id !== roomId) return
-      if (raw.session_id !== mySessionId) return
-      // Ignorer mes propres messages (déjà ajoutés localement lors de l'envoi)
-      if (isLoggedIn.value && raw.user_id === currentUser.value?.id) return
-      if (!isLoggedIn.value && raw.sender_name !== 'Imam') return
-
-      // Éviter les doublons (message déjà ajouté localement)
+    .channel(`imam-session:${mySessionId}`)
+    .on('broadcast', { event: 'imam_reply' }, (payload) => {
+      const raw = payload.payload
+      if (!raw) return
       if (messages.value.some(m => m.id === raw.id)) return
-
-      const msg = formatMsg({ ...raw })
-      messages.value.push(msg)
+      messages.value.push(formatMsg({ ...raw }))
       if (!open.value) unreadCount.value++
       scrollBottom()
     })

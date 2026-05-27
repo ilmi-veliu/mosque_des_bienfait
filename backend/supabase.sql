@@ -84,10 +84,10 @@ CREATE TABLE IF NOT EXISTS benevoles (
 -- STORAGE - BUCKET IMAGES
 -- ============================================
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES ('images', 'images', true, null, null)
+VALUES ('images', 'images', true, 5242880, ARRAY['image/jpeg','image/png','image/webp','image/gif'])
 ON CONFLICT (id) DO UPDATE SET
-  allowed_mime_types = null,
-  file_size_limit = null;
+  allowed_mime_types = ARRAY['image/jpeg','image/png','image/webp','image/gif'],
+  file_size_limit = 5242880;
 
 
 -- ============================================
@@ -400,7 +400,7 @@ CREATE POLICY "ben_insert" ON benevoles FOR INSERT TO anon, authenticated WITH C
   AND (role IS NULL OR role = 'benevole')
   AND NOT EXISTS (
     SELECT 1 FROM benevoles b
-    WHERE b.email = email
+    WHERE lower(b.email) = lower(email)
     AND b.created_at > NOW() - INTERVAL '1 day'
   )
 );
@@ -1387,3 +1387,136 @@ SELECT cron.schedule(
     AND room_id IN (SELECT id FROM chat_rooms WHERE is_imam = TRUE);
   $$
 );
+
+
+-- ============================================
+-- PRIVACY FIX : isolation des conversations imam
+-- ============================================
+
+-- 1. Politique SELECT : bloquer l'accès direct REST pour les anonymes
+--    Les anon passent UNIQUEMENT par le RPC get_imam_messages (SECURITY DEFINER)
+--    et reçoivent les réponses imam via Supabase Broadcast (pas postgres_changes).
+--    Sans politique SELECT pour anon → requête REST directe retourne 0 résultats.
+DROP POLICY IF EXISTS "msgs_select" ON chat_messages;
+DROP POLICY IF EXISTS "msgs_select_anon" ON chat_messages;
+DROP POLICY IF EXISTS "msgs_select_auth" ON chat_messages;
+-- Pas de recréation de msgs_select_anon : accès direct bloqué pour anon
+
+-- Authentifié : salons normaux (genre), salon imam accessible à tous connectés
+-- L'isolation par session_id se fait côté RPC (SECURITY DEFINER) et broadcast realtime
+CREATE POLICY "msgs_select_auth" ON chat_messages FOR SELECT TO authenticated USING (
+  deleted_at IS NULL
+  AND EXISTS (
+    SELECT 1 FROM chat_rooms
+    WHERE id = chat_messages.room_id
+    AND (
+      is_imam = TRUE
+      OR (is_imam = FALSE AND (gender IS NULL OR gender = (SELECT sexe FROM profiles WHERE id = auth.uid())))
+    )
+  )
+);
+
+-- 2. Rate limit serveur : max 10 messages/min par session anon
+CREATE OR REPLACE FUNCTION check_anon_imam_rate() RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.user_id IS NULL AND (
+    SELECT COUNT(*) FROM chat_messages
+    WHERE session_id = NEW.session_id
+      AND created_at > NOW() - INTERVAL '1 minute'
+      AND deleted_at IS NULL
+  ) >= 10 THEN
+    RAISE EXCEPTION 'rate_limit: trop de messages, attendez 1 minute';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS anon_imam_rate_limit ON chat_messages;
+CREATE TRIGGER anon_imam_rate_limit
+  BEFORE INSERT ON chat_messages
+  FOR EACH ROW WHEN (NEW.user_id IS NULL AND NEW.session_id IS NOT NULL)
+  EXECUTE FUNCTION check_anon_imam_rate();
+
+-- 2. get_imam_messages : strict par session_id uniquement
+--    PLUS de wildcard sender_name='Imam' qui exposait toutes les réponses imam
+CREATE OR REPLACE FUNCTION get_imam_messages(p_session_id UUID, p_room_id UUID)
+RETURNS SETOF chat_messages
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT * FROM chat_messages
+  WHERE room_id = p_room_id
+    AND deleted_at IS NULL
+    AND session_id = p_session_id
+  ORDER BY created_at ASC;
+$$;
+
+-- 3. RPC admin : liste des sessions actives dans la room imam
+CREATE OR REPLACE FUNCTION get_imam_sessions(p_room_id UUID)
+RETURNS TABLE(
+  session_id UUID,
+  last_message TEXT,
+  last_at TIMESTAMPTZ,
+  msg_count BIGINT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  IF NOT is_admin_or_superadmin() THEN
+    RETURN;
+  END IF;
+  RETURN QUERY
+    SELECT
+      m.session_id,
+      (
+        SELECT cm.content FROM chat_messages cm
+        WHERE cm.room_id = p_room_id AND cm.session_id = m.session_id AND cm.deleted_at IS NULL
+        ORDER BY cm.created_at DESC LIMIT 1
+      ) AS last_message,
+      MAX(m.created_at) AS last_at,
+      COUNT(*)::BIGINT AS msg_count
+    FROM chat_messages m
+    WHERE m.room_id = p_room_id
+      AND m.session_id IS NOT NULL
+      AND m.deleted_at IS NULL
+    GROUP BY m.session_id
+    ORDER BY last_at DESC;
+END;
+$$;
+
+-- 4. RPC admin : messages d'une session spécifique
+CREATE OR REPLACE FUNCTION get_session_messages(p_session_id UUID, p_room_id UUID)
+RETURNS SETOF chat_messages
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  IF NOT is_admin_or_superadmin() THEN
+    RETURN;
+  END IF;
+  RETURN QUERY
+    SELECT * FROM chat_messages
+    WHERE room_id = p_room_id
+      AND deleted_at IS NULL
+      AND session_id = p_session_id
+    ORDER BY created_at ASC;
+END;
+$$;
+
+
+-- ============================================
+-- FIX : s'assurer que le salon imam a is_imam = TRUE
+-- (corrige le 403 si le salon existait avant l'ajout de la colonne)
+-- ============================================
+UPDATE chat_rooms
+SET is_imam = TRUE
+WHERE name ILIKE '%imam%'
+  AND (is_imam IS NULL OR is_imam = FALSE);
+
+INSERT INTO chat_rooms (name, description, color, is_imam, is_readonly)
+SELECT 'Chat Imam', 'Posez vos questions à l''imam', '#059669', TRUE, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM chat_rooms WHERE is_imam = TRUE);

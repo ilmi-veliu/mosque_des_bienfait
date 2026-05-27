@@ -33,7 +33,7 @@ router.post('/login', async (req, res) => {
         role: user.role
       },
       process.env.JWT_SECRET, // Clé secrète utilisée pour signer le token (stockée dans les variables d'environnement)
-      { expiresIn: '7d' } // Le token expire après 7 jours
+      { expiresIn: '2h' }
     );
 
     // Si la connexion est réussie, retourne une réponse avec le token et les informations utilisateur

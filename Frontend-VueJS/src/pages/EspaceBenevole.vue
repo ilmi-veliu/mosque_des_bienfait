@@ -901,7 +901,7 @@ onMounted(async () => {
     const { data } = await supabase
       .from('benevoles')
       .select('*')
-      .ilike('email', s.user.email)
+      .eq('email', s.user.email.toLowerCase().trim())
       .eq('statut', 'accepté')
       .single()
 
@@ -923,7 +923,7 @@ onMounted(async () => {
       const { data } = await supabase
         .from('benevoles')
         .select('id, statut')
-        .ilike('email', session.value?.user?.email)
+        .eq('email', session.value?.user?.email?.toLowerCase().trim())
         .eq('statut', 'accepté')
         .single()
       if (data) {
@@ -973,7 +973,8 @@ onUnmounted(() => {
 const handleLogout = async () => {
   const { error } = await supabase.auth.signOut()
   if (error) {
-    localStorage.removeItem('sb-ibisrjtnzblzfaodlzgs-auth-token')
+    const projectId = import.meta.env.VITE_SUPABASE_URL?.match(/https:\/\/([^.]+)\./)?.[1]
+    if (projectId) localStorage.removeItem(`sb-${projectId}-auth-token`)
   }
   session.value = null
   benevole.value = null
