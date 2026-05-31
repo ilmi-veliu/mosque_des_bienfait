@@ -39,12 +39,7 @@ const routes = [
     component: () => import('./pages/Connexion.vue'),
     meta: { title: 'Connexion | Mosquée des Bienfaisants Périgueux' }
   },
-  {
-    path: '/horaires',
-    name: 'Horaires',
-    component: Accueil,  // Temporaire - à changer plus tard
-    meta: { title: 'Horaires des Prières | Mosquée des Bienfaisants Périgueux' }
-  },
+
   {
     path: '/politique-confidentialite',
     name: 'PolitiqueConfidentialite',
