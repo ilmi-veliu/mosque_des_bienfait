@@ -15,12 +15,12 @@
                   </svg>
                 </div>
               </div>
-  
+
               <!-- Content -->
               <div class="flex-1 text-center md:text-left">
                 <h3 class="text-lg font-semibold mb-1">Cookies et confidentialité</h3>
                 <p class="text-emerald-100 text-sm">
-                  Ce site utilise des cookies pour le chat en ligne (Tawk.to), un service tiers qui peut traiter des données en dehors de l'Union Européenne. En acceptant, vous consentez au chargement de ce service.
+                  Ce site utilise le stockage local de votre navigateur pour le chat avec l'imam. Les messages sont hébergés en Europe (Supabase, Allemagne) et <strong>supprimés automatiquement après 7 jours</strong>.
                 </p>
                 <p class="text-emerald-200 text-xs mt-2">
                   <router-link to="/politique-confidentialite" class="underline hover:text-white">
@@ -32,7 +32,7 @@
                   </router-link>
                 </p>
               </div>
-  
+
               <!-- Buttons -->
               <div class="flex gap-3 flex-shrink-0">
                 <button
@@ -60,60 +60,41 @@
       </div>
     </Transition>
   </template>
-  
+
   <script setup lang="ts">
   import { ref, onMounted } from 'vue';
-  
-  const showBanner = ref(false);
-  
-  const loadTawkTo = () => {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = 'https://embed.tawk.to/68ee9823ab07261951f59f2d/1j7i04j9u';
-    script.charset = 'UTF-8';
-    script.setAttribute('crossorigin', '*');
 
-    const firstScript = document.getElementsByTagName('script')[0];
-    firstScript.parentNode?.insertBefore(script, firstScript);
-  };
-  
+  const showBanner = ref(false);
+
   const acceptCookies = () => {
     localStorage.setItem('cookieConsent', 'accepted');
     showBanner.value = false;
-    loadTawkTo();
   };
-  
+
   const refuseCookies = () => {
     localStorage.setItem('cookieConsent', 'refused');
     showBanner.value = false;
-    alert('Le chat en ligne ne sera pas disponible sans l\'acceptation des cookies. Vous pouvez nous contacter par téléphone ou email.');
   };
-  
+
   onMounted(() => {
     const consent = localStorage.getItem('cookieConsent');
-    
     if (!consent) {
-      // L'utilisateur n'a pas encore fait de choix
       showBanner.value = true;
-    } else if (consent === 'accepted') {
-      // L'utilisateur a déjà accepté, charger Tawk.to
-      loadTawkTo();
     }
-    // Si 'refused', ne rien faire
   });
   </script>
-  
+
   <style scoped>
   .slide-up-enter-active,
   .slide-up-leave-active {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .slide-up-enter-from {
     transform: translateY(100%);
     opacity: 0;
   }
-  
+
   .slide-up-leave-to {
     transform: translateY(100%);
     opacity: 0;
