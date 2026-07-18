@@ -73,7 +73,7 @@ export default {
   components: { Navbar, Footer, BetaBanner, InstallBanner, ChatImamWidget, CookieBanner },
   data() {
     return {
-      MAINTENANCE_MODE: true,
+      MAINTENANCE_MODE: false,
     }
   }
 }
