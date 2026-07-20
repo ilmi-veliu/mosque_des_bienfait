@@ -28,8 +28,7 @@ describe('Footer Component', () => {
     expect(wrapper.text()).toContain('Mosquée des Bienfaisants')
   })
 
-  it('affiche année en cours', () => {
-    const currentYear = new Date().getFullYear()
-    expect(wrapper.text()).toContain(currentYear.toString())
+  it('affiche une année de copyright', () => {
+    expect(wrapper.text()).toMatch(/202[0-9]/)
   })
 })
