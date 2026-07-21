@@ -37,11 +37,9 @@
 
   <!-- Site normal -->
   <div v-else id="app">
-    <BetaBanner v-if="!$route.meta.hideNavbar" />
     <Navbar v-if="!$route.meta.hideNavbar" />
     <router-view />
     <Footer v-if="!$route.meta.hideFooter" />
-    <InstallBanner />
     <ChatImamWidget />
     <CookieBanner />
   </div>
@@ -50,8 +48,6 @@
 <script>
 import Navbar from './composants/Navbar.vue'
 import Footer from './composants/Footer.vue'
-import BetaBanner from './composants/BetaBanner.vue'
-import InstallBanner from './composants/InstallBanner.vue'
 import ChatImamWidget from './composants/ChatImamWidget.vue'
 import CookieBanner from './composants/CookieBanner.vue'
 
@@ -70,7 +66,7 @@ document.addEventListener('visibilitychange', () => {
 
 export default {
   name: 'App',
-  components: { Navbar, Footer, BetaBanner, InstallBanner, ChatImamWidget, CookieBanner },
+  components: { Navbar, Footer, ChatImamWidget, CookieBanner },
   data() {
     return {
       MAINTENANCE_MODE: false,

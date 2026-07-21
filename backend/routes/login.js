@@ -42,10 +42,10 @@ router.post('/login', async (req, res) => {
       message: 'Connexion réussie',
       token: token, // Le token JWT généré
       user: {
-        id: user.id, // Identifiant de l'utilisateur
-        prenom: user.prenom, // Prénom de l'utilisateur
-        nom: user.nom, // Nom de l'utilisateur
-        email: user.email // Email de l'utilisateur
+        id: user.id,
+        prenom: user.prenom,
+        nom: user.nom,
+        email: user.email
       }
     });
 
