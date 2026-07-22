@@ -88,12 +88,6 @@ const routes = [
     component: () => import('./pages/MonProfil.vue'),
     meta: { requiresAuth: true, title: 'Mon Profil | Mosquée des Bienfaisants' }
   },
-  ...(import.meta.env.DEV ? [{
-    path: '/demo-navbar',
-    name: 'DemoNavbar',
-    component: () => import('./pages/DemoNavbar.vue'),
-    meta: { hideNavbar: true, hideFooter: true, title: 'Choisir la navbar | Demo' }
-  }] : []),
 ]
 
 const router = createRouter({

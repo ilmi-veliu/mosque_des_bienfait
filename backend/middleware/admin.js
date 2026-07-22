@@ -1,6 +1,9 @@
+// Créer et vérifier des tokens JWT
 const jwt = require('jsonwebtoken');
+// Se connecter à Supabase
 const { createClient } = require('@supabase/supabase-js');
 
+// Clé "service" côté serveur (plus puissante que la clé publique)
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -17,12 +20,13 @@ module.exports = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Vérification en base : rôle actuel + statut
+    // Requête Supabase : équivalent SQL de
+    // SELECT role, statut FROM benevoles WHERE email = '...'
     const { data, error } = await supabase
-      .from('benevoles')
-      .select('role, statut')
-      .eq('email', decoded.email.toLowerCase().trim())
-      .single();
+      .from('benevoles')       // table ciblée
+      .select('role, statut')  // colonnes demandées
+      .eq('email', decoded.email.toLowerCase().trim())  // condition WHERE
+      .single();                // une seule ligne attendue
 
     if (error || !data) {
       return res.status(403).json({ message: 'Accès refusé : utilisateur introuvable' });

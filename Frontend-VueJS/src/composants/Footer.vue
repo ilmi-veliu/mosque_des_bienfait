@@ -1,5 +1,7 @@
 <template>
+  <!-- sm: = s'applique à partir de 640px (mobile-first Tailwind) -->
   <footer class="bg-[#030213] text-white px-4 sm:px-6 py-10 sm:py-12 mt-20">
+    <!-- flex-wrap permet aux colonnes de passer à la ligne sur mobile -->
     <div class="flex flex-wrap justify-between gap-6 sm:gap-10 max-w-[75rem] mx-auto">
 
       <!-- Colonne 1 : Description -->
@@ -32,6 +34,7 @@
         <h3 class="mb-4 text-base font-semibold">Liens Rapides</h3>
         <ul class="list-none p-0">
           <li class="mb-2">
+            <!-- router-link génère un <a> mais navigue sans recharger la page (SPA) -->
             <router-link to="/" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
               Accueil
             </router-link>
@@ -47,11 +50,6 @@
             </router-link>
           </li>
           <li class="mb-2">
-            <router-link to="/horaires" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
-              Horaires des Prières
-            </router-link>
-          </li>
-          <li class="mb-2">
             <router-link to="/benevole" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
               Devenir Bénévole
             </router-link>
@@ -61,7 +59,7 @@
       
     </div>
     
-    <!-- Footer Bottom -->
+    <!-- Footer Bottom — border-white/10 = bordure blanche à 10% d'opacité (syntaxe Tailwind) -->
     <div class="text-center mt-10 text-[0.8125rem] border-t border-white/10 pt-5 text-[#717182]">
       <div class="flex justify-center gap-4 mb-3">
         <router-link to="/politique-confidentialite" class="text-[#717182] no-underline hover:text-white transition-colors duration-200">
