@@ -86,6 +86,25 @@
           <BookOpen :size="18" />
           Cours
         </button>
+        <button
+          @click="activeTab = 'hadiths'; fetchHadiths()"
+          :class="activeTab === 'hadiths' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+        >
+          <ScrollText :size="18" />
+          Hadiths
+        </button>
+        <button
+          @click="activeTab = 'eleves'; fetchEleves()"
+          :class="activeTab === 'eleves' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
+        >
+          <GraduationCap :size="18" />
+          Élèves
+          <span v-if="inscriptionsEnAttente.length > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            {{ inscriptionsEnAttente.length > 9 ? '9+' : inscriptionsEnAttente.length }}
+          </span>
+        </button>
         <button v-if="isSuperAdmin"
           @click="activeTab = 'benevoles'"
           :class="activeTab === 'benevoles' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -123,6 +142,14 @@
           <span v-if="imamUnreadCount > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             {{ imamUnreadCount > 9 ? '9+' : imamUnreadCount }}
           </span>
+        </button>
+        <button v-if="canSeeImamChat"
+          @click="activeTab = 'rdv'; fetchRdvs()"
+          :class="activeTab === 'rdv' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+        >
+          <Calendar :size="18" />
+          RDV
         </button>
       </div>
     </div>
@@ -199,6 +226,7 @@
                 <span :class="c.actif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" class="text-xs px-2 py-0.5 rounded">
                   {{ c.actif ? 'Actif' : 'Inactif' }}
                 </span>
+                <span v-if="c.prive" class="text-xs px-2 py-0.5 rounded bg-violet-100 text-violet-700">Privé</span>
               </div>
               <p class="text-sm text-gray-500 truncate">{{ c.description }}</p>
               <div class="flex flex-wrap gap-2 sm:gap-4 mt-1 text-xs text-gray-400">
@@ -217,6 +245,111 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- HADITHS -->
+      <div v-if="activeTab === 'hadiths'">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Hadiths</h2>
+
+        <form @submit.prevent="saveHadith" class="bg-white rounded-xl border p-4 sm:p-5 mb-6 space-y-3">
+          <h3 class="font-semibold text-gray-800">{{ editingHadithId ? 'Modifier le hadith' : 'Publier un hadith' }}</h3>
+          <textarea v-model="hadithForm.texte_arabe" rows="2" maxlength="3000" dir="rtl" placeholder="Texte arabe (facultatif)"
+            class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm"></textarea>
+          <textarea v-model="hadithForm.texte_francais" rows="3" required maxlength="3000" placeholder="Traduction française *"
+            class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm"></textarea>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input v-model="hadithForm.source" maxlength="300" placeholder="Source (ex : Sahih al-Bukhari, 1)"
+              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+            <input v-model="hadithForm.theme" maxlength="100" placeholder="Thème (ex : Patience)"
+              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+          </div>
+          <div class="flex justify-end gap-3">
+            <button v-if="editingHadithId" type="button" @click="resetHadithForm" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors text-sm">
+              Annuler
+            </button>
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 text-sm">
+              {{ saving ? 'Enregistrement...' : (editingHadithId ? 'Modifier' : 'Publier') }}
+            </button>
+          </div>
+        </form>
+
+        <div v-if="hadithsLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+        </div>
+        <div v-else-if="hadiths.length === 0" class="text-center py-12 text-gray-500">Aucun hadith publié.</div>
+        <div v-else class="space-y-3">
+          <div v-for="h in hadiths" :key="h.id" class="bg-white rounded-xl border p-4 flex gap-4">
+            <div class="flex-1 min-w-0">
+              <p v-if="h.texte_arabe" class="text-right text-gray-800 mb-1" dir="rtl">{{ h.texte_arabe }}</p>
+              <p class="text-sm text-gray-700">{{ h.texte_francais }}</p>
+              <div class="flex flex-wrap gap-2 mt-2 text-xs text-gray-400">
+                <span v-if="h.theme" class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">{{ h.theme }}</span>
+                <span v-if="h.source">{{ h.source }}</span>
+              </div>
+            </div>
+            <div class="flex gap-1 flex-shrink-0 self-start">
+              <button @click="editHadith(h)" class="p-2 text-gray-400 hover:text-emerald-600 transition-colors">
+                <Pencil :size="16" />
+              </button>
+              <button @click="deleteHadith(h.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                <Trash2 :size="16" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÉLÈVES : inscriptions aux cours + rôles -->
+      <div v-if="activeTab === 'eleves'">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Inscriptions aux cours</h2>
+        <div v-if="elevesLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+        </div>
+        <template v-else>
+          <div v-if="inscriptions.length === 0" class="text-center py-8 text-gray-500 mb-8">Aucune inscription.</div>
+          <div v-else class="space-y-3 mb-10">
+            <div v-for="i in inscriptions" :key="i.id" class="bg-white rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-medium text-gray-800">{{ nomProfil(i.user_id) }}</p>
+                <p class="text-sm text-gray-500">{{ titreCours(i.cours_id) }}</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <template v-if="i.statut === 'en_attente'">
+                  <button @click="updateInscription(i, 'validee')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">Valider</button>
+                  <button @click="updateInscription(i, 'refusee')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Refuser</button>
+                </template>
+                <span v-else class="text-xs px-3 py-1.5 rounded-full"
+                  :class="i.statut === 'validee' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'">
+                  {{ i.statut === 'validee' ? 'Validée' : 'Refusée' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Rôles des comptes</h2>
+          <p class="text-sm text-gray-500 mb-4">
+            Étudiant privé : accès aux cours privés. Professeur : accès à l'Espace professeur pour corriger les récitations.
+          </p>
+          <div class="relative mb-4 max-w-sm">
+            <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input v-model="eleveSearch" placeholder="Rechercher un nom..."
+              class="w-full pl-9 pr-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+          </div>
+          <p v-if="roleError" class="text-sm text-red-500 mb-3">{{ roleError }}</p>
+          <div class="bg-white rounded-xl border divide-y">
+            <div v-for="p in profilsFiltres" :key="p.id" class="px-4 py-3 flex items-center justify-between gap-3">
+              <span class="text-sm text-gray-800 truncate">{{ [p.prenom, p.nom].filter(Boolean).join(' ') || 'Sans nom' }}</span>
+              <select :value="p.role_eleve" @change="changerRoleEleve(p, $event.target.value)"
+                class="text-sm border rounded-lg px-2 py-1.5 focus:outline-none focus:border-emerald-600">
+                <option value="standard">Standard</option>
+                <option value="etudiant">Étudiant</option>
+                <option value="etudiant_prive">Étudiant privé</option>
+                <option value="professeur">Professeur</option>
+              </select>
+            </div>
+            <div v-if="profilsFiltres.length === 0" class="px-4 py-6 text-center text-sm text-gray-400">Aucun compte trouvé.</div>
+          </div>
+        </template>
       </div>
 
       <!-- BÉNÉVOLES -->
@@ -324,189 +457,6 @@
         </div>
       </div>
 
-      <!-- RAMADAN SUPPRIMÉ -->
-      <div v-if="false">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- Calendrier + Détails -->
-          <div class="lg:col-span-2">
-            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Planning Ramadan 2026</h2>
-            <p class="text-sm text-gray-500 mb-6">18 février - 19 mars | Cliquez sur un jour pour voir les détails</p>
-
-            <!-- Grille des 30 jours -->
-            <div class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-10 gap-2 mb-8">
-              <button v-for="(day, i) in ramadanDays" :key="i" @click="selectedRamadanDay = day"
-                :class="[
-                  selectedRamadanDay && ramadanDateStr(selectedRamadanDay) === ramadanDateStr(day) ? 'ring-2 ring-emerald-600 shadow-md' : '',
-                  getRamadanPresentsCount(day) === 0 ? 'bg-red-50 text-red-700 border-red-200' :
-                  getRamadanPresentsCount(day) < 3 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                ]"
-                class="rounded-xl p-2 text-center transition-all hover:shadow border">
-                <span class="text-[10px] font-bold block">J{{ i + 1 }}</span>
-                <span class="text-lg font-bold block leading-tight">{{ day.getDate() }}</span>
-                <span class="text-[10px] block">{{ getRamadanPresentsCount(day) }} ben.</span>
-              </button>
-            </div>
-
-            <!-- Détails du jour sélectionné -->
-            <div v-if="selectedRamadanDay" class="bg-white rounded-xl border p-5">
-              <h3 class="font-semibold text-gray-800 mb-4 text-lg">{{ formatRamadanDate(selectedRamadanDay) }}</h3>
-
-              <!-- Bénévoles présents -->
-              <div class="mb-6">
-                <h4 class="text-sm font-medium text-gray-600 mb-3">
-                  Bénévoles présents ({{ getRamadanPresents(selectedRamadanDay).length }})
-                </h4>
-                <div v-if="getRamadanPresents(selectedRamadanDay).length === 0" class="text-sm text-gray-400 italic">
-                  Aucun bénévole inscrit pour ce jour.
-                </div>
-                <div v-else class="flex flex-wrap gap-2">
-                  <span v-for="p in getRamadanPresents(selectedRamadanDay)" :key="p.id"
-                    class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-medium">
-                    {{ getBenevoleNom(p.benevole_id) }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Tâches -->
-              <div class="mb-6">
-                <h4 class="text-sm font-medium text-gray-600 mb-3">Tâches</h4>
-                <div v-if="getRamadanTaches(selectedRamadanDay).length === 0" class="text-sm text-gray-400 italic mb-3">
-                  Aucune tâche pour ce jour.
-                </div>
-                <div v-else class="space-y-2 mb-4">
-                  <div v-for="t in getRamadanTaches(selectedRamadanDay)" :key="t.id"
-                    class="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
-                    <span :class="t.fait ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-400'"
-                      class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                      {{ t.fait ? '\u2713' : '' }}
-                    </span>
-                    <span class="text-sm flex-1 font-medium" :class="t.fait ? 'line-through text-gray-400' : 'text-gray-700'">{{ t.nom }}</span>
-                    <span v-if="getEquipeNomAdmin(t.equipe_id)" class="text-[11px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded">
-                      {{ getEquipeNomAdmin(t.equipe_id) }}
-                    </span>
-                    <span v-if="getBenevoleNom(t.benevole_id) !== 'Inconnu'" class="text-[11px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
-                      {{ getBenevoleNom(t.benevole_id) }}
-                    </span>
-                    <select :value="t.benevole_id || (t.equipe_id ? 'eq_' + t.equipe_id : '')" @change="assignRamadanTache(t.id, $event.target.value)"
-                      class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600 max-w-[160px]">
-                      <option value="">Non assignée</option>
-                      <option v-for="p in getRamadanPresents(selectedRamadanDay)" :key="p.benevole_id" :value="p.benevole_id">
-                        {{ getBenevoleNom(p.benevole_id) }}
-                      </option>
-                      <option disabled class="font-medium">── Équipes ──</option>
-                      <option v-for="eq in allEquipes" :key="eq.id" :value="'eq_' + eq.id">
-                        {{ eq.nom }}
-                      </option>
-                    </select>
-                    <button @click="deleteRamadanTache(t.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                      <Trash2 :size="14" />
-                    </button>
-                  </div>
-                </div>
-                <form @submit.prevent="addRamadanTache" class="flex gap-2">
-                  <input v-model="newRamadanTache" required maxlength="500" placeholder="Nouvelle tâche (ex: Cuisson riz, Service...)"
-                    class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
-                  <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 text-sm font-medium">
-                    Ajouter
-                  </button>
-                </form>
-              </div>
-
-              <!-- Notes -->
-              <div>
-                <h4 class="text-sm font-medium text-gray-600 mb-3">Notes partagées</h4>
-                <div v-if="getRamadanNotes(selectedRamadanDay).length === 0" class="text-sm text-gray-400 italic">
-                  Aucune note pour ce jour.
-                </div>
-                <div v-else class="space-y-2">
-                  <div v-for="n in getRamadanNotes(selectedRamadanDay)" :key="n.id"
-                    class="flex items-start gap-2 bg-yellow-50/50 rounded-lg px-3 py-2">
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm text-gray-800">{{ n.contenu }}</p>
-                      <p class="text-[11px] text-gray-400 mt-0.5">{{ n.auteur_nom }}</p>
-                    </div>
-                    <button @click="deleteRamadanNote(n.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0">
-                      <Trash2 :size="14" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-else class="bg-white rounded-xl border p-8 text-center text-gray-400">
-              Sélectionnez un jour pour voir les détails et gérer les tâches.
-            </div>
-          </div>
-
-          <!-- Colonne droite : Produits -->
-          <div>
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-semibold text-gray-800">Courses</h2>
-              <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
-                {{ ramadanProduitsManquants }} manquant(s)
-              </span>
-            </div>
-
-            <!-- Ajouter produit -->
-            <form @submit.prevent="addRamadanProduit" class="bg-white rounded-xl border p-3 mb-4">
-              <div class="flex gap-2">
-                <input v-model="newRamadanProduit.nom" required maxlength="300" placeholder="Produit"
-                  class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-emerald-600 text-sm" />
-                <input v-model="newRamadanProduit.quantite" maxlength="100" placeholder="Qté"
-                  class="w-20 px-3 py-2 border rounded-lg focus:outline-none focus:border-emerald-600 text-sm" />
-                <button type="submit" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-bold">+</button>
-              </div>
-            </form>
-
-            <div v-if="ramadanProduits.length === 0" class="text-center py-8 text-gray-400 text-sm">
-              Aucun produit ajouté.
-            </div>
-            <div v-else class="space-y-2">
-              <div v-for="p in ramadanProduits" :key="p.id" class="bg-white rounded-xl border p-3 flex items-center gap-2">
-                <button @click="toggleRamadanStock(p)"
-                  :class="p.en_stock ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors">
-                  {{ p.en_stock ? '\u2713' : '\u2717' }}
-                </button>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium" :class="p.en_stock ? 'line-through text-gray-400' : 'text-gray-800'">{{ p.nom }}</p>
-                  <p class="text-xs text-gray-400">{{ p.quantite || '' }} {{ p.responsable_nom ? '\u00B7 ' + p.responsable_nom : '' }}</p>
-                </div>
-                <button @click="deleteRamadanProduit(p.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                  <Trash2 :size="14" />
-                </button>
-              </div>
-            </div>
-            <!-- Section Équipes -->
-            <div class="mt-6">
-              <h2 class="text-xl font-semibold text-gray-800 mb-4">Équipes</h2>
-              <div v-if="allEquipes.length === 0" class="text-center py-6 text-gray-400 text-sm">
-                Aucune équipe créée.
-              </div>
-              <div v-else class="space-y-3">
-                <div v-for="eq in allEquipes" :key="eq.id" class="bg-white rounded-xl border p-3">
-                  <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center gap-2">
-                      <div class="w-8 h-8 bg-violet-100 text-violet-700 rounded-lg flex items-center justify-center text-xs font-bold">
-                        {{ eq.nom.substring(0, 2).toUpperCase() }}
-                      </div>
-                      <p class="text-sm font-semibold text-gray-800">{{ eq.nom }}</p>
-                    </div>
-                    <button v-if="isSuperAdmin" @click="deleteEquipeAdmin(eq.id)" class="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                      <Trash2 :size="14" />
-                    </button>
-                  </div>
-                  <div class="flex flex-wrap gap-1.5">
-                    <span v-for="m in getEquipeMembresAdmin(eq.id)" :key="m.id"
-                      class="text-[11px] bg-violet-50 text-violet-700 px-2 py-0.5 rounded font-medium">
-                      {{ getBenevoleNom(m.benevole_id) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
       <!-- GESTION DES BÉNÉVOLES (Super Admin only) -->
@@ -647,11 +597,6 @@
       <div v-if="imamLoading" class="flex items-center justify-center py-20">
         <div class="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
       </div>
-      <div v-else-if="!imamRoom" class="text-center py-20 text-gray-400">
-        <MessageSquare :size="48" class="mx-auto mb-4 opacity-30" />
-        <p>La room imam n'existe pas encore.</p>
-        <p class="text-xs mt-2">Exécutez le SQL de migration dans Supabase.</p>
-      </div>
 
       <div v-else class="flex flex-col md:flex-row gap-4 md:h-[600px]">
         <!-- Liste conversations — cachée sur mobile quand une conv est sélectionnée -->
@@ -750,7 +695,7 @@
                   class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 text-xs text-gray-700">
                   <span>📎</span>
                   <span class="truncate max-w-[120px]">{{ f.name }}</span>
-                  <button @click="imamPendingFiles.splice(i, 1)" class="text-gray-400 hover:text-red-500 ml-1">✕</button>
+                  <button @click="imamPendingFiles = imamPendingFiles.filter((_, idx) => idx !== i)" class="text-gray-400 hover:text-red-500 ml-1">✕</button>
                 </div>
               </div>
               <p v-if="imamFileError" class="px-4 pt-1 text-xs text-red-500">{{ imamFileError }}</p>
@@ -776,6 +721,33 @@
               </div>
             </div>
           </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- RDV IMAM -->
+    <div v-if="activeTab === 'rdv' && canSeeImamChat">
+      <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Demandes de rendez-vous</h2>
+      <div v-if="rdvsLoading" class="text-center text-gray-400 py-16">Chargement...</div>
+      <div v-else-if="rdvs.length === 0" class="text-center text-gray-400 py-16">Aucune demande.</div>
+      <div v-for="r in rdvs" :key="r.id" class="bg-white rounded-2xl shadow-sm border p-5 mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="min-w-0">
+          <p class="font-medium text-gray-800">
+            {{ new Date(r.date_demandee).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) }}
+            à {{ r.heure_demandee?.slice(0, 5) }}
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">{{ r.profiles?.prenom }} {{ r.profiles?.nom }}</p>
+          <p v-if="r.motif" class="text-sm text-gray-500 mt-1">{{ r.motif }}</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <template v-if="r.statut === 'en_attente'">
+            <button @click="updateRdvStatut(r, 'confirme')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">Confirmer</button>
+            <button @click="updateRdvStatut(r, 'refuse')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Refuser</button>
+          </template>
+          <span v-else class="text-xs px-3 py-1.5 rounded-full"
+            :class="r.statut === 'confirme' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'">
+            {{ r.statut === 'confirme' ? 'Confirmé' : 'Refusé' }}
+          </span>
         </div>
       </div>
     </div>
@@ -956,6 +928,10 @@
             <input v-model="coursForm.actif" type="checkbox" id="actif" class="w-4 h-4 accent-emerald-600" />
             <label for="actif" class="text-sm font-medium text-gray-700">Cours actif (visible sur le site)</label>
           </div>
+          <div class="flex items-center gap-3">
+            <input v-model="coursForm.prive" type="checkbox" id="prive" class="w-4 h-4 accent-emerald-600" />
+            <label for="prive" class="text-sm font-medium text-gray-700">Cours privé (réservé aux étudiants privés, voir onglet Élèves)</label>
+          </div>
 
           <div class="flex justify-end gap-3 pt-2">
             <button type="button" @click="showCoursModal = false" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors">
@@ -972,13 +948,136 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, shallowRef, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip, ScrollText, GraduationCap } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
 const activeTab = ref('evenements')
+
+// --- RDV IMAM ---
+const rdvs = ref([])
+const rdvsLoading = ref(false)
+
+const fetchRdvs = async () => {
+  rdvsLoading.value = true
+  const { data } = await supabase.from('rdv_imam').select('*').order('date_demandee', { ascending: true })
+  const rows = data || []
+  // profiles n'est pas lié par une clé étrangère directe à rdv_imam (les deux
+  // référencent auth.users séparément) : on récupère les noms à part et on fusionne.
+  const userIds = [...new Set(rows.map(r => r.user_id))]
+  const { data: profs } = userIds.length
+    ? await supabase.from('profiles').select('id, prenom, nom').in('id', userIds)
+    : { data: [] }
+  const profMap = Object.fromEntries((profs || []).map(p => [p.id, p]))
+  rdvs.value = rows.map(r => ({ ...r, profiles: profMap[r.user_id] || null }))
+  rdvsLoading.value = false
+}
+
+const updateRdvStatut = async (r, statut) => {
+  const { error } = await supabase.from('rdv_imam').update({ statut }).eq('id', r.id)
+  if (!error) r.statut = statut
+}
+
+// --- HADITHS ---
+const hadiths = ref([])
+const hadithsLoading = ref(false)
+const emptyHadith = () => ({ texte_arabe: '', texte_francais: '', source: '', theme: '' })
+const hadithForm = ref(emptyHadith())
+const editingHadithId = ref(null)
+
+const fetchHadiths = async () => {
+  hadithsLoading.value = true
+  const { data } = await supabase.from('hadiths').select('*').order('created_at', { ascending: false })
+  hadiths.value = data || []
+  hadithsLoading.value = false
+}
+
+const resetHadithForm = () => {
+  hadithForm.value = emptyHadith()
+  editingHadithId.value = null
+}
+
+const editHadith = (h) => {
+  hadithForm.value = { texte_arabe: h.texte_arabe || '', texte_francais: h.texte_francais, source: h.source || '', theme: h.theme || '' }
+  editingHadithId.value = h.id
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const saveHadith = async () => {
+  saving.value = true
+  // Champs vides -> null, pour ne pas afficher de badge vide côté site
+  const payload = Object.fromEntries(Object.entries(hadithForm.value).map(([k, v]) => [k, v.trim() || null]))
+  const { error } = editingHadithId.value
+    ? await supabase.from('hadiths').update(payload).eq('id', editingHadithId.value)
+    : await supabase.from('hadiths').insert(payload)
+  saving.value = false
+  if (error) { alert('Erreur lors de l\'enregistrement. Réessayez.'); return }
+  resetHadithForm()
+  fetchHadiths()
+}
+
+const deleteHadith = async (id) => {
+  if (!confirm('Supprimer ce hadith ?')) return
+  await supabase.from('hadiths').delete().eq('id', id)
+  fetchHadiths()
+}
+
+// --- ÉLÈVES (inscriptions aux cours + rôles) ---
+const inscriptions = ref([])
+const profils = ref([])
+const elevesLoading = ref(false)
+const eleveSearch = ref('')
+const roleError = ref('')
+
+const inscriptionsEnAttente = computed(() => inscriptions.value.filter(i => i.statut === 'en_attente'))
+
+const profilsFiltres = computed(() => {
+  const q = eleveSearch.value.trim().toLowerCase()
+  if (!q) return profils.value
+  return profils.value.filter(p => `${p.prenom || ''} ${p.nom || ''}`.toLowerCase().includes(q))
+})
+
+const nomProfil = (userId) => {
+  const p = profils.value.find(p => p.id === userId)
+  return p ? ([p.prenom, p.nom].filter(Boolean).join(' ') || 'Sans nom') : 'Compte inconnu'
+}
+
+const titreCours = (coursId) => cours.value.find(c => c.id === coursId)?.titre || 'Cours supprimé'
+
+const fetchInscriptions = async () => {
+  const { data } = await supabase.from('inscriptions_cours').select('*').order('created_at', { ascending: false })
+  inscriptions.value = data || []
+}
+
+const fetchEleves = async () => {
+  elevesLoading.value = true
+  const [, { data: profs }] = await Promise.all([
+    fetchInscriptions(),
+    supabase.from('profiles').select('id, prenom, nom, role_eleve').order('prenom'),
+  ])
+  profils.value = profs || []
+  elevesLoading.value = false
+}
+
+const updateInscription = async (i, statut) => {
+  const { error } = await supabase.from('inscriptions_cours').update({ statut }).eq('id', i.id)
+  if (!error) i.statut = statut
+}
+
+const changerRoleEleve = async (p, role) => {
+  roleError.value = ''
+  const ancien = p.role_eleve
+  p.role_eleve = role
+  // Passe par la fonction SQL set_role_eleve : la policy RLS de profiles
+  // n'autorise à modifier que son propre profil.
+  const { error } = await supabase.rpc('set_role_eleve', { p_user_id: p.id, p_role: role })
+  if (error) {
+    p.role_eleve = ancien
+    roleError.value = 'Impossible de changer le rôle. Réessayez.'
+  }
+}
 const saving = ref(false)
 const uploading = ref(false)
 const adminUser = ref(null)
@@ -1160,7 +1259,7 @@ const editingCours = ref(null)
 const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const coursForm = ref({
   titre: '', description: '', enseignant: '', jour: '', heure: '',
-  lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true
+  lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true, prive: false
 })
 
 const fetchCours = async () => {
@@ -1175,7 +1274,7 @@ const openCoursForm = (c = null) => {
   if (c) {
     coursForm.value = { ...c }
   } else {
-    coursForm.value = { titre: '', description: '', enseignant: '', jour: '', heure: '', lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true }
+    coursForm.value = { titre: '', description: '', enseignant: '', jour: '', heure: '', lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true, prive: false }
   }
   showCoursModal.value = true
 }
@@ -1245,133 +1344,6 @@ const deleteBenevole = async (id) => {
   if (!confirm('Supprimer cette candidature ?')) return
   await supabase.from('benevoles').delete().eq('id', id)
   fetchBenevoles()
-}
-
-// --- RAMADAN ---
-const ramadanPresences = ref([])
-const ramadanTaches = ref([])
-const ramadanProduits = ref([])
-const ramadanNotes = ref([])
-const selectedRamadanDay = ref(null)
-const newRamadanTache = ref('')
-const newRamadanProduit = ref({ nom: '', quantite: '' })
-
-const ramadanDays = []
-const ramadanStart = new Date(2026, 1, 18)
-for (let i = 0; i < 30; i++) {
-  const d = new Date(ramadanStart)
-  d.setDate(d.getDate() + i)
-  ramadanDays.push(d)
-}
-
-const ramadanDateStr = (d) => {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-const formatRamadanDate = (d) => d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-
-const ramadanProduitsManquants = computed(() => ramadanProduits.value.filter(p => !p.en_stock).length)
-
-const allEquipes = ref([])
-const allEquipeMembres = ref([])
-
-const fetchRamadanData = async () => {
-  const [presRes, tachesRes, produitsRes, notesRes, equipesRes, membresRes] = await Promise.all([
-    supabase.from('ramadan_presences').select('*'),
-    supabase.from('ramadan_taches').select('*'),
-    supabase.from('ramadan_produits').select('*').order('created_at'),
-    supabase.from('ramadan_notes').select('*').order('created_at'),
-    supabase.from('equipes').select('*').order('created_at'),
-    supabase.from('equipe_membres').select('*')
-  ])
-  ramadanPresences.value = presRes.data || []
-  ramadanTaches.value = tachesRes.data || []
-  ramadanProduits.value = produitsRes.data || []
-  ramadanNotes.value = notesRes.data || []
-  allEquipes.value = equipesRes.data || []
-  allEquipeMembres.value = membresRes.data || []
-}
-
-const getEquipeNomAdmin = (id) => {
-  if (!id) return null
-  const eq = allEquipes.value.find(e => e.id === id)
-  return eq ? eq.nom : null
-}
-
-const getEquipeMembresAdmin = (equipeId) => {
-  return allEquipeMembres.value.filter(m => m.equipe_id === equipeId)
-}
-
-const deleteEquipeAdmin = async (equipeId) => {
-  if (!confirm('Supprimer cette équipe ?')) return
-  await supabase.from('equipes').delete().eq('id', equipeId)
-  fetchRamadanData()
-}
-
-const getRamadanPresentsCount = (day) => ramadanPresences.value.filter(p => p.jour === ramadanDateStr(day)).length
-
-const getRamadanPresents = (day) => ramadanPresences.value.filter(p => p.jour === ramadanDateStr(day))
-
-const getRamadanTaches = (day) => ramadanTaches.value.filter(t => t.jour === ramadanDateStr(day))
-
-const getBenevoleNom = (id) => {
-  const b = benevoles.value.find(b => b.id === id)
-  return b ? `${b.prenom} ${b.nom}` : 'Inconnu'
-}
-
-const addRamadanTache = async () => {
-  if (!selectedRamadanDay.value || !newRamadanTache.value) return
-  await supabase.from('ramadan_taches').insert({ jour: ramadanDateStr(selectedRamadanDay.value), nom: newRamadanTache.value, created_by: adminUser.value.id })
-  newRamadanTache.value = ''
-  fetchRamadanData()
-}
-
-const assignRamadanTache = async (tacheId, value) => {
-  if (value && value.startsWith('eq_')) {
-    // Assigner à une équipe
-    const equipeId = value.replace('eq_', '')
-    await supabase.from('ramadan_taches').update({ equipe_id: equipeId, benevole_id: null }).eq('id', tacheId)
-  } else {
-    // Assigner à un bénévole (ou désassigner)
-    await supabase.from('ramadan_taches').update({ benevole_id: value || null, equipe_id: null }).eq('id', tacheId)
-  }
-  fetchRamadanData()
-}
-
-const deleteRamadanTache = async (id) => {
-  await supabase.from('ramadan_taches').delete().eq('id', id)
-  fetchRamadanData()
-}
-
-const getRamadanNotes = (day) => ramadanNotes.value.filter(n => n.jour === ramadanDateStr(day))
-
-const deleteRamadanNote = async (id) => {
-  await supabase.from('ramadan_notes').delete().eq('id', id)
-  fetchRamadanData()
-}
-
-const addRamadanProduit = async () => {
-  await supabase.from('ramadan_produits').insert({
-    nom: newRamadanProduit.value.nom,
-    quantite: newRamadanProduit.value.quantite || null,
-    created_by: adminUser.value.id
-  })
-  newRamadanProduit.value = { nom: '', quantite: '' }
-  fetchRamadanData()
-}
-
-const toggleRamadanStock = async (p) => {
-  await supabase.from('ramadan_produits').update({ en_stock: !p.en_stock }).eq('id', p.id)
-  fetchRamadanData()
-}
-
-const deleteRamadanProduit = async (id) => {
-  if (!confirm('Supprimer ce produit ?')) return
-  await supabase.from('ramadan_produits').delete().eq('id', id)
-  fetchRamadanData()
 }
 
 // --- NOTIFICATIONS ---
@@ -1483,7 +1455,6 @@ const updateDispoDates = async (b, field, value) => {
 }
 
 // --- CHAT IMAM ---
-const imamRoom = ref(null)
 const imamLoading = ref(false)
 const imamConversations = ref([])
 const selectedImamConv = ref(null)
@@ -1494,7 +1465,9 @@ const imamUnreadCount = ref(0)
 const imamMsgsEl = ref(null)
 const unreadConvKeys = ref(new Set())
 const imamAudioEls = ref({})
-const imamPendingFiles = ref([])
+// shallowRef : évite que Vue enveloppe les File/Blob dans un Proxy réactif,
+// ce qui peut corrompre silencieusement leurs données binaires à l'envoi.
+const imamPendingFiles = shallowRef([])
 const imamFileInput = ref(null)
 const imamFileError = ref('')
 let allImamMessages = []
@@ -1514,7 +1487,7 @@ const formatImamTime = (date) => {
 const buildImamConversations = (messages) => {
   const convMap = new Map()
   for (const msg of messages) {
-    if (msg.sender_name === 'Imam') continue
+    if (msg.sender_role === 'imam') continue
     const key = msg.session_id || msg.user_id || 'anon'
     if (!convMap.has(key)) {
       convMap.set(key, {
@@ -1529,11 +1502,11 @@ const buildImamConversations = (messages) => {
   }
   return Array.from(convMap.values()).map(c => {
     const allConvMsgs = messages.filter(m => {
-      if (m.sender_name === 'Imam') return m.session_id === c.session_id
+      if (m.sender_role === 'imam') return m.session_id === c.session_id
       return (m.session_id || m.user_id || 'anon') === c.key
     })
     const lastMsg = allConvMsgs[allConvMsgs.length - 1]
-    const hasUnread = lastMsg && lastMsg.sender_name !== 'Imam'
+    const hasUnread = lastMsg && lastMsg.sender_role !== 'imam'
     return {
       ...c,
       msgCount: allConvMsgs.length,
@@ -1548,34 +1521,22 @@ const buildImamConversations = (messages) => {
 const computeImamUnread = (conversations, messages) => {
   return conversations.filter(c => {
     const convMsgs = messages.filter(m => {
-      if (m.sender_name === 'Imam') return m.session_id === c.session_id
+      if (m.sender_role === 'imam') return m.session_id === c.session_id
       return (m.session_id || m.user_id || 'anon') === c.key
     })
     const last = convMsgs[convMsgs.length - 1]
-    return last && last.sender_name !== 'Imam'
+    return last && last.sender_role !== 'imam'
   }).length
 }
 
 const loadImamConversations = async () => {
   imamLoading.value = true
-  const { data: room } = await supabase
-    .from('chat_rooms')
-    .select('*')
-    .eq('is_imam', true)
-    .single()
-
-  if (!room) {
-    imamRoom.value = null
-    imamLoading.value = false
-    return
-  }
-
-  imamRoom.value = room
-
+  // Plus de notion de "room" dans le nouveau schéma : l'admin (via is_admin_or_superadmin
+  // dans la policy chat_select_own) peut lire tous les messages directement.
   const { data: messages } = await supabase
     .from('chat_messages')
     .select('*')
-    .eq('room_id', room.id)
+    .is('deleted_at', null)
     .order('created_at', { ascending: true })
 
   allImamMessages = (messages || []).map(m => ({ ...m, playing: false }))
@@ -1586,12 +1547,11 @@ const loadImamConversations = async () => {
 
   if (imamChannel) supabase.removeChannel(imamChannel)
   imamChannel = supabase
-    .channel('imam-admin-' + room.id)
+    .channel('imam-admin-all')
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',
       table: 'chat_messages',
-      filter: `room_id=eq.${room.id}`
     }, (payload) => {
       const newMsg = { ...payload.new, playing: false }
       if (allImamMessages.some(m => m.id === newMsg.id)) return
@@ -1600,7 +1560,7 @@ const loadImamConversations = async () => {
       imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
       // Marquer comme non lu si message d'un visiteur et conv pas sélectionnée
       const msgKey = newMsg.session_id || newMsg.user_id || 'anon'
-      if (newMsg.sender_name !== 'Imam' && selectedImamConv.value?.key !== msgKey) {
+      if (newMsg.sender_role !== 'imam' && selectedImamConv.value?.key !== msgKey) {
         unreadConvKeys.value = new Set([...unreadConvKeys.value, msgKey])
         // Notification navigateur si onglet en arrière-plan
         if (document.hidden && Notification.permission === 'granted') {
@@ -1627,10 +1587,10 @@ const selectImamConversation = (conv) => {
   unreadConvKeys.value = new Set(unreadConvKeys.value)
   selectedImamMessages.value = allImamMessages
     .filter(m => {
-      if (m.sender_name === 'Imam') return m.session_id === conv.session_id
+      if (m.sender_role === 'imam') return m.session_id === conv.session_id
       return (m.session_id || m.user_id || 'anon') === conv.key
     })
-    .map(m => ({ ...m, isImamReply: m.sender_name === 'Imam' }))
+    .map(m => ({ ...m, isImamReply: m.sender_role === 'imam' }))
   setTimeout(() => {
     if (imamMsgsEl.value) imamMsgsEl.value.scrollTop = imamMsgsEl.value.scrollHeight
   }, 50)
@@ -1671,9 +1631,7 @@ const uploadImamFile = async (file, userId) => {
 
 const onImamFileChange = (e) => {
   imamFileError.value = ''
-  for (const file of e.target.files) {
-    imamPendingFiles.value.push(file)
-  }
+  imamPendingFiles.value = [...imamPendingFiles.value, ...e.target.files]
   e.target.value = ''
 }
 
@@ -1681,19 +1639,42 @@ const sendImamReply = async () => {
   const hasText = imamReply.value.trim()
   const hasFiles = imamPendingFiles.value.length > 0
   if (!hasText && !hasFiles) return
-  if (imamSending.value || !selectedImamConv.value || !imamRoom.value) return
+  if (imamSending.value || !selectedImamConv.value) return
   imamSending.value = true
   imamFileError.value = ''
   const { data: { session } } = await supabase.auth.getSession()
 
+  // Important : la réponse doit être classée dans LA CONVERSATION DU VISITEUR
+  // (son user_id ou son session_id), pas dans le compte de l'admin — sinon la
+  // policy "chat_select_own" (user_id = auth.uid()) empêcherait le visiteur
+  // connecté de voir la réponse de l'imam, puisque ce ne serait pas son propre id.
+  const conv = selectedImamConv.value
+
   const insertMsg = async (msgData) => {
-    const { data: inserted, error } = await supabase.from('chat_messages').insert(msgData).select().single()
+    const { data: inserted, error } = await supabase.from('chat_messages').insert({
+      user_id: conv.user_id,
+      session_id: conv.session_id,
+      sender_role: 'imam',
+      sender_name: 'Imam',
+      ...msgData,
+    }).select().single()
     if (error) { alert('Erreur envoi : ' + error.message); return }
     const newMsg = { ...inserted, playing: false }
     if (!allImamMessages.some(m => m.id === newMsg.id)) {
       allImamMessages = [...allImamMessages, newMsg]
       imamConversations.value = buildImamConversations(allImamMessages)
       imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
+    }
+    // Un visiteur anonyme ne peut pas lire chat_messages directement (pas de policy
+    // SELECT pour anon), donc postgres_changes ne le préviendra jamais. On lui envoie
+    // la réponse en direct via un broadcast ciblé sur SA session — voir ChatImamWidget.vue,
+    // qui écoute exactement ce canal/événement quand il n'est pas connecté.
+    if (conv.session_id && !conv.user_id) {
+      await supabase.channel(`imam-session:${conv.session_id}`).send({
+        type: 'broadcast',
+        event: 'imam_reply',
+        payload: inserted,
+      })
     }
   }
 
@@ -1702,10 +1683,6 @@ const sendImamReply = async () => {
     const result = await uploadImamFile(file, session?.user?.id)
     if (result) {
       await insertMsg({
-        room_id: imamRoom.value.id,
-        user_id: session?.user?.id || null,
-        session_id: selectedImamConv.value.session_id,
-        sender_name: 'Imam',
         content: '',
         type: result.type,
         file_url: result.url,
@@ -1718,14 +1695,7 @@ const sendImamReply = async () => {
 
   // Envoi du texte
   if (hasText) {
-    await insertMsg({
-      room_id: imamRoom.value.id,
-      user_id: session?.user?.id || null,
-      session_id: selectedImamConv.value.session_id,
-      sender_name: 'Imam',
-      content: hasText,
-      type: 'text'
-    })
+    await insertMsg({ content: hasText, type: 'text' })
     imamReply.value = ''
   }
 
@@ -1785,7 +1755,8 @@ onMounted(async () => {
       fetchCours(),
       fetchBenevoles(),
       fetchNotifications(),
-      fetchBugReports()
+      fetchBugReports(),
+      fetchInscriptions() // pour le badge "Élèves" dès l'ouverture
     ])
 
     const benevoleAdmin = (adminResult.data || []).find(r => ['admin', 'superadmin'].includes(r.role))

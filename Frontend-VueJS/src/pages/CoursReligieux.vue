@@ -154,6 +154,24 @@
                   @play="enregistrerVue(c.id)"
                 ></audio>
               </div>
+
+              <!-- Inscription : seulement pour un cours récurrent (jour fixe, ex: chaque lundi) —
+                   inutile pour une simple vidéo déjà enregistrée, sans suite -->
+              <div v-if="c.jour" class="mt-4 pt-4 border-t border-gray-100">
+                <button v-if="!inscriptionsMap[c.id]" @click="sInscrire(c.id)" :disabled="inscrivant === c.id"
+                  class="w-full bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                  {{ inscrivant === c.id ? 'Envoi...' : "S'inscrire à ce cours" }}
+                </button>
+                <p v-else class="text-center text-sm py-2 rounded-xl"
+                  :class="{
+                    'bg-yellow-50 text-yellow-700': inscriptionsMap[c.id] === 'en_attente',
+                    'bg-emerald-50 text-emerald-700': inscriptionsMap[c.id] === 'validee',
+                    'bg-red-50 text-red-700': inscriptionsMap[c.id] === 'refusee',
+                  }">
+                  {{ inscriptionsMap[c.id] === 'en_attente' ? 'Inscription en attente de validation'
+                     : inscriptionsMap[c.id] === 'validee' ? 'Inscrit ✓' : 'Inscription refusée' }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -169,10 +187,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { ChevronLeft, Search, Calendar, MapPin, User, RotateCcw, Eye } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import { store, preloadCours } from '../store'
 
+const router = useRouter()
 const isAdmin = ref(false)
 
 const searchQuery = ref('')
@@ -287,6 +307,27 @@ const activerYoutube = (coursId) => {
   enregistrerVue(coursId)
 }
 
+// --- Inscription aux cours ---
+const inscriptionsMap = ref({}) // { cours_id: statut }
+const inscrivant = ref(null)
+
+const fetchInscriptions = async () => {
+  if (!currentUserId.value) return
+  const { data } = await supabase.from('inscriptions_cours').select('cours_id, statut').eq('user_id', currentUserId.value)
+  const map = {}
+  ;(data || []).forEach(i => { map[i.cours_id] = i.statut })
+  inscriptionsMap.value = map
+}
+
+const sInscrire = async (coursId) => {
+  if (!currentUserId.value) { router.push('/connexion'); return }
+  if (inscrivant.value) return
+  inscrivant.value = coursId
+  const { error } = await supabase.from('inscriptions_cours').insert({ user_id: currentUserId.value, cours_id: coursId })
+  if (!error) inscriptionsMap.value = { ...inscriptionsMap.value, [coursId]: 'en_attente' }
+  inscrivant.value = null
+}
+
 // Charger les compteurs de vues depuis Supabase
 const fetchVues = async () => {
   const { data } = await supabase.from('cours_vues').select('cours_id')
@@ -373,7 +414,8 @@ const fetchCours = async () => {
 
 onMounted(async () => {
   const coursPromise = fetchCours()
-  fetchProgress()
+  await fetchProgress()
+  fetchInscriptions()
   fetchVues()
 
   await coursPromise

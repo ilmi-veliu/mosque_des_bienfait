@@ -135,30 +135,49 @@
               class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 text-xs text-gray-700">
               <span>📎</span>
               <span class="truncate max-w-[100px]">{{ f.name }}</span>
-              <button @click="pendingFiles.splice(i, 1)" class="text-gray-400 hover:text-red-500 ml-1">✕</button>
+              <button @click="removePendingFile(i)" class="text-gray-400 hover:text-red-500 ml-1">✕</button>
             </div>
           </div>
 
           <!-- Zone de saisie -->
           <div class="bg-white border-t px-3 py-3 shrink-0">
             <p v-if="errorMsg" class="text-xs text-red-500 mb-2">{{ errorMsg }}</p>
+
+            <!-- Enregistrement vocal en cours -->
+            <div v-if="isRecording" class="flex items-center justify-between mb-2 px-3 py-2 bg-red-50 rounded-xl">
+              <span class="text-sm text-red-600 flex items-center gap-2">
+                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                {{ formatRecordingTime(recordingSeconds) }}
+              </span>
+              <button @click="stopRecording" class="px-3 py-1 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-700">
+                Arrêter
+              </button>
+            </div>
+
             <div class="flex items-end gap-1.5">
 
               <!-- Emoji -->
-              <button @click="showEmojis = !showEmojis"
-                class="p-2 rounded-xl transition-colors shrink-0"
+              <button @click="showEmojis = !showEmojis" :disabled="isRecording"
+                class="p-2 rounded-xl transition-colors shrink-0 disabled:opacity-40"
                 :class="showEmojis ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'">
                 <Smile :size="18" />
               </button>
 
               <!-- Fichier -->
-              <button @click="$refs.fileInput.click()"
-                class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors shrink-0">
+              <button @click="$refs.fileInput.click()" :disabled="isRecording"
+                class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors shrink-0 disabled:opacity-40">
                 <Paperclip :size="18" />
               </button>
               <input ref="fileInput" type="file" class="hidden" multiple
                 accept="image/*,audio/*,.pdf,.doc,.docx,.txt"
                 @change="onFilesSelected" />
+
+              <!-- Vocal -->
+              <button @click="isRecording ? stopRecording() : startRecording()"
+                class="p-2 rounded-xl transition-colors shrink-0"
+                :class="isRecording ? 'bg-red-100 text-red-600' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'">
+                <Mic :size="18" />
+              </button>
 
               <!-- Textarea -->
               <textarea
@@ -166,7 +185,7 @@
                 @keydown.enter.exact.prevent="sendMessage"
                 placeholder="Écrire un message..."
                 rows="1"
-                :disabled="sending"
+                :disabled="sending || isRecording"
                 class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 transition-colors resize-none disabled:opacity-50"
                 style="min-height: 38px; max-height: 90px; overflow-y: auto;"
                 @input="autoResize($event.target)"
@@ -174,7 +193,7 @@
 
               <!-- Envoyer -->
               <button @click="sendMessage"
-                :disabled="sending || (!newMessage.trim() && !pendingFiles.length)"
+                :disabled="sending || isRecording || (!newMessage.trim() && !pendingFiles.length)"
                 class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shrink-0 disabled:opacity-50">
                 <div v-if="sending" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <Send v-else :size="18" />
@@ -205,385 +224,6 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
-import { MessageSquare, X, Send, Smile, Paperclip, Play, Pause } from 'lucide-vue-next'
-import { supabase } from '../supabase'
-
-const route = useRoute()
-const open = ref(false)
-const sending = ref(false)
-const errorMsg = ref('')
-const newMessage = ref('')
-const messages = ref([])
-const messagesEl = ref(null)
-const showEmojis = ref(false)
-const pendingFiles = ref([])
-const fileInput = ref(null)
-const audioElements = ref({})
-
-// Auth (peut être null si anonyme)
-const isLoggedIn = ref(false)
-const currentUser = ref(null)
-const userName = ref('Visiteur')
-const userColor = ref('#6b7280')
-
-// Room
-const imamRoom = ref(null)
-const loadingRoom = ref(false)
-const roomNotFound = ref(false)
-
-// Unread
-const unreadCount = ref(0)
-
-// Rate-limit
-const recentSendTimestamps = []
-
-let realtimeChannel = null
-let localIdCounter = 0
-
-// Identifiant de session persistant : chaque visiteur a sa conversation privée
-const mySessionId = (() => {
-  let id = localStorage.getItem('mosque_imam_session_id')
-  if (!id) { id = crypto.randomUUID(); localStorage.setItem('mosque_imam_session_id', id) }
-  return id
-})()
-
-const emojis = [
-  '😊','🙏','❤️','☪️','🕌','🌙','⭐','✨','😀','😂',
-  '🥰','😇','😎','🤲','📖','🌿','🌹','💚','👍','🎉',
-  '😢','🤔','💪','🙌','✅','🌟','🤍','🫶','😭','🥺',
-  '🌺','🕋','📿','🌸','🌼','💫','🌊','☀️','🍃','🌱'
-]
-
-const hideWidget = computed(() => {
-  const hidden = ['/chat', '/admin', '/admin/dashboard', '/espace-benevole']
-  return hidden.some(p => route.path.startsWith(p)) || route.meta?.hideNavbar
-})
-
-const myName = computed(() => userName.value || 'Visiteur')
-const myInitial = computed(() => (myName.value[0] || 'V').toUpperCase())
-
-const colorFor = (str) => {
-  const colors = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ef4444','#ec4899']
-  let hash = 0
-  for (const c of String(str)) hash = c.charCodeAt(0) + ((hash << 5) - hash)
-  return colors[Math.abs(hash) % colors.length]
-}
-
-const initialsFor = (name) => {
-  const parts = String(name || '?').trim().split(' ')
-  return (parts[0]?.[0] || '') + (parts[1]?.[0] || '')
-}
-
-const formatTimeDate = (date) => {
-  if (!date) return ''
-  const d = date instanceof Date ? date : new Date(date)
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-}
-
-const nowStr = () => new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-
-const scrollBottom = async () => {
-  await nextTick()
-  if (messagesEl.value) messagesEl.value.scrollTop = messagesEl.value.scrollHeight
-}
-
-const autoResize = (el) => {
-  el.style.height = 'auto'
-  el.style.height = Math.min(el.scrollHeight, 90) + 'px'
-}
-
-const insertEmoji = (emoji) => {
-  newMessage.value += emoji
-  showEmojis.value = false
-}
-
-const onFilesSelected = (e) => {
-  for (const file of e.target.files) pendingFiles.value.push(file)
-  e.target.value = ''
-  showEmojis.value = false
-}
-
-// ─── Profil (si connecté) ────────────────────────────────────────────────────────
-const loadProfile = async (user) => {
-  currentUser.value = user
-  isLoggedIn.value = true
-  userColor.value = colorFor(user.id)
-  try {
-    const { data } = await supabase.from('profiles').select('prenom, nom').eq('id', user.id).single()
-    if (data) {
-      userName.value = [data.prenom, data.nom].filter(Boolean).join(' ') || user.email.split('@')[0]
-    } else {
-      userName.value = user.email.split('@')[0]
-    }
-  } catch {
-    userName.value = user.email.split('@')[0]
-  }
-}
-
-// ─── Formatage message ──────────────────────────────────────────────────────────
-const formatMsg = (msg, forceOwn = false) => {
-  const isOwn = forceOwn
-    || (isLoggedIn.value && msg.user_id === currentUser.value?.id)
-    || (msg.session_id === mySessionId && msg.sender_name !== 'Imam')
-  return {
-    ...msg,
-    isOwn,
-    time: formatTimeDate(msg.created_at),
-    playing: false,
-    audioProgress: 0,
-    audioDuration: msg.duration || null,
-  }
-}
-
-// ─── Room imam + messages ────────────────────────────────────────────────────────
-const loadImamRoom = async () => {
-  loadingRoom.value = true
-  try {
-    // Chercher d'abord par is_imam = true, puis par nom en fallback
-    let roomData = null
-
-    const { data: d1, error: e1 } = await supabase
-      .from('chat_rooms')
-      .select('*')
-      .eq('is_imam', true)
-      .maybeSingle()
-
-    if (d1) {
-      roomData = d1
-    }
-
-    if (!roomData) {
-      console.error('[ChatImam] Salon imam introuvable. e1=', e1)
-      roomNotFound.value = true
-      loadingRoom.value = false
-      return
-    }
-
-    imamRoom.value = roomData
-
-    // RPC sécurisée : ne bloque pas le chat si la fonction n'existe pas encore
-    try {
-      const { data: msgs, error: rpcErr } = await supabase
-        .rpc('get_imam_messages', { p_session_id: mySessionId, p_room_id: roomData.id })
-      if (!rpcErr && msgs) {
-        messages.value = msgs.map(m => formatMsg(m))
-      }
-    } catch {
-      // Fonction RPC absente : chat disponible mais sans historique
-    }
-
-    subscribeToRoom()
-    loadingRoom.value = false
-    await scrollBottom()
-  } catch (err) {
-    console.error('[ChatImam] Erreur loadImamRoom:', err)
-    roomNotFound.value = true
-    loadingRoom.value = false
-  }
-}
-
-// ─── Realtime ───────────────────────────────────────────────────────────────────
-const subscribeToRoom = () => {
-  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
-
-  // Broadcast uniquement : l'admin pousse ses réponses via imam-session:<session_id>
-  // Cela évite d'avoir besoin d'une RLS SELECT pour les anon, qui permettrait
-  // une lecture directe de TOUTES les conversations imam via l'API REST.
-  realtimeChannel = supabase
-    .channel(`imam-session:${mySessionId}`)
-    .on('broadcast', { event: 'imam_reply' }, (payload) => {
-      const raw = payload.payload
-      if (!raw) return
-      if (messages.value.some(m => m.id === raw.id)) return
-      messages.value.push(formatMsg({ ...raw }))
-      if (!open.value) unreadCount.value++
-      scrollBottom()
-    })
-    .subscribe()
-}
-
-// ─── Audio (lecture) ─────────────────────────────────────────────────────────────
-const toggleAudio = (msg) => {
-  const el = audioElements.value[msg.id]
-  if (!el) return
-  if (msg.playing) {
-    el.pause()
-    msg.playing = false
-  } else {
-    for (const other of messages.value) {
-      if (other.playing && other.id !== msg.id) {
-        audioElements.value[other.id]?.pause()
-        other.playing = false
-      }
-    }
-    el.play()
-    msg.playing = true
-  }
-}
-
-const updateAudioProgress = (msg) => {
-  const el = audioElements.value[msg.id]
-  if (!el || !el.duration) return
-  msg.audioProgress = (el.currentTime / el.duration) * 100
-  const mins = Math.floor(el.currentTime / 60)
-  const secs = Math.floor(el.currentTime % 60)
-  msg.audioDuration = `${mins}:${secs.toString().padStart(2, '0')}`
-}
-
-
-// ─── Upload fichier ──────────────────────────────────────────────────────────────
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
-const ALLOWED_MIME_PREFIXES = ['image/', 'audio/']
-const ALLOWED_MIME_EXACT = ['application/pdf', 'text/plain',
-  'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-
-const uploadFile = async (file) => {
-  // Validation taille
-  if (file.size > MAX_FILE_SIZE) {
-    errorMsg.value = `Fichier trop volumineux (max 10 Mo). Le vôtre fait ${(file.size / 1024 / 1024).toFixed(1)} Mo.`
-    return null
-  }
-  // Validation type MIME
-  const mimeOk = ALLOWED_MIME_PREFIXES.some(p => file.type.startsWith(p)) || ALLOWED_MIME_EXACT.includes(file.type)
-  if (!mimeOk) {
-    errorMsg.value = 'Type de fichier non autorisé. Utilisez image, audio, PDF, DOC ou TXT.'
-    return null
-  }
-  try {
-    const folder = isLoggedIn.value ? currentUser.value.id : 'anon-imam'
-    // Nom de fichier sécurisé (pas d'injection de chemin)
-    const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}`
-    const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
-    const path = `${folder}/imam_${safeName}.${ext}`
-    const { data, error } = await supabase.storage.from('chat-media').upload(path, file, { upsert: false })
-    if (error) throw error
-    const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
-    return {
-      url: urlData.publicUrl,
-      name: file.name.slice(0, 100), // Limite le nom affiché
-      size: file.size,
-      type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
-    }
-  } catch {
-    return null
-  }
-}
-
-// ─── Envoi message ───────────────────────────────────────────────────────────────
-const sendMessage = async () => {
-  if (!imamRoom.value) return
-  const text = newMessage.value.trim()
-  if (!text && !pendingFiles.value.length) return
-  if (sending.value) return
-
-  // Rate-limit : 10 msg/min
-  const tsNow = Date.now()
-  const oneMinuteAgo = tsNow - 60_000
-  while (recentSendTimestamps.length && recentSendTimestamps[0] < oneMinuteAgo) recentSendTimestamps.shift()
-  if (recentSendTimestamps.length >= 10) {
-    errorMsg.value = 'Limite atteinte : 10 messages par minute maximum.'
-    return
-  }
-  recentSendTimestamps.push(tsNow)
-
-  if (text.length > 2000) {
-    errorMsg.value = 'Message trop long (max 2000 caractères).'
-    return
-  }
-
-  errorMsg.value = ''
-  showEmojis.value = false
-  sending.value = true
-
-  try {
-    // Fichiers
-    for (const file of pendingFiles.value) {
-      const result = await uploadFile(file)
-      if (result) {
-        const msgData = {
-          room_id: imamRoom.value.id,
-          user_id: isLoggedIn.value ? currentUser.value.id : null,
-          sender_name: myName.value,
-          session_id: mySessionId,
-          type: result.type,
-          file_url: result.url,
-          file_name: result.name,
-          file_size: result.size,
-          content: '',
-        }
-        const { data, error } = await supabase.from('chat_messages').insert(msgData).select().single()
-        if (error) throw error
-        if (data) {
-          messages.value.push(formatMsg(data, true))
-          await scrollBottom()
-        }
-      }
-    }
-    pendingFiles.value = []
-
-    // Texte
-    if (text) {
-      const msgData = {
-        room_id: imamRoom.value.id,
-        user_id: isLoggedIn.value ? currentUser.value.id : null,
-        sender_name: myName.value,
-        session_id: mySessionId,
-        type: 'text',
-        content: text,
-      }
-
-      // Affichage immédiat
-      const localId = `local-${++localIdCounter}`
-      messages.value.push({
-        id: null, localId, isOwn: true, type: 'text',
-        content: text, sender_name: myName.value, time: nowStr(),
-        playing: false, audioProgress: 0,
-      })
-      newMessage.value = ''
-      await scrollBottom()
-
-      const { data, error } = await supabase.from('chat_messages').insert(msgData).select().single()
-      if (error) throw error
-      if (data) {
-        const idx = messages.value.findIndex(m => m.localId === localId)
-        // Si realtime a déjà ajouté le vrai message, supprimer le placeholder
-        // Sinon remplacer le placeholder par le vrai message
-        if (messages.value.some(m => m.id === data.id)) {
-          if (idx !== -1) messages.value.splice(idx, 1)
-        } else {
-          if (idx !== -1) messages.value[idx] = formatMsg(data, true)
-        }
-      }
-    }
-  } catch (err) {
-    errorMsg.value = 'Le chat n\'est pas disponible actuellement, revenez plus tard.'
-    console.error('Imam chat error:', err)
-  }
-
-  sending.value = false
-}
-
-// ─── Init ────────────────────────────────────────────────────────────────────────
-onMounted(async () => {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (session?.user) {
-    await loadProfile(session.user)
-  }
-  // Tout le monde charge la room immédiatement (connecté ou non)
-  await loadImamRoom()
-
-  window.addEventListener('ouvrir-chat-imam', () => { open.value = true })
-})
-
-onBeforeUnmount(() => {
-  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
-  window.removeEventListener('ouvrir-chat-imam', () => { open.value = true })
-})
-</script>
-
 <style scoped>
 .popup-enter-active,
 .popup-leave-active {
@@ -603,5 +243,351 @@ onBeforeUnmount(() => {
 .icon-leave-to {
   opacity: 0;
   transform: scale(0.7);
+
 }
 </style>
+
+<script setup>
+// ─── Imports ─────────────────────────────────────────────
+import { ref, shallowRef, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
+import { X, Play, Pause, Smile, Paperclip, Send, MessageSquare, Mic } from 'lucide-vue-next'
+import { supabase } from '../supabase'
+
+const route = useRoute()
+
+// ─── État (les données qui changent) ────────────────────
+const open = ref(false)
+const messages = ref([])
+// shallowRef : les File/Blob à l'intérieur ne doivent pas être rendus réactifs
+// en profondeur par Vue (Proxy), sinon leurs données binaires peuvent être
+// corrompues silencieusement à l'envoi (même bug identifié dans Coran.vue).
+const pendingFiles = shallowRef([])
+const newMessage = ref('')
+const loadingRoom = ref(false)
+const roomNotFound = ref(false) // true si le chargement échoue (nom historique, plus de "room" en vrai)
+const showEmojis = ref(false)
+const errorMsg = ref('')
+const sending = ref(false)
+const unreadCount = ref(0)
+const userColor = ref('#6b7280')
+const myName = ref('Visiteur')
+const audioElements = ref({})
+const messagesEl = ref(null)
+const fileInput = ref(null)
+
+// Connecté (compte) ou visiteur anonyme
+const isLoggedIn = ref(false)
+const currentUser = ref(null)
+
+let realtimeChannel = null
+
+// Identifiant unique du visiteur anonyme, gardé dans son navigateur (localStorage)
+// pour retrouver "sa" conversation même sans compte
+const mySessionId = (() => {
+  let id = localStorage.getItem('mosque_imam_session_id')
+  if (!id) { id = crypto.randomUUID(); localStorage.setItem('mosque_imam_session_id', id) }
+  return id
+})()
+
+const emojis = [
+  '😊','🙏','❤️','☪️','🕌','🌙','⭐','✨','😀','😂',
+  '🥰','😇','😎','🤲','📖','🌿','🌹','💚','👍','🎉',
+  '😢','🤔','💪','🙌','✅','🌟','🤍','🫶','😭','🥺',
+  '🌺','🕋','📿','🌸','🌼','💫','🌊','☀️','🍃','🌱'
+]
+
+// hideWidget : true si on est sur une page où le chat ne doit pas apparaître
+const hideWidget = computed(() => {
+  const hidden = ['/chat', '/admin', '/admin/dashboard', '/espace-benevole']
+  return hidden.some(p => route.path.startsWith(p)) || route.meta?.hideNavbar
+})
+
+// myInitial : première lettre du nom affiché, en majuscule (pour l'avatar rond)
+const myInitial = computed(() => (myName.value[0] || 'V').toUpperCase())
+
+// ─── Fonctions ───────────────────────────────────────────
+
+// Enrichit un message brut de la base (isOwn, heure lisible) pour l'affichage
+const formatMsg = (msg) => {
+  const isOwn = msg.sender_role === 'user' && (
+    (isLoggedIn.value && msg.user_id === currentUser.value?.id) ||
+    (!isLoggedIn.value && msg.session_id === mySessionId)
+  )
+  const d = msg.created_at ? new Date(msg.created_at) : new Date()
+  return {
+    ...msg,
+    isOwn,
+    time: d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    playing: false,
+    audioProgress: 0,
+    audioDuration: msg.duration || null,
+  }
+}
+
+// Fait défiler la conversation tout en bas (après un nouveau message)
+const scrollBottom = async () => {
+  await nextTick() // attend que Vue ait affiché le nouveau message avant de calculer le scroll
+  if (messagesEl.value) messagesEl.value.scrollTop = messagesEl.value.scrollHeight
+}
+
+// Va chercher le prénom/nom dans "profiles" si l'utilisateur est connecté
+const loadProfile = async (user) => {
+  currentUser.value = user
+  isLoggedIn.value = true
+  try {
+    const { data } = await supabase.from('profiles').select('prenom, nom').eq('id', user.id).single()
+    myName.value = data ? ([data.prenom, data.nom].filter(Boolean).join(' ') || user.email.split('@')[0]) : user.email.split('@')[0]
+  } catch {
+    myName.value = user.email.split('@')[0]
+  }
+}
+
+// Charge l'historique des messages puis branche l'écoute en temps réel
+const loadMessages = async () => {
+  loadingRoom.value = true
+  try {
+    if (isLoggedIn.value) {
+      // Connecté : lecture directe, autorisée par la règle RLS "chat_select_own" (user_id = auth.uid())
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', currentUser.value.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true })
+      if (error) throw error
+      messages.value = (data || []).map(formatMsg)
+    } else {
+      // Anonyme : pas de lecture directe possible (session_id n'est pas vérifiable), passe par une RPC.
+      // ⚠️ À créer côté SQL : get_my_anon_messages(p_session_id uuid) — sinon historique vide, sans planter.
+      const { data, error } = await supabase.rpc('get_my_anon_messages', { p_session_id: mySessionId })
+      if (!error && data) messages.value = data.map(formatMsg)
+    }
+    subscribeRealtime()
+    await scrollBottom()
+  } catch (err) {
+    console.error('[ChatImam] Erreur chargement messages:', err)
+    roomNotFound.value = true
+  }
+  loadingRoom.value = false
+}
+
+// Écoute l'arrivée de nouveaux messages en direct
+const subscribeRealtime = () => {
+  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
+
+  if (isLoggedIn.value) {
+    // postgres_changes respecte les RLS -> on ne reçoit que ses propres messages,
+    // c'est ce qui corrige la faille de sécurité de l'ancien système en broadcast.
+    realtimeChannel = supabase
+      .channel(`chat-${currentUser.value.id}`)
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `user_id=eq.${currentUser.value.id}` },
+        (payload) => {
+          if (messages.value.some(m => m.id === payload.new.id)) return
+          messages.value.push(formatMsg(payload.new))
+          if (!open.value) unreadCount.value++
+          scrollBottom()
+        })
+      .subscribe()
+  } else {
+    // Anonyme : session_id non vérifiable par RLS -> réponse reçue via broadcast ciblé.
+    // ⚠️ Le dashboard admin doit envoyer ce broadcast sur `imam-session:<session_id>`, événement 'imam_reply'.
+    realtimeChannel = supabase
+      .channel(`imam-session:${mySessionId}`)
+      .on('broadcast', { event: 'imam_reply' }, (payload) => {
+        const raw = payload.payload
+        if (!raw || messages.value.some(m => m.id === raw.id)) return
+        messages.value.push(formatMsg(raw))
+        if (!open.value) unreadCount.value++
+        scrollBottom()
+      })
+      .subscribe()
+  }
+}
+
+// Insère une ligne dans chat_messages avec les bons champs selon connecté/anonyme
+const insertMessage = async (fields) => {
+  const base = {
+    sender_role: 'user',
+    sender_name: myName.value,
+    user_id: isLoggedIn.value ? currentUser.value.id : null,
+    session_id: isLoggedIn.value ? null : mySessionId,
+    ...fields,
+  }
+  const { data, error } = await supabase.from('chat_messages').insert(base).select().single()
+  if (error) throw error
+  if (data && !messages.value.some(m => m.id === data.id)) messages.value.push(formatMsg(data))
+}
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 Mo
+const ALLOWED_MIME_PREFIXES = ['image/', 'audio/']
+const ALLOWED_MIME_EXACT = ['application/pdf', 'text/plain',
+  'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+
+// Envoie un fichier vers le bucket "chat-media" et renvoie son URL publique
+const uploadFile = async (file) => {
+  if (file.size > MAX_FILE_SIZE) {
+    errorMsg.value = `Fichier trop volumineux (max 10 Mo). Le vôtre fait ${(file.size / 1024 / 1024).toFixed(1)} Mo.`
+    return null
+  }
+  const mimeOk = ALLOWED_MIME_PREFIXES.some(p => file.type.startsWith(p)) || ALLOWED_MIME_EXACT.includes(file.type)
+  if (!mimeOk) {
+    errorMsg.value = 'Type de fichier non autorisé. Utilisez image, audio, PDF, DOC ou TXT.'
+    return null
+  }
+  try {
+    const folder = isLoggedIn.value ? currentUser.value.id : `anon-${mySessionId}`
+    const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}` // nom aléatoire, jamais le nom d'origine
+    const ext = (file.name.split('.').pop() || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `${folder}/${safeName}.${ext}`
+    const { data, error } = await supabase.storage.from('chat-media').upload(path, file, { upsert: false })
+    if (error) throw error
+    const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
+    return {
+      url: urlData.publicUrl,
+      name: file.name.slice(0, 100),
+      size: file.size,
+      type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
+    }
+  } catch {
+    return null
+  }
+}
+
+// Envoie le texte en cours + les fichiers en attente
+const sendMessage = async () => {
+  const text = newMessage.value.trim()
+  if (!text && !pendingFiles.value.length) return
+  if (sending.value) return
+  sending.value = true
+  errorMsg.value = ''
+
+  try {
+    for (const file of pendingFiles.value) {
+      const uploaded = await uploadFile(file)
+      if (uploaded) {
+        await insertMessage({ type: uploaded.type, file_url: uploaded.url, file_name: uploaded.name, file_size: uploaded.size, content: '' })
+      }
+    }
+    pendingFiles.value = []
+
+    if (text) {
+      newMessage.value = ''
+      await insertMessage({ type: 'text', content: text })
+    }
+    await scrollBottom()
+  } catch (err) {
+    errorMsg.value = "Le chat n'est pas disponible actuellement, réessayez plus tard."
+    console.error('[ChatImam] Erreur envoi:', err)
+  }
+  sending.value = false
+}
+
+// Ajoute un fichier choisi à la liste d'attente avant envoi.
+// Avec shallowRef, on remplace le tableau (nouvelle référence) plutôt que de le
+// muter avec .push() — sinon Vue ne détecte pas le changement et l'affichage
+// ne se met pas à jour (shallowRef ne réagit qu'aux réassignations de .value).
+const onFilesSelected = (e) => {
+  pendingFiles.value = [...pendingFiles.value, ...e.target.files]
+  e.target.value = ''
+  showEmojis.value = false
+}
+
+const removePendingFile = (i) => {
+  pendingFiles.value = pendingFiles.value.filter((_, idx) => idx !== i)
+}
+
+// Ajoute un emoji au message en cours d'écriture
+const insertEmoji = (emoji) => {
+  newMessage.value += emoji
+  showEmojis.value = false
+}
+
+// Agrandit la zone de texte au fur et à mesure qu'on écrit (jusqu'à 90px max)
+const autoResize = (el) => {
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 90) + 'px'
+}
+
+// Joue / met en pause un message vocal (un seul à la fois)
+const toggleAudio = (msg) => {
+  const el = audioElements.value[msg.id]
+  if (!el) return
+  if (msg.playing) {
+    el.pause()
+    msg.playing = false
+  } else {
+    for (const other of messages.value) {
+      if (other.playing && other.id !== msg.id) { audioElements.value[other.id]?.pause(); other.playing = false }
+    }
+    el.play()
+    msg.playing = true
+  }
+}
+
+// Met à jour la barre de progression et le compteur de temps pendant la lecture
+const updateAudioProgress = (msg) => {
+  const el = audioElements.value[msg.id]
+  if (!el || !el.duration) return
+  msg.audioProgress = (el.currentTime / el.duration) * 100
+  const mins = Math.floor(el.currentTime / 60)
+  const secs = Math.floor(el.currentTime % 60)
+  msg.audioDuration = `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+// ─── Cycle de vie ────────────────────────────────────────
+// ─── Enregistrement vocal (MediaRecorder) ────────────────────────────────
+const isRecording = ref(false)
+const recordingSeconds = ref(0)
+let mediaRecorder = null
+let recordedChunks = []
+let recordingTimer = null
+let activeStream = null
+
+const formatRecordingTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
+
+const startRecording = async () => {
+  errorMsg.value = ''
+  try {
+    activeStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+  } catch {
+    errorMsg.value = "Impossible d'accéder au micro (permission refusée ou indisponible)."
+    return
+  }
+  recordedChunks = []
+  mediaRecorder = new MediaRecorder(activeStream)
+  mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data) }
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' })
+    const ext = (mediaRecorder.mimeType || 'audio/webm').includes('mp4') ? 'm4a' : 'webm'
+    const file = new File([blob], `vocal-${Date.now()}.${ext}`, { type: blob.type })
+    pendingFiles.value = [...pendingFiles.value, file]
+    activeStream.getTracks().forEach(t => t.stop())
+    activeStream = null
+  }
+  mediaRecorder.start()
+  isRecording.value = true
+  recordingSeconds.value = 0
+  recordingTimer = setInterval(() => { recordingSeconds.value++ }, 1000)
+}
+
+const stopRecording = () => {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop()
+  isRecording.value = false
+  clearInterval(recordingTimer)
+}
+
+onMounted(async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user) await loadProfile(session.user)
+  await loadMessages()
+  window.addEventListener('ouvrir-chat-imam', () => { open.value = true })
+})
+
+onBeforeUnmount(() => {
+  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
+  clearInterval(recordingTimer)
+  activeStream?.getTracks().forEach(t => t.stop())
+})
+</script>

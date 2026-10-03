@@ -15,7 +15,7 @@
           <router-link to="/" class="hover:text-gray-600 transition-colors">Accueil</router-link>
           <router-link to="/cours" class="hover:text-gray-600 transition-colors">Cours Vidéo</router-link>
           <router-link to="/evenements" class="hover:text-gray-600 transition-colors">Événements</router-link>
-          <router-link to="/contact" class="hover:text-gray-600 transition-colors">Contact Imam</router-link>
+          <router-link to="/hadith" class="hover:text-gray-600 transition-colors">Hadiths</router-link>
           <!-- Connecté : avatar dropdown -->
           <template v-if="isLoggedIn">
             <div class="relative" ref="dropdownRef">
@@ -47,6 +47,31 @@
                   >
                     <UserCircle :size="16" class="text-gray-400" />
                     Mon Profil
+                  </router-link>
+                  <router-link
+                    to="/coran"
+                    @click="dropdownOpen = false"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <BookOpen :size="16" class="text-gray-400" />
+                    Récitation du Coran
+                  </router-link>
+                  <router-link
+                    to="/rdv-imam"
+                    @click="dropdownOpen = false"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Calendar :size="16" class="text-gray-400" />
+                    Rendez-vous avec l'Imam
+                  </router-link>
+                  <router-link
+                    v-if="isProfesseur"
+                    to="/espace-professeur"
+                    @click="dropdownOpen = false"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <GraduationCap :size="16" class="text-gray-400" />
+                    Espace Professeur
                   </router-link>
                   <router-link
                     v-if="isBenevole"
@@ -90,12 +115,11 @@
 
           <!-- Non connecté -->
           <template v-else>
-            <router-link to="/connexion" class="hover:text-gray-600 transition-colors">Connexion</router-link>
             <router-link
-              to="/inscription"
+              to="/connexion"
               class="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
             >
-              S'inscrire
+              Connexion
             </router-link>
           </template>
         </div>
@@ -124,10 +148,24 @@
           <Calendar :size="18" class="text-gray-400" />
           Événements
         </router-link>
-        <router-link @click="mobileOpen = false" to="/contact" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
-          <MessageSquare :size="18" class="text-gray-400" />
-          Contact Imam
+        <router-link @click="mobileOpen = false" to="/hadith" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+          <BookOpen :size="18" class="text-gray-400" />
+          Hadiths
         </router-link>
+        <template v-if="isLoggedIn">
+          <router-link @click="mobileOpen = false" to="/coran" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+            <BookOpen :size="18" class="text-gray-400" />
+            Récitation du Coran
+          </router-link>
+          <router-link @click="mobileOpen = false" to="/rdv-imam" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+            <Calendar :size="18" class="text-gray-400" />
+            RDV avec l'Imam
+          </router-link>
+          <router-link v-if="isProfesseur" @click="mobileOpen = false" to="/espace-professeur" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+            <GraduationCap :size="18" class="text-gray-400" />
+            Espace Professeur
+          </router-link>
+        </template>
         <!-- Connecté : section compte -->
         <template v-if="isLoggedIn">
           <div class="pt-2 mt-2 border-t border-gray-100">
@@ -164,12 +202,9 @@
 
         <!-- Non connecté -->
         <template v-else>
-          <div class="pt-2 mt-2 border-t border-gray-100 flex gap-2">
-            <router-link @click="mobileOpen = false" to="/connexion" class="flex-1 text-center px-4 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors text-sm">
+          <div class="pt-2 mt-2 border-t border-gray-100">
+            <router-link @click="mobileOpen = false" to="/connexion" class="block text-center px-4 py-2.5 rounded-xl bg-gray-900 text-white hover:bg-gray-700 transition-colors text-sm font-medium">
               Connexion
-            </router-link>
-            <router-link @click="mobileOpen = false" to="/inscription" class="flex-1 text-center px-4 py-2.5 rounded-xl bg-gray-900 text-white hover:bg-gray-700 transition-colors text-sm font-medium">
-              S'inscrire
             </router-link>
           </div>
         </template>
@@ -179,13 +214,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { Building2, Home, Video, Calendar, MessageSquare, MessagesSquare, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X } from 'lucide-vue-next'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { Building2, Home, Video, Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
-const route = useRoute()
 const isLoggedIn = ref(false)
 const isAdmin = ref(false)
 const isBenevole = ref(false)
@@ -194,26 +228,7 @@ const dropdownOpen = ref(false)
 const dropdownRef = ref(null)
 const avatarUrl = ref('')
 const userInitiales = ref('')
-const chatUnread = ref(0)
-let chatChannel = null
-let currentUserId = null
-
-// Réinitialiser le badge quand on arrive sur /chat
-watch(() => route.path, (newPath) => {
-  if (newPath.startsWith('/chat')) chatUnread.value = 0
-})
-
-const subscribeToChatNotifs = () => {
-  if (chatChannel) { supabase.removeChannel(chatChannel); chatChannel = null }
-  chatChannel = supabase
-    .channel('navbar-chat-notifs')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
-      if (payload.new.user_id === currentUserId) return
-      if (route.path.startsWith('/chat')) return
-      chatUnread.value++
-    })
-    .subscribe()
-}
+const isProfesseur = ref(false)
 
 const checkBenevole = async (email) => {
   if (!email) {
@@ -240,29 +255,26 @@ const checkBenevole = async (email) => {
 }
 
 const loadProfile = async (userId) => {
-  const { data } = await supabase.from('profiles').select('avatar_url, prenom, nom').eq('id', userId).single()
+  const { data } = await supabase.from('profiles').select('avatar_url, prenom, nom, role_eleve').eq('id', userId).single()
   if (data) {
     avatarUrl.value = data.avatar_url || ''
     userInitiales.value = ((data.prenom?.[0] || '') + (data.nom?.[0] || '')).toUpperCase()
+    isProfesseur.value = data.role_eleve === 'professeur'
   }
 }
 
 const updateAuthState = async (session) => {
   isLoggedIn.value = !!session
   if (session) {
-    currentUserId = session.user.id
     await checkBenevole(session.user.email)
     loadProfile(session.user.id)
-    subscribeToChatNotifs()
   } else {
-    currentUserId = null
     isAdmin.value = false
     isBenevole.value = false
+    isProfesseur.value = false
     avatarUrl.value = ''
     userInitiales.value = ''
     lastCheckedEmail = null
-    chatUnread.value = 0
-    if (chatChannel) { supabase.removeChannel(chatChannel); chatChannel = null }
   }
 }
 
@@ -302,7 +314,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   authSub?.unsubscribe()
   document.removeEventListener('click', handleClickOutside)
-  if (chatChannel) supabase.removeChannel(chatChannel)
 })
 </script>
 

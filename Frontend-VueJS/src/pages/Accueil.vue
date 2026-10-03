@@ -22,7 +22,7 @@
           <!-- CTA Buttons -->
           <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button 
-              @click="$router.push('/contact')"
+              @click="window.dispatchEvent(new Event('ouvrir-chat-imam'))"
               class="px-8 py-3 bg-white text-black rounded-md hover:bg-gray-100 transition-colors"
             >
               Contacter l'Imam
@@ -37,6 +37,32 @@
         </div>
       </div>
     </div>
+
+    <!-- Horaires de Prière -->
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center mb-10">
+          <h2 class="text-2xl sm:text-3xl text-gray-800 mb-2">Horaires de Prière</h2>
+          <p class="text-gray-500 text-sm">{{ prayerDateLabel }} — Périgueux</p>
+        </div>
+
+        <div v-if="prayerError" class="text-center text-sm text-gray-400 max-w-md mx-auto">
+          Horaires momentanément indisponibles, réessayez plus tard.
+        </div>
+
+        <div v-else class="grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-4xl mx-auto">
+          <div v-for="p in prayerTimes" :key="p.name"
+            class="bg-stone-50 rounded-xl p-4 text-center border"
+            :class="p.isNext ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-stone-200'">
+            <p class="text-xs uppercase tracking-wide text-gray-400 mb-1">{{ p.label }}</p>
+            <p class="text-lg font-semibold" :class="p.isNext ? 'text-emerald-700' : 'text-gray-800'">
+              {{ p.loading ? '--:--' : p.time }}
+            </p>
+            <p v-if="p.isNext" class="text-[10px] text-emerald-600 mt-1">Prochaine</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Donation Section -->
     <section class="py-16 bg-stone-50">
@@ -97,17 +123,66 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Heart, ExternalLink } from 'lucide-vue-next'
 import { preloadAll } from '../store'
 
 // Précharger les données des autres pages en arrière-plan
 onMounted(() => {
   preloadAll()
+  loadPrayerTimes()
 })
 
 // Gestion du don
 const handleDonation = () => {
   window.open('https://www.helloasso.com/associations/association-des-musulmans-de-perigueux', '_blank')
+}
+
+// ─── Horaires de prière (API Aladhan) ────────────────────
+const PRAYER_LABELS = [
+  { key: 'Fajr', label: 'Fajr' },
+  { key: 'Dhuhr', label: 'Dhuhr' },
+  { key: 'Asr', label: 'Asr' },
+  { key: 'Maghrib', label: 'Maghrib' },
+  { key: 'Isha', label: 'Isha' },
+]
+
+const prayerTimes = ref(PRAYER_LABELS.map(p => ({ name: p.key, label: p.label, time: '', loading: true, isNext: false })))
+const prayerError = ref(false)
+const prayerDateLabel = ref('')
+
+const loadPrayerTimes = async () => {
+  try {
+    // method=12 : Union Organization Islamic de France — méthode de calcul standard en France
+    const url = 'https://api.aladhan.com/v1/timingsByCity?city=Périgueux&country=France&method=12'
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('Réponse API invalide')
+    const json = await res.json()
+    const timings = json?.data?.timings
+    if (!timings) throw new Error('Horaires manquants')
+
+    const now = new Date()
+    prayerDateLabel.value = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+    // L'API renvoie parfois un fuseau horaire en suffixe (ex: "05:12 (CEST)") — on ne garde que "HH:MM"
+    const clean = (t) => (t || '').split(' ')[0]
+
+    // Détermine la prochaine prière à venir, pour la mettre en avant visuellement
+    const nowMinutes = now.getHours() * 60 + now.getMinutes()
+    const toMinutes = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+    let nextFound = false
+
+    prayerTimes.value = PRAYER_LABELS.map((p) => {
+      const time = clean(timings[p.key])
+      const isNext = !nextFound && toMinutes(time) > nowMinutes
+      if (isNext) nextFound = true
+      return { name: p.key, label: p.label, time, loading: false, isNext }
+    })
+    // Si toutes les prières du jour sont déjà passées, on met en avant la première de demain (Fajr)
+    if (!nextFound && prayerTimes.value.length) prayerTimes.value[0].isNext = true
+  } catch (err) {
+    console.error('[Horaires] Erreur chargement:', err)
+    prayerError.value = true
+  }
 }
 </script>

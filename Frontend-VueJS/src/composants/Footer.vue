@@ -40,9 +40,9 @@
             </router-link>
           </li>
           <li class="mb-2">
-            <router-link to="/contact" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">
+            <button @click="window.dispatchEvent(new Event('ouvrir-chat-imam'))" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white bg-transparent border-0 p-0 cursor-pointer">
               Contacter l'Imam
-            </router-link>
+            </button>
           </li>
           <li class="mb-2">
             <router-link to="/evenements" class="text-sm text-[#717182] no-underline transition-colors duration-200 hover:text-white">

@@ -16,10 +16,28 @@ const routes = [
     meta: { title: 'Événements | Mosquée des Bienfaisants Périgueux' }
   },
   {
-    path: '/contact',
-    name: 'Contact',
-    component: () => import('./pages/Contact.vue'),
-    meta: { title: "Contacter l'Imam | Mosquée des Bienfaisants Périgueux" }
+    path: '/hadith',
+    name: 'Hadith',
+    component: () => import('./pages/Hadith.vue'),
+    meta: { title: 'Hadiths | Mosquée des Bienfaisants Périgueux' }
+  },
+  {
+    path: '/coran',
+    name: 'Coran',
+    component: () => import('./pages/Coran.vue'),
+    meta: { requiresAuth: true, title: 'Coran | Mosquée des Bienfaisants Périgueux' }
+  },
+  {
+    path: '/rdv-imam',
+    name: 'RdvImam',
+    component: () => import('./pages/RdvImam.vue'),
+    meta: { requiresAuth: true, title: 'Rendez-vous avec l\'Imam | Mosquée des Bienfaisants Périgueux' }
+  },
+  {
+    path: '/espace-professeur',
+    name: 'EspaceProfesseur',
+    component: () => import('./pages/EspaceProfesseur.vue'),
+    meta: { requiresAuth: true, title: 'Espace Professeur | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/cours',
