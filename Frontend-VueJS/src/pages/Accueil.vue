@@ -38,29 +38,50 @@
       </div>
     </div>
 
-    <!-- Horaires de Prière -->
+    <!-- Horaires de Prière (horaires officiels de la mosquée, en temps réel) -->
     <section class="py-16 bg-white">
       <div class="container mx-auto px-4">
-        <div class="max-w-4xl mx-auto text-center mb-10">
+        <div class="max-w-4xl mx-auto text-center mb-8">
           <h2 class="text-2xl sm:text-3xl text-gray-800 mb-2">Horaires de Prière</h2>
-          <p class="text-gray-500 text-sm">{{ prayerDateLabel }} — Périgueux</p>
+          <p class="text-gray-500 text-sm capitalize">{{ dateLabel }} — Périgueux</p>
         </div>
 
-        <div v-if="prayerError" class="text-center text-sm text-gray-400 max-w-md mx-auto">
+        <div v-if="erreur" class="text-center text-sm text-gray-400 max-w-md mx-auto">
           Horaires momentanément indisponibles, réessayez plus tard.
         </div>
 
-        <div v-else class="grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-4xl mx-auto">
-          <div v-for="p in prayerTimes" :key="p.name"
-            class="bg-stone-50 rounded-xl p-4 text-center border"
-            :class="p.isNext ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-stone-200'">
-            <p class="text-xs uppercase tracking-wide text-gray-400 mb-1">{{ p.label }}</p>
-            <p class="text-lg font-semibold" :class="p.isNext ? 'text-emerald-700' : 'text-gray-800'">
-              {{ p.loading ? '--:--' : p.time }}
-            </p>
-            <p v-if="p.isNext" class="text-[10px] text-emerald-600 mt-1">Prochaine</p>
+        <template v-else>
+          <p v-if="prochaine" class="text-center text-sm text-gray-600 mb-6">
+            Prochaine prière :
+            <span class="font-semibold text-emerald-700">{{ prochaine.label }}{{ prochaine.demain ? ' (demain)' : '' }} à {{ prochaine.heure }}</span>
+            — dans <span class="font-semibold tabular-nums">{{ compteARebours }}</span>
+          </p>
+
+          <!-- Téléphone : une prière par ligne (nom à gauche, heure à droite) ;
+               à partir de 640px : 5 cartes côte à côte -->
+          <div class="max-w-md sm:max-w-4xl mx-auto flex flex-col sm:grid sm:grid-cols-5 gap-2 sm:gap-3">
+            <div v-for="p in prieres" :key="p.key"
+              class="rounded-xl px-5 py-3.5 sm:p-4 border transition-colors flex sm:flex-col items-center justify-between sm:justify-center"
+              :class="p.prochaine ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'bg-stone-50 border-stone-200'">
+              <p class="text-sm sm:text-xs uppercase tracking-wide sm:mb-1"
+                :class="p.prochaine ? 'text-emerald-700 font-semibold sm:font-normal sm:text-gray-400' : 'text-gray-500 sm:text-gray-400'">
+                {{ p.label }}
+                <span v-if="p.prochaine" class="sm:hidden ml-1.5 text-[10px] normal-case font-normal bg-emerald-600 text-white px-1.5 py-0.5 rounded">Prochaine</span>
+              </p>
+              <p class="text-lg font-semibold tabular-nums" :class="p.prochaine ? 'text-emerald-700' : p.passee ? 'text-gray-400' : 'text-gray-800'">
+                {{ p.heure }}
+              </p>
+              <p v-if="p.prochaine" class="hidden sm:block text-[10px] text-emerald-600 mt-1">Prochaine</p>
+            </div>
           </div>
-        </div>
+
+          <p class="text-center text-xs text-gray-400 mt-5">
+            <span v-if="chourouk">Chourouk {{ chourouk }}</span>
+            <span v-if="chourouk && joumoua"> · </span>
+            <span v-if="joumoua">Joumou'a {{ joumoua }}</span>
+            <span v-if="source === 'aladhan'"> · horaires calculés, à confirmer à la mosquée</span>
+          </p>
+        </template>
       </div>
     </section>
 
@@ -123,14 +144,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { Heart, ExternalLink } from 'lucide-vue-next'
 import { preloadAll } from '../store'
+import { useHorairesPriere } from '../horairesPriere'
 
 // Précharger les données des autres pages en arrière-plan
 onMounted(() => {
   preloadAll()
-  loadPrayerTimes()
 })
 
 // Gestion du don
@@ -138,51 +159,6 @@ const handleDonation = () => {
   window.open('https://www.helloasso.com/associations/association-des-musulmans-de-perigueux', '_blank')
 }
 
-// ─── Horaires de prière (API Aladhan) ────────────────────
-const PRAYER_LABELS = [
-  { key: 'Fajr', label: 'Fajr' },
-  { key: 'Dhuhr', label: 'Dhuhr' },
-  { key: 'Asr', label: 'Asr' },
-  { key: 'Maghrib', label: 'Maghrib' },
-  { key: 'Isha', label: 'Isha' },
-]
-
-const prayerTimes = ref(PRAYER_LABELS.map(p => ({ name: p.key, label: p.label, time: '', loading: true, isNext: false })))
-const prayerError = ref(false)
-const prayerDateLabel = ref('')
-
-const loadPrayerTimes = async () => {
-  try {
-    // method=12 : Union Organization Islamic de France — méthode de calcul standard en France
-    const url = 'https://api.aladhan.com/v1/timingsByCity?city=Périgueux&country=France&method=12'
-    const res = await fetch(url)
-    if (!res.ok) throw new Error('Réponse API invalide')
-    const json = await res.json()
-    const timings = json?.data?.timings
-    if (!timings) throw new Error('Horaires manquants')
-
-    const now = new Date()
-    prayerDateLabel.value = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-
-    // L'API renvoie parfois un fuseau horaire en suffixe (ex: "05:12 (CEST)") — on ne garde que "HH:MM"
-    const clean = (t) => (t || '').split(' ')[0]
-
-    // Détermine la prochaine prière à venir, pour la mettre en avant visuellement
-    const nowMinutes = now.getHours() * 60 + now.getMinutes()
-    const toMinutes = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
-    let nextFound = false
-
-    prayerTimes.value = PRAYER_LABELS.map((p) => {
-      const time = clean(timings[p.key])
-      const isNext = !nextFound && toMinutes(time) > nowMinutes
-      if (isNext) nextFound = true
-      return { name: p.key, label: p.label, time, loading: false, isNext }
-    })
-    // Si toutes les prières du jour sont déjà passées, on met en avant la première de demain (Fajr)
-    if (!nextFound && prayerTimes.value.length) prayerTimes.value[0].isNext = true
-  } catch (err) {
-    console.error('[Horaires] Erreur chargement:', err)
-    prayerError.value = true
-  }
-}
+// ─── Horaires de prière (Mawaqit de la mosquée, voir src/horairesPriere.js) ───
+const { prieres, prochaine, compteARebours, chourouk, joumoua, source, erreur, dateLabel } = useHorairesPriere()
 </script>

@@ -18,6 +18,7 @@ Document de travail. Statut au 2026-07-25. Stack actuelle conservée : **Vue 3 +
 | 2.6 / 2.7 | Coran + Espace professeur | ✅ Fait — lien « Espace Professeur » visible pour les profs |
 | 3.1 | RDV imam | ✅ Fait — demande côté utilisateur, validation côté admin |
 | 3.2 | Dons | ⏸️ Décision à prendre : Stripe ou HelloAsso |
+| 3.3 | Projets avec collecte (ex. sortie pour les sœurs) | 📝 Ajouté au plan, pas commencé |
 | 4.x / 5.x | Design, logo, 3D, app mobile | ⏸️ Pas commencé |
 
 ⚠️ Le fichier `backend/supabase.sql` doit être réexécuté dans Supabase (SQL Editor) pour appliquer les dernières corrections.
@@ -64,6 +65,7 @@ Document de travail. Statut au 2026-07-25. Stack actuelle conservée : **Vue 3 +
 |---|------|-------|
 | 3.1 | Prise de RDV avec l'imam (calendrier, validation par l'imam) | Table `rdv` (statut pending/approuvé/refusé) + une lib de calendrier Vue (ex. v-calendar) |
 | 3.2 | Dons par carte bancaire via prestataire externe | **Ne jamais coder la capture de carte soi-même** (risque légal/PCI-DSS). Deux options : **Stripe Checkout** (page hébergée, contrôle total, mais reçus fiscaux à gérer soi-même) ou **HelloAsso** (fait pour les associations françaises, gère le reçu fiscal automatiquement, souvent gratuit pour les dons) — à trancher ensemble selon si la mosquée a déjà un statut permettant les reçus fiscaux |
+| 3.3 | **Projets de la mosquée avec collecte** : l'admin crée un projet (ex. « Sortie arrière pour les sœurs ») avec titre, image, explication écrite et/ou audio, objectif en €. Le projet s'affiche sur la page d'accueil avec une barre de progression des dons et un bouton « Participer » vers la collecte HelloAsso. Plusieurs projets possibles, l'admin choisit lequel est mis en avant et le clôture une fois financé | Table Supabase `projets` (titre, description, image_url, audio_url, objectif, montant_collecte, url_don, statut, en_avant) + Storage (image/audio, mêmes buckets que les cours) + onglet « Projets » dans l'admin. Montant collecté : saisi à la main par l'admin au départ ; plus tard, lu automatiquement via l'API HelloAsso (une campagne HelloAsso par projet) |
 
 ### Phase 4 — Identité visuelle
 | # | Item | Stack |
