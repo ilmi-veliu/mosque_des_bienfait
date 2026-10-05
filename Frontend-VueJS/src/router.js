@@ -16,6 +16,13 @@ const routes = [
     meta: { title: 'La mosquée | Mosquée des Bienfaisants Périgueux' }
   },
   {
+    // Aperçu « option 3 » : visite photo plein écran
+    path: '/visite',
+    name: 'VisiteMosquee',
+    component: () => import('./pages/VisiteMosquee.vue'),
+    meta: { hideFooter: true, title: 'Visite de la mosquée | Mosquée des Bienfaisants Périgueux' }
+  },
+  {
     path: '/evenements',
     name: 'Evenements',
     component: () => import('./pages/Evenements.vue'),

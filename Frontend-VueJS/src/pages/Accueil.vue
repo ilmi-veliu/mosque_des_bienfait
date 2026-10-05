@@ -59,8 +59,23 @@
       </template>
     </section>
 
+    <!-- APERÇU option 2 (/?apercu=2) : un seul bandeau vers la page « La mosquée »,
+         à la place du texte de présentation et de la galerie -->
+    <section v-if="apercu === '2'" class="relative">
+      <img :src="salle" alt="La salle de prière de la mosquée" loading="lazy" class="h-[60vh] min-h-[420px] w-full object-cover" />
+      <div class="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent"></div>
+      <div class="absolute inset-0">
+        <div class="mx-auto flex h-full max-w-6xl flex-col justify-end px-5 pb-12 text-ink-foreground md:pb-16">
+          <p class="eyebrow !text-ink-foreground/70">La mosquée</p>
+          <h2 class="mt-3 max-w-2xl text-4xl md:text-6xl">Une maison ouverte à tous</h2>
+          <p class="mt-4 max-w-lg opacity-85">Salle de prière, bibliothèque, qamis à disposition, parking : tout ce qu'il faut savoir avant de venir.</p>
+          <router-link to="/la-mosquee" class="btn btn-light mt-7 w-fit">Découvrir la mosquée</router-link>
+        </div>
+      </div>
+    </section>
+
     <!-- Présentation -->
-    <section id="presentation" class="mx-auto max-w-6xl px-5 py-16 md:py-24">
+    <section v-else id="presentation" class="mx-auto max-w-6xl px-5 py-16 md:py-24">
       <p class="eyebrow">La mosquée</p>
       <h2 class="mt-3 text-4xl md:text-5xl">Une maison ouverte à tous</h2>
       <div class="mt-10 grid gap-10 md:grid-cols-2 md:items-center">
@@ -112,23 +127,6 @@
       </div>
     </section>
 
-    <!-- Accès rapide -->
-    <section class="mx-auto max-w-6xl px-5 py-16 md:py-24">
-      <p class="eyebrow">Services</p>
-      <h2 class="mt-3 text-4xl md:text-5xl">Accès rapide</h2>
-      <div class="mt-10 grid border-t border-line sm:grid-cols-2 lg:grid-cols-3">
-        <router-link v-for="(s, i) in services" :key="s.to" :to="s.to"
-          class="group flex items-start justify-between gap-4 border-b border-line py-6 sm:px-6"
-          :class="[i % 2 === 0 ? 'sm:border-r' : 'sm:border-r-0', i % 3 === 2 ? 'lg:border-r-0' : 'lg:border-r']">
-          <div>
-            <p class="text-xs tabular-nums text-muted">0{{ i + 1 }}</p>
-            <p class="mt-2 font-serif text-2xl">{{ s.titre }}</p>
-            <p class="mt-1 text-sm text-muted">{{ s.texte }}</p>
-          </div>
-          <ArrowRight class="mt-6 h-5 w-5 shrink-0 text-muted transition group-hover:translate-x-1 group-hover:text-accent-500" />
-        </router-link>
-      </div>
-    </section>
 
     <!-- Hadith (le dernier publié par la mosquée) -->
     <section class="border-y border-line bg-card">
@@ -160,7 +158,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ArrowRight } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
 import { preloadAll } from '../store'
 import { supabase } from '../supabase'
 import { useHorairesPriere } from '../horairesPriere'
@@ -173,6 +171,10 @@ import detArchi from '../assets/mihrab-detail.jpg'
 import bibliotheque from '../assets/bibliotheque-mosquee.jpg'
 import mihrab from '../assets/mihrab.jpg'
 import imageProjet from '../assets/entree.jpg'
+
+// Aperçu des variantes de l'accueil pour comparer (?apercu=2)
+const route = useRoute()
+const apercu = computed(() => route.query.apercu)
 
 const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
 
@@ -199,14 +201,6 @@ const projet = {
 const pourcentage = computed(() => Math.min(100, Math.round((projet.collecte / projet.objectif) * 100)))
 const euros = (n) => n.toLocaleString('fr-FR') + ' €'
 
-const services = [
-  { titre: 'Cours religieux', texte: 'Tajwid, croyance, jurisprudence, arabe', to: '/cours' },
-  { titre: 'Récitation du Coran', texte: 'Envoyez votre récitation, recevez une correction', to: '/coran' },
-  { titre: 'Hadiths', texte: 'Paroles prophétiques choisies par la mosquée', to: '/hadith' },
-  { titre: "Rendez-vous avec l'imam", texte: "Un temps d'écoute, en toute discrétion", to: '/rdv-imam' },
-  { titre: 'Événements', texte: 'Conférences, repas, rencontres', to: '/evenements' },
-  { titre: 'Bénévolat', texte: 'Accueil, entretien, cuisine, événements', to: '/benevole' },
-]
 
 // Dernier hadith publié depuis l'admin ; celui-ci s'affiche tant qu'il n'y en a aucun
 const hadith = ref({
