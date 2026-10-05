@@ -31,7 +31,7 @@
             <p class="eyebrow">{{ aVenir.length ? 'À venir' : 'Agenda' }}</p>
             <h2 class="mt-3 text-4xl md:text-5xl">Tous les rendez-vous</h2>
           </div>
-          <div class="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:px-0">
+          <div class="flex flex-wrap gap-2">
             <button v-for="cat in categories" :key="cat" @click="categorie = cat"
               class="shrink-0 border px-4 py-1.5 text-sm transition-colors"
               :class="categorie === cat ? 'border-ink bg-ink text-paper' : 'border-line text-muted hover:text-ink'">
@@ -43,13 +43,13 @@
         <p v-if="liste.length === 0" class="mt-10 text-muted">Aucun événement pour le moment.</p>
 
         <div v-else class="mt-10 grid gap-5 md:grid-cols-2">
-          <article v-for="ev in liste" :key="ev.id" class="grid grid-cols-[4.5rem_1fr] border border-line bg-card"
+          <article v-for="ev in liste" :key="ev.id" class="grid grid-cols-[4.5rem_minmax(0,1fr)] border border-line bg-card"
             :class="estPasse(ev) ? 'opacity-60' : ''">
             <div class="border-r border-line px-3 py-5 text-center">
               <p class="font-serif text-4xl leading-none tabular-nums">{{ jour(ev.date) }}</p>
               <p class="eyebrow mt-2 !text-accent-600">{{ mois(ev.date) }}</p>
             </div>
-            <div class="flex flex-col p-5">
+            <div class="flex min-w-0 flex-col break-words p-5">
               <p class="eyebrow">{{ ev.categorie }}<template v-if="estPasse(ev)"> · Passé</template></p>
               <h3 class="mt-2 text-2xl leading-tight">{{ ev.titre }}</h3>
               <p v-if="ev.description" class="mt-3 flex-1 text-sm text-muted">{{ ev.description }}</p>

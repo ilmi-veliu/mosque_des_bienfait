@@ -5,7 +5,7 @@
 
     <div class="mx-auto max-w-6xl px-5 py-10">
       <!-- Filtres par catégorie -->
-      <div class="-mx-5 flex gap-2 overflow-x-auto px-5 pb-2">
+      <div class="flex flex-wrap gap-2">
         <button v-for="cat in filtres" :key="cat" @click="selectedCategorie = cat"
           class="shrink-0 border px-4 py-1.5 text-sm transition-colors"
           :class="selectedCategorie === cat ? 'border-ink bg-ink text-paper' : 'border-line text-muted hover:text-ink'">

@@ -19,7 +19,7 @@
       </section>
 
       <section class="mx-auto max-w-4xl px-5 py-14 md:py-20">
-        <div v-if="themes.length > 2" class="-mx-5 flex gap-2 overflow-x-auto px-5 pb-2 md:mx-0 md:px-0">
+        <div v-if="themes.length > 2" class="flex flex-wrap gap-2">
           <button v-for="t in themes" :key="t" @click="theme = t"
             class="shrink-0 border px-4 py-1.5 text-sm transition-colors"
             :class="theme === t ? 'border-ink bg-ink text-paper' : 'border-line text-muted hover:text-ink'">

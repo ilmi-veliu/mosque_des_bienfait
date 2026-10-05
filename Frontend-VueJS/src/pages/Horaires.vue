@@ -13,22 +13,25 @@
       <p v-if="erreur" class="mt-10 text-muted">Horaires momentanément indisponibles, réessayez plus tard.</p>
       <p v-else-if="!calendrier" class="mt-10 text-muted">Chargement…</p>
 
-      <div v-else class="mt-8 overflow-x-auto border border-line bg-card">
-        <table class="w-full min-w-[640px] text-sm">
+      <!-- Tient dans la largeur du téléphone : pas de défilement horizontal -->
+      <div v-else class="mt-8 border border-line bg-card">
+        <table class="w-full table-fixed text-xs sm:text-sm">
           <thead>
             <tr class="border-b border-line text-left">
-              <th class="px-4 py-3 font-normal text-muted">Jour</th>
-              <th v-for="c in COLONNES" :key="c" class="px-3 py-3 text-center font-serif text-lg font-normal">{{ c }}</th>
+              <th class="w-[18%] px-2 py-3 font-normal text-muted sm:w-auto sm:px-4">Jour</th>
+              <th v-for="c in COLONNES" :key="c.long" class="px-0.5 py-3 text-center font-serif text-sm font-normal sm:px-3 sm:text-lg">
+                <span class="sm:hidden">{{ c.court }}</span><span class="hidden sm:inline">{{ c.long }}</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="l in lignes" :key="l.jour" class="border-b border-line last:border-b-0"
               :class="l.aujourdhui ? 'bg-accent-50 font-medium' : l.vendredi ? 'bg-paper' : ''">
-              <td class="whitespace-nowrap px-4 py-2.5 capitalize">
+              <td class="whitespace-nowrap px-2 py-2.5 capitalize sm:px-4">
                 {{ l.libelle }}
-                <span v-if="l.aujourdhui" class="ml-2 bg-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-paper">Aujourd'hui</span>
+                <span v-if="l.aujourdhui" class="ml-2 hidden bg-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-paper sm:inline">Aujourd'hui</span>
               </td>
-              <td v-for="(h, i) in l.heures" :key="i" class="px-3 py-2.5 text-center tabular-nums"
+              <td v-for="(h, i) in l.heures" :key="i" class="px-0.5 py-2.5 text-center tabular-nums sm:px-3"
                 :class="i === 1 ? 'text-muted' : ''">{{ h }}</td>
             </tr>
           </tbody>
@@ -46,7 +49,11 @@ import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import PageIntro from '../composants/PageIntro.vue'
 import { useHorairesPriere } from '../horairesPriere'
 
-const COLONNES = ['Fajr', 'Chourouk', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
+// Noms abrégés sur téléphone pour que le tableau tienne dans l'écran
+const COLONNES = [
+  { long: 'Fajr', court: 'Fajr' }, { long: 'Chourouk', court: 'Chour.' }, { long: 'Dhuhr', court: 'Dhuhr' },
+  { long: 'Asr', court: 'Asr' }, { long: 'Maghrib', court: 'Magh.' }, { long: 'Isha', court: 'Isha' },
+]
 const { calendrier, joumoua, erreur, now } = useHorairesPriere()
 
 // Le calendrier Mawaqit couvre une année (mois 1 à 12) : on navigue dans cette année
@@ -61,7 +68,7 @@ const lignes = computed(() => {
     const d = new Date(now.value.annee, mois.value - 1, j)
     return {
       jour: j,
-      libelle: d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }),
+      libelle: d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }).replace('.', ''),
       heures: jours[String(j)],
       vendredi: d.getDay() === 5,
       aujourdhui: mois.value === now.value.mois && j === now.value.jour,

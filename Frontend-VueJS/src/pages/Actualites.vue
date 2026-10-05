@@ -25,8 +25,9 @@
       </section>
 
       <div class="mx-auto grid max-w-6xl gap-12 px-5 py-14 lg:grid-cols-[1fr_18rem] md:py-20">
-        <div>
-          <div v-if="categories.length > 2" class="-mx-5 flex gap-2 overflow-x-auto px-5 pb-2 md:mx-0 md:px-0">
+        <!-- min-w-0 : sans ça, la rangée de filtres élargit la colonne et la page déborde sur mobile -->
+        <div class="min-w-0">
+          <div v-if="categories.length > 2" class="flex flex-wrap gap-2">
             <button v-for="c in categories" :key="c" @click="categorie = c; nbAffiches = PAR_PAGE"
               class="shrink-0 border px-4 py-1.5 text-sm transition-colors"
               :class="categorie === c ? 'border-ink bg-ink text-paper' : 'border-line text-muted hover:text-ink'">
