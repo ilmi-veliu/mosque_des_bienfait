@@ -59,23 +59,8 @@
       </template>
     </section>
 
-    <!-- APERÇU option 2 (/?apercu=2) : un seul bandeau vers la page « La mosquée »,
-         à la place du texte de présentation et de la galerie -->
-    <section v-if="apercu === '2'" class="relative">
-      <img :src="salle" alt="La salle de prière de la mosquée" loading="lazy" class="h-[60vh] min-h-[420px] w-full object-cover" />
-      <div class="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent"></div>
-      <div class="absolute inset-0">
-        <div class="mx-auto flex h-full max-w-6xl flex-col justify-end px-5 pb-12 text-ink-foreground md:pb-16">
-          <p class="eyebrow !text-ink-foreground/70">La mosquée</p>
-          <h2 class="mt-3 max-w-2xl text-4xl md:text-6xl">Une maison ouverte à tous</h2>
-          <p class="mt-4 max-w-lg opacity-85">Salle de prière, bibliothèque, qamis à disposition, parking : tout ce qu'il faut savoir avant de venir.</p>
-          <router-link to="/la-mosquee" class="btn btn-light mt-7 w-fit">Découvrir la mosquée</router-link>
-        </div>
-      </div>
-    </section>
-
     <!-- Présentation -->
-    <section v-else id="presentation" class="mx-auto max-w-6xl px-5 py-16 md:py-24">
+    <section id="presentation" class="mx-auto max-w-6xl px-5 py-16 md:py-24">
       <p class="eyebrow">La mosquée</p>
       <h2 class="mt-3 text-4xl md:text-5xl">Une maison ouverte à tous</h2>
       <div class="mt-10 grid gap-10 md:grid-cols-2 md:items-center">
@@ -93,15 +78,6 @@
         </div>
       </div>
 
-      <div class="mt-12 grid gap-4 md:mt-16 md:grid-cols-3">
-        <figure v-for="f in galerie" :key="f.num" :class="f.classe">
-          <img :src="f.src" :alt="f.legende" loading="lazy" class="w-full object-cover" :class="f.ratio" />
-          <figcaption class="mt-2 flex items-baseline justify-between text-sm text-muted">
-            <span>{{ f.legende }}</span>
-            <span class="tabular-nums">{{ f.num }}</span>
-          </figcaption>
-        </figure>
-      </div>
     </section>
 
     <!-- Projet en cours (collecte) -->
@@ -158,7 +134,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
 import { preloadAll } from '../store'
 import { supabase } from '../supabase'
 import { useHorairesPriere } from '../horairesPriere'
@@ -166,26 +141,12 @@ import Etoile from '../composants/Etoile.vue'
 // Photos de la mosquée (prises le 5 octobre 2026)
 import hero from '../assets/salle-priere-large.jpg'
 import facade from '../assets/cour-entree.jpg'
-import salle from '../assets/salle-priere.jpg'
-import detArchi from '../assets/mihrab-detail.jpg'
-import bibliotheque from '../assets/bibliotheque-mosquee.jpg'
-import mihrab from '../assets/mihrab.jpg'
 import imageProjet from '../assets/entree.jpg'
-
-// Aperçu des variantes de l'accueil pour comparer (?apercu=2)
-const route = useRoute()
-const apercu = computed(() => route.query.apercu)
 
 const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
 
 const ouvrirChat = () => window.dispatchEvent(new Event('ouvrir-chat-imam'))
 
-const galerie = [
-  { src: salle, legende: 'La salle de prière', num: '01', classe: 'md:col-span-2', ratio: 'aspect-[3/2]' },
-  { src: detArchi, legende: 'Les faïences du mihrab', num: '02', classe: '', ratio: 'aspect-square' },
-  { src: bibliotheque, legende: 'La bibliothèque', num: '03', classe: 'md:row-start-2', ratio: 'aspect-[4/3]' },
-  { src: mihrab, legende: 'Le mihrab', num: '04', classe: 'md:col-span-2 md:row-start-2', ratio: 'aspect-[2/1]' },
-]
 
 // Données d'exemple : sera remplacé par le projet mis en avant depuis l'onglet
 // « Projets » de l'admin (PRD 3.3, pas encore codé).
