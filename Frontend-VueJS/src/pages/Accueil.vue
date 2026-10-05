@@ -2,7 +2,7 @@
   <div>
     <!-- Héros -->
     <section class="relative">
-      <img :src="hero" alt="Salle de prière baignée de lumière" width="1600" height="1104"
+      <img :src="hero" alt="La salle de prière de la mosquée"
         class="h-[78vh] min-h-[520px] w-full object-cover" />
       <div class="absolute inset-0 bg-ink/55"></div>
       <div class="absolute inset-0">
@@ -64,7 +64,7 @@
       <p class="eyebrow">La mosquée</p>
       <h2 class="mt-3 text-4xl md:text-5xl">Une maison ouverte à tous</h2>
       <div class="mt-10 grid gap-10 md:grid-cols-2 md:items-center">
-        <img :src="facade" alt="Façade de la mosquée" loading="lazy" width="1024" height="1024" class="aspect-[4/3] w-full object-cover" />
+        <img :src="facade" alt="La cour et l'entrée de la mosquée" loading="lazy" class="aspect-[4/3] w-full object-cover" />
         <div>
           <p class="text-lg leading-relaxed">
             La Mosquée des Bienfaisants accueille les fidèles et les curieux de Périgueux dans un lieu simple et lumineux,
@@ -86,13 +86,12 @@
           </figcaption>
         </figure>
       </div>
-      <p class="mt-6 text-xs text-muted">Photographies d'illustration — à remplacer par les vraies images de la mosquée.</p>
     </section>
 
     <!-- Projet en cours (collecte) -->
     <section class="bg-pierre">
       <div class="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-2 md:items-center md:py-24">
-        <img :src="projet.image" :alt="projet.titre" loading="lazy" class="aspect-[4/3] w-full object-cover object-[center_80%]" />
+        <img :src="projet.image" :alt="projet.titre" loading="lazy" class="aspect-[4/3] w-full object-cover object-[center_60%]" />
         <div>
           <p class="eyebrow">Projet en cours · Collecte</p>
           <h2 class="mt-3 text-4xl md:text-5xl">{{ projet.titre }}</h2>
@@ -164,13 +163,14 @@ import { preloadAll } from '../store'
 import { supabase } from '../supabase'
 import { useHorairesPriere } from '../horairesPriere'
 import Etoile from '../composants/Etoile.vue'
-import hero from '../assets/hero.jpg'
-import facade from '../assets/facade.jpg'
-import salle from '../assets/salle.jpg'
-import detArchi from '../assets/det_archi.jpg'
-import bibliotheque from '../assets/bibliotheque.jpg'
-import calligraphie from '../assets/calligraphie.jpg'
-import imageProjet from '../assets/projet.jpg'
+// Photos de la mosquée (prises le 5 octobre 2026)
+import hero from '../assets/salle-priere-large.jpg'
+import facade from '../assets/cour-entree.jpg'
+import salle from '../assets/salle-priere.jpg'
+import detArchi from '../assets/mihrab-detail.jpg'
+import bibliotheque from '../assets/bibliotheque-mosquee.jpg'
+import mihrab from '../assets/mihrab.jpg'
+import imageProjet from '../assets/entree.jpg'
 
 const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
 
@@ -178,9 +178,9 @@ const ouvrirChat = () => window.dispatchEvent(new Event('ouvrir-chat-imam'))
 
 const galerie = [
   { src: salle, legende: 'La salle de prière', num: '01', classe: 'md:col-span-2', ratio: 'aspect-[3/2]' },
-  { src: detArchi, legende: "Détail d'architecture", num: '02', classe: '', ratio: 'aspect-square' },
+  { src: detArchi, legende: 'Les faïences du mihrab', num: '02', classe: '', ratio: 'aspect-square' },
   { src: bibliotheque, legende: 'La bibliothèque', num: '03', classe: 'md:row-start-2', ratio: 'aspect-[4/3]' },
-  { src: calligraphie, legende: 'Calligraphie', num: '04', classe: 'md:col-span-2 md:row-start-2', ratio: 'aspect-[2/1]' },
+  { src: mihrab, legende: 'Le mihrab', num: '04', classe: 'md:col-span-2 md:row-start-2', ratio: 'aspect-[2/1]' },
 ]
 
 // Données d'exemple : sera remplacé par le projet mis en avant depuis l'onglet
