@@ -24,6 +24,7 @@
       <div class="text-sm opacity-80">
         <p class="eyebrow !text-accent-500 mb-3">Liens</p>
         <ul class="space-y-1.5">
+          <li><router-link to="/la-mosquee" class="hover:text-accent-400 transition-colors">La mosquée</router-link></li>
           <li><router-link to="/cours" class="hover:text-accent-400 transition-colors">Cours</router-link></li>
           <li><router-link to="/evenements" class="hover:text-accent-400 transition-colors">Événements</router-link></li>
           <li><router-link to="/hadith" class="hover:text-accent-400 transition-colors">Hadiths</router-link></li>

@@ -12,6 +12,7 @@
         <!-- Navigation Desktop -->
         <div class="hidden lg:flex items-center gap-8 text-sm">
           <router-link to="/" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Accueil</router-link>
+          <router-link to="/la-mosquee" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">La mosquée</router-link>
           <router-link to="/cours" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Cours Vidéo</router-link>
           <router-link to="/evenements" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Événements</router-link>
           <router-link to="/hadith" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Hadiths</router-link>
@@ -139,6 +140,10 @@
           <Home :size="18" class="text-gray-400" />
           Accueil
         </router-link>
+        <router-link @click="mobileOpen = false" to="/la-mosquee" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
+          <Landmark :size="18" class="text-gray-400" />
+          La mosquée
+        </router-link>
         <router-link @click="mobileOpen = false" to="/cours" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
           <Video :size="18" class="text-gray-400" />
           Cours Vidéo
@@ -215,7 +220,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Home, Video, Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
+import { Home, Landmark, Video, Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import Etoile from './Etoile.vue'
 

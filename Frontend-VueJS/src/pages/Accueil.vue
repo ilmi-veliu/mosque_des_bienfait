@@ -74,6 +74,7 @@
             La mosquée vit toute l'année au rythme des cinq prières, des cours et des événements qui rassemblent
             les familles du quartier et de tout le Périgord.
           </p>
+          <router-link to="/la-mosquee" class="btn btn-outline mt-8">Découvrir la mosquée</router-link>
         </div>
       </div>
 

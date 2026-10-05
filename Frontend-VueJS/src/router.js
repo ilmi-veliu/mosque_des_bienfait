@@ -10,6 +10,12 @@ const routes = [
     meta: { title: 'Mosquée des Bienfaisants Périgueux | Prières & Communauté Musulmane' }
   },
   {
+    path: '/la-mosquee',
+    name: 'LaMosquee',
+    component: () => import('./pages/LaMosquee.vue'),
+    meta: { title: 'La mosquée | Mosquée des Bienfaisants Périgueux' }
+  },
+  {
     path: '/evenements',
     name: 'Evenements',
     component: () => import('./pages/Evenements.vue'),
