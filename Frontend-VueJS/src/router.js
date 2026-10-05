@@ -111,7 +111,9 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
+  scrollBehavior(to, from) {
+    // Même page, seule l'adresse change (ex. livre ouvert dans les hadiths) : on ne bouge pas
+    if (to.path === from.path) return false
     return { top: 0 }
   }
 })
