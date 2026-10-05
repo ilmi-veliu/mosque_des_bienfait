@@ -80,7 +80,7 @@
     <section class="mx-auto max-w-6xl px-5 py-16 md:py-24">
       <p class="eyebrow">Apprendre</p>
       <h2 class="mt-3 text-4xl md:text-5xl">Découvrir et approfondir</h2>
-      <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2">
         <router-link v-for="c in apprendre" :key="c.titre" :to="c.to" class="group flex flex-col">
           <div class="overflow-hidden">
             <img :src="c.image" :alt="c.titre" loading="lazy" class="aspect-[3/2] w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
@@ -197,7 +197,6 @@ import facade from '../assets/cour-entree.jpg'
 import imageProjet from '../assets/entree.jpg'
 import imgCours from '../assets/mihrab.jpg'
 import imgCoran from '../assets/salle-priere.jpg'
-import imgHadith from '../assets/bibliotheque-mosquee.jpg'
 
 const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
 
@@ -227,7 +226,6 @@ const aLaUne = actus
 const apprendre = [
   { titre: 'Cours religieux', texte: 'Tajwid, croyance, jurisprudence, langue arabe, en vidéo et en audio.', to: '/cours', image: imgCours },
   { titre: 'Récitation du Coran', texte: "Enregistrez votre récitation, un professeur vous renvoie ses corrections.", to: '/coran', image: imgCoran },
-  { titre: 'Hadiths', texte: 'Les hadiths choisis et publiés par la mosquée, en arabe et en français.', to: '/hadith', image: imgHadith },
 ]
 
 // ─── Programme de la semaine (uniquement des activités réelles) ───

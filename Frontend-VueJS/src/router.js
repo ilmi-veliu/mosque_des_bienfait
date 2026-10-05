@@ -34,27 +34,24 @@ const routes = [
     meta: { title: 'Horaires de prière | Mosquée des Bienfaisants Périgueux' }
   },
   {
+    // Rubriques supprimées : les anciennes adresses renvoient vers l'accueil
+    path: '/hadith',
+    redirect: '/'
+  },
+  {
+    path: '/rdv-imam',
+    redirect: '/'
+  },
+  {
     // Les événements sont remplacés par les actualités : l'ancienne adresse y renvoie
     path: '/evenements',
     redirect: '/actualites'
-  },
-  {
-    path: '/hadith',
-    name: 'Hadith',
-    component: () => import('./pages/Hadith.vue'),
-    meta: { title: 'Hadiths | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/coran',
     name: 'Coran',
     component: () => import('./pages/Coran.vue'),
     meta: { requiresAuth: true, title: 'Coran | Mosquée des Bienfaisants Périgueux' }
-  },
-  {
-    path: '/rdv-imam',
-    name: 'RdvImam',
-    component: () => import('./pages/RdvImam.vue'),
-    meta: { requiresAuth: true, title: 'Rendez-vous avec l\'Imam | Mosquée des Bienfaisants Périgueux' }
   },
   {
     path: '/espace-professeur',
@@ -135,7 +132,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from) {
-    // Même page, seule l'adresse change (ex. livre ouvert dans les hadiths) : on ne bouge pas
+    // Même page, seule l'adresse change (ex. paramètre ?...) : on ne bouge pas
     if (to.path === from.path) return false
     return { top: 0 }
   }

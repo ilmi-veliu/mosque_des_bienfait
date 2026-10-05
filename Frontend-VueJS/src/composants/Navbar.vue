@@ -71,14 +71,6 @@
                     Récitation du Coran
                   </router-link>
                   <router-link
-                    to="/rdv-imam"
-                    @click="dropdownOpen = false"
-                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <Calendar :size="16" class="text-gray-400" />
-                    Rendez-vous avec l'Imam
-                  </router-link>
-                  <router-link
                     v-if="isProfesseur"
                     to="/espace-professeur"
                     @click="dropdownOpen = false"
@@ -238,12 +230,10 @@ const DON_URL = 'https://www.helloasso.com/associations/association-des-musulman
 const groupes = [
   { titre: 'La mosquée', liens: [
     { to: '/la-mosquee', label: 'Présentation', texte: 'Le lieu, les services, venir' },
-    { to: '/rdv-imam', label: "Rendez-vous avec l'imam", texte: "Un temps d'écoute", compte: true },
     { to: '/benevole', label: 'Bénévolat', texte: 'Donner de son temps' },
   ] },
   { titre: 'Apprendre', liens: [
     { to: '/cours', label: 'Cours religieux', texte: 'Tajwid, croyance, fiqh, arabe' },
-    { to: '/hadith', label: 'Hadiths', texte: 'Choisis par la mosquée' },
     { to: '/coran', label: 'Récitation du Coran', texte: 'Faire corriger sa récitation', compte: true },
   ] },
 ]

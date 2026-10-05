@@ -124,11 +124,10 @@
         <h2 class="mt-3 text-4xl">Vous découvrez l'islam ou la mosquée ?</h2>
         <p class="mt-5 text-muted">
           Curieux, nouveau converti ou simplement de passage : l'imam peut vous accueillir, répondre à vos questions
-          et vous faire visiter le lieu. Il suffit de le contacter.
+          et vous faire visiter le lieu. Il suffit de lui écrire.
         </p>
         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
           <button @click="ouvrirChat" class="btn btn-primary">Écrire à l'imam</button>
-          <router-link to="/rdv-imam" class="btn btn-outline">Demander un rendez-vous</router-link>
         </div>
       </div>
     </section>

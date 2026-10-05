@@ -87,14 +87,6 @@
           Cours
         </button>
         <button
-          @click="activeTab = 'hadiths'; fetchHadiths()"
-          :class="activeTab === 'hadiths' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
-        >
-          <ScrollText :size="18" />
-          Hadiths
-        </button>
-        <button
           @click="activeTab = 'eleves'; fetchEleves()"
           :class="activeTab === 'eleves' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
@@ -142,14 +134,6 @@
           <span v-if="imamUnreadCount > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             {{ imamUnreadCount > 9 ? '9+' : imamUnreadCount }}
           </span>
-        </button>
-        <button v-if="canSeeImamChat"
-          @click="activeTab = 'rdv'; fetchRdvs()"
-          :class="activeTab === 'rdv' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
-        >
-          <Calendar :size="18" />
-          RDV
         </button>
       </div>
     </div>
@@ -264,58 +248,6 @@
             <div class="flex gap-1 flex-shrink-0">
               <button @click="editActu(a)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors"><Pencil :size="16" /></button>
               <button @click="deleteActu(a.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors"><Trash2 :size="16" /></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- HADITHS -->
-      <div v-if="activeTab === 'hadiths'">
-        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Hadiths</h2>
-
-        <form @submit.prevent="saveHadith" class="bg-card rounded-xl border p-4 sm:p-5 mb-6 space-y-3">
-          <h3 class="font-semibold text-gray-800">{{ editingHadithId ? 'Modifier le hadith' : 'Publier un hadith' }}</h3>
-          <textarea v-model="hadithForm.texte_arabe" rows="2" maxlength="3000" dir="rtl" placeholder="Texte arabe (facultatif)"
-            class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
-          <textarea v-model="hadithForm.texte_francais" rows="3" required maxlength="3000" placeholder="Traduction française *"
-            class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input v-model="hadithForm.source" maxlength="300" placeholder="Source (ex : Sahih al-Bukhari, 1)"
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
-            <input v-model="hadithForm.theme" maxlength="100" placeholder="Thème (ex : Patience)"
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
-          </div>
-          <div class="flex justify-end gap-3">
-            <button v-if="editingHadithId" type="button" @click="resetHadithForm" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors text-sm">
-              Annuler
-            </button>
-            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-50 text-sm">
-              {{ saving ? 'Enregistrement...' : (editingHadithId ? 'Modifier' : 'Publier') }}
-            </button>
-          </div>
-        </form>
-
-        <div v-if="hadithsLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
-        </div>
-        <div v-else-if="hadiths.length === 0" class="text-center py-12 text-gray-500">Aucun hadith publié.</div>
-        <div v-else class="space-y-3">
-          <div v-for="h in hadiths" :key="h.id" class="bg-card rounded-xl border p-4 flex gap-4">
-            <div class="flex-1 min-w-0">
-              <p v-if="h.texte_arabe" class="text-right text-gray-800 mb-1" dir="rtl">{{ h.texte_arabe }}</p>
-              <p class="text-sm text-gray-700">{{ h.texte_francais }}</p>
-              <div class="flex flex-wrap gap-2 mt-2 text-xs text-gray-400">
-                <span v-if="h.theme" class="bg-accent-50 text-accent-700 px-2 py-0.5 rounded">{{ h.theme }}</span>
-                <span v-if="h.source">{{ h.source }}</span>
-              </div>
-            </div>
-            <div class="flex gap-1 flex-shrink-0 self-start">
-              <button @click="editHadith(h)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors">
-                <Pencil :size="16" />
-              </button>
-              <button @click="deleteHadith(h.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                <Trash2 :size="16" />
-              </button>
             </div>
           </div>
         </div>
@@ -747,33 +679,6 @@
       </div>
     </div>
 
-    <!-- RDV IMAM -->
-    <div v-if="activeTab === 'rdv' && canSeeImamChat">
-      <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Demandes de rendez-vous</h2>
-      <div v-if="rdvsLoading" class="text-center text-gray-400 py-16">Chargement...</div>
-      <div v-else-if="rdvs.length === 0" class="text-center text-gray-400 py-16">Aucune demande.</div>
-      <div v-for="r in rdvs" :key="r.id" class="bg-card rounded-2xl shadow-sm border p-5 mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="min-w-0">
-          <p class="font-medium text-gray-800">
-            {{ new Date(r.date_demandee).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) }}
-            à {{ r.heure_demandee?.slice(0, 5) }}
-          </p>
-          <p class="text-xs text-gray-400 mt-0.5">{{ r.profiles?.prenom }} {{ r.profiles?.nom }}</p>
-          <p v-if="r.motif" class="text-sm text-gray-500 mt-1">{{ r.motif }}</p>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <template v-if="r.statut === 'en_attente'">
-            <button @click="updateRdvStatut(r, 'confirme')" class="px-3 py-1.5 bg-ink text-paper rounded-lg text-xs font-medium hover:bg-accent-600">Confirmer</button>
-            <button @click="updateRdvStatut(r, 'refuse')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Refuser</button>
-          </template>
-          <span v-else class="text-xs px-3 py-1.5 rounded-full"
-            :class="r.statut === 'confirme' ? 'bg-accent-50 text-accent-700' : 'bg-red-50 text-red-700'">
-            {{ r.statut === 'confirme' ? 'Confirmé' : 'Refusé' }}
-          </span>
-        </div>
-      </div>
-    </div>
-
     <!-- MODAL COURS -->
     <div v-if="showCoursModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showCoursModal = false">
       <div class="bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
@@ -894,30 +799,6 @@ import { supabase } from '../supabase'
 const router = useRouter()
 const activeTab = ref('actualites')
 
-// --- RDV IMAM ---
-const rdvs = ref([])
-const rdvsLoading = ref(false)
-
-const fetchRdvs = async () => {
-  rdvsLoading.value = true
-  const { data } = await supabase.from('rdv_imam').select('*').order('date_demandee', { ascending: true })
-  const rows = data || []
-  // profiles n'est pas lié par une clé étrangère directe à rdv_imam (les deux
-  // référencent auth.users séparément) : on récupère les noms à part et on fusionne.
-  const userIds = [...new Set(rows.map(r => r.user_id))]
-  const { data: profs } = userIds.length
-    ? await supabase.from('profiles').select('id, prenom, nom').in('id', userIds)
-    : { data: [] }
-  const profMap = Object.fromEntries((profs || []).map(p => [p.id, p]))
-  rdvs.value = rows.map(r => ({ ...r, profiles: profMap[r.user_id] || null }))
-  rdvsLoading.value = false
-}
-
-const updateRdvStatut = async (r, statut) => {
-  const { error } = await supabase.from('rdv_imam').update({ statut }).eq('id', r.id)
-  if (!error) r.statut = statut
-}
-
 // --- ACTUALITÉS ---
 const actus = ref([])
 const actusLoading = ref(false)
@@ -976,50 +857,6 @@ const deleteActu = async (id) => {
   if (!confirm('Supprimer cet article ?')) return
   await supabase.from('actualites').delete().eq('id', id)
   fetchActus()
-}
-
-// --- HADITHS ---
-const hadiths = ref([])
-const hadithsLoading = ref(false)
-const emptyHadith = () => ({ texte_arabe: '', texte_francais: '', source: '', theme: '' })
-const hadithForm = ref(emptyHadith())
-const editingHadithId = ref(null)
-
-const fetchHadiths = async () => {
-  hadithsLoading.value = true
-  const { data } = await supabase.from('hadiths').select('*').order('created_at', { ascending: false })
-  hadiths.value = data || []
-  hadithsLoading.value = false
-}
-
-const resetHadithForm = () => {
-  hadithForm.value = emptyHadith()
-  editingHadithId.value = null
-}
-
-const editHadith = (h) => {
-  hadithForm.value = { texte_arabe: h.texte_arabe || '', texte_francais: h.texte_francais, source: h.source || '', theme: h.theme || '' }
-  editingHadithId.value = h.id
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-const saveHadith = async () => {
-  saving.value = true
-  // Champs vides -> null, pour ne pas afficher de badge vide côté site
-  const payload = Object.fromEntries(Object.entries(hadithForm.value).map(([k, v]) => [k, v.trim() || null]))
-  const { error } = editingHadithId.value
-    ? await supabase.from('hadiths').update(payload).eq('id', editingHadithId.value)
-    : await supabase.from('hadiths').insert(payload)
-  saving.value = false
-  if (error) { alert('Erreur lors de l\'enregistrement. Réessayez.'); return }
-  resetHadithForm()
-  fetchHadiths()
-}
-
-const deleteHadith = async (id) => {
-  if (!confirm('Supprimer ce hadith ?')) return
-  await supabase.from('hadiths').delete().eq('id', id)
-  fetchHadiths()
 }
 
 // --- ÉLÈVES (inscriptions aux cours + rôles) ---
