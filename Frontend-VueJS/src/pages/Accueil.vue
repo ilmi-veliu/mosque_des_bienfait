@@ -207,9 +207,6 @@ import imageProjet from '../assets/entree.jpg'
 import imgCours from '../assets/mihrab.jpg'
 import imgCoran from '../assets/salle-priere.jpg'
 import imgHadith from '../assets/bibliotheque-mosquee.jpg'
-import imgPriere from '../assets/salle-colonnes.jpg'
-import imgJeune from '../assets/mihrab-detail.jpg'
-import imgComportement from '../assets/qamis.jpg'
 
 const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
 
@@ -242,10 +239,7 @@ const dateEvenement = (d) => { const [a, m, j] = d.split('-').map(Number); retur
 const apprendre = [
   { titre: 'Cours religieux', texte: 'Tajwid, croyance, jurisprudence, langue arabe, en vidéo et en audio.', to: '/cours', image: imgCours },
   { titre: 'Récitation du Coran', texte: "Enregistrez votre récitation, un professeur vous renvoie ses corrections.", to: '/coran', image: imgCoran },
-  { titre: 'Sahih al-Bukhari', texte: 'Les 97 livres et plus de 7 000 hadiths, en arabe et en français.', to: '/hadith', image: imgHadith },
-  { titre: 'La prière', texte: 'Ablutions, horaires, adhân, prière du vendredi : les hadiths sur la prière.', to: '/hadith?categorie=Prière', image: imgPriere },
-  { titre: 'Le jeûne et le Ramadan', texte: 'Le jeûne, les tarâwîh, la Nuit du Destin, la retraite spirituelle.', to: '/hadith?categorie=Jeûne et Ramadan', image: imgJeune },
-  { titre: 'Le bon comportement', texte: 'Le bon caractère, les invocations, l\'adoucissement des cœurs.', to: '/hadith?categorie=Comportement et spiritualité', image: imgComportement },
+  { titre: 'Hadiths', texte: 'Les hadiths choisis et publiés par la mosquée, en arabe et en français.', to: '/hadith', image: imgHadith },
 ]
 
 // ─── Programme de la semaine (uniquement des activités réelles) ───

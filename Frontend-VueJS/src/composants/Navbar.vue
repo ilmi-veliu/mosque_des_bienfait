@@ -226,7 +226,7 @@ const groupes = [
   ] },
   { titre: 'Apprendre', liens: [
     { to: '/cours', label: 'Cours religieux', texte: 'Tajwid, croyance, fiqh, arabe' },
-    { to: '/hadith', label: 'Hadiths', texte: 'Tout le Sahih al-Bukhari' },
+    { to: '/hadith', label: 'Hadiths', texte: 'Choisis par la mosquée' },
     { to: '/coran', label: 'Récitation du Coran', texte: 'Faire corriger sa récitation' },
   ] },
 ]
