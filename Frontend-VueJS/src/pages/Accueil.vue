@@ -53,7 +53,7 @@
         <template v-else>
           <p v-if="prochaine" class="text-center text-sm text-gray-600 mb-6">
             Prochaine prière :
-            <span class="font-semibold text-emerald-700">{{ prochaine.label }}{{ prochaine.demain ? ' (demain)' : '' }} à {{ prochaine.heure }}</span>
+            <span class="font-semibold text-accent-700">{{ prochaine.label }}{{ prochaine.demain ? ' (demain)' : '' }} à {{ prochaine.heure }}</span>
             — dans <span class="font-semibold tabular-nums">{{ compteARebours }}</span>
           </p>
 
@@ -62,16 +62,16 @@
           <div class="max-w-md sm:max-w-4xl mx-auto flex flex-col sm:grid sm:grid-cols-5 gap-2 sm:gap-3">
             <div v-for="p in prieres" :key="p.key"
               class="rounded-xl px-5 py-3.5 sm:p-4 border transition-colors flex sm:flex-col items-center justify-between sm:justify-center"
-              :class="p.prochaine ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'bg-stone-50 border-stone-200'">
+              :class="p.prochaine ? 'bg-accent-50 border-accent-500 ring-1 ring-accent-500' : 'bg-stone-50 border-stone-200'">
               <p class="text-sm sm:text-xs uppercase tracking-wide sm:mb-1"
-                :class="p.prochaine ? 'text-emerald-700 font-semibold sm:font-normal sm:text-gray-400' : 'text-gray-500 sm:text-gray-400'">
+                :class="p.prochaine ? 'text-accent-700 font-semibold sm:font-normal sm:text-gray-400' : 'text-gray-500 sm:text-gray-400'">
                 {{ p.label }}
-                <span v-if="p.prochaine" class="sm:hidden ml-1.5 text-[10px] normal-case font-normal bg-emerald-600 text-white px-1.5 py-0.5 rounded">Prochaine</span>
+                <span v-if="p.prochaine" class="sm:hidden ml-1.5 text-[10px] normal-case font-normal bg-accent-600 text-white px-1.5 py-0.5 rounded">Prochaine</span>
               </p>
-              <p class="text-lg font-semibold tabular-nums" :class="p.prochaine ? 'text-emerald-700' : p.passee ? 'text-gray-400' : 'text-gray-800'">
+              <p class="text-lg font-semibold tabular-nums" :class="p.prochaine ? 'text-accent-700' : p.passee ? 'text-gray-400' : 'text-gray-800'">
                 {{ p.heure }}
               </p>
-              <p v-if="p.prochaine" class="hidden sm:block text-[10px] text-emerald-600 mt-1">Prochaine</p>
+              <p v-if="p.prochaine" class="hidden sm:block text-[10px] text-accent-600 mt-1">Prochaine</p>
             </div>
           </div>
 
@@ -92,12 +92,12 @@
           <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="md:flex">
               <!-- Left side - Icon & Message -->
-              <div class="md:w-1/2 bg-slate-800 p-8 md:p-12 flex flex-col justify-center items-center text-white text-center">
+              <div class="md:w-1/2 bg-stone-800 p-8 md:p-12 flex flex-col justify-center items-center text-white text-center">
                 <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm">
                   <Heart :size="40" fill="currentColor" />
                 </div>
                 <h2 class="text-3xl mb-4">Soutenez la Mosquée</h2>
-                <p class="text-slate-300 leading-relaxed">
+                <p class="text-stone-300 leading-relaxed">
                   Votre générosité aide à maintenir et développer les activités de notre mosquée
                 </p>
               </div>
@@ -123,7 +123,7 @@
                   
                   <button
                     @click="handleDonation"
-                    class="w-full bg-slate-800 hover:bg-slate-900 text-white py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 group"
+                    class="w-full bg-stone-800 hover:bg-stone-900 text-white py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 group"
                   >
                     <Heart :size="20" fill="currentColor" />
                     Faire un don - Sadaqa

@@ -12,7 +12,7 @@
 
       <!-- Loading -->
       <div v-if="loading" class="flex justify-center py-20">
-        <div class="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-emerald-600"></div>
+        <div class="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-accent-600"></div>
       </div>
 
       <div v-else class="space-y-6">
@@ -26,16 +26,16 @@
                 v-if="form.avatar_url"
                 :src="form.avatar_url"
                 alt="Avatar"
-                class="w-20 h-20 rounded-full object-cover ring-2 ring-emerald-100"
+                class="w-20 h-20 rounded-full object-cover ring-2 ring-accent-100"
               />
               <div
                 v-else
-                class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-2xl font-semibold text-emerald-700"
+                class="w-20 h-20 rounded-full bg-accent-100 flex items-center justify-center text-2xl font-semibold text-accent-700"
               >
                 {{ initiales }}
               </div>
               <label
-                class="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-emerald-700 transition-colors"
+                class="absolute -bottom-1 -right-1 w-7 h-7 bg-accent-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-accent-700 transition-colors"
                 :class="{ 'opacity-50 cursor-not-allowed': uploadingAvatar }"
               >
                 <Camera :size="14" class="text-white" />
@@ -62,7 +62,7 @@
               </button>
             </div>
           </div>
-          <p v-if="uploadingAvatar" class="text-xs text-emerald-600 mt-3">Téléchargement en cours...</p>
+          <p v-if="uploadingAvatar" class="text-xs text-accent-600 mt-3">Téléchargement en cours...</p>
           <p v-if="uploadError" class="text-xs text-red-500 mt-3">{{ uploadError }}</p>
         </div>
 
@@ -76,7 +76,7 @@
                 v-model="form.prenom"
                 type="text"
                 placeholder="Votre prénom"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-accent-500 transition-colors"
               />
             </div>
             <div>
@@ -85,7 +85,7 @@
                 v-model="form.nom"
                 type="text"
                 placeholder="Votre nom"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-accent-500 transition-colors"
               />
             </div>
           </div>
@@ -96,7 +96,7 @@
               v-model="form.bio"
               rows="3"
               placeholder="Quelques mots sur vous..."
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 transition-colors resize-none"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-accent-500 transition-colors resize-none"
             ></textarea>
           </div>
         </div>
@@ -106,13 +106,13 @@
           <button
             @click="saveProfile"
             :disabled="saving"
-            class="flex-1 sm:flex-none bg-emerald-600 text-white px-8 py-3 rounded-xl font-medium text-sm hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="flex-1 sm:flex-none bg-accent-600 text-white px-8 py-3 rounded-xl font-medium text-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Save :size="16" />
             {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
           </button>
           <Transition name="fade">
-            <span v-if="saved" class="text-sm text-emerald-600 flex items-center gap-1.5 font-medium">
+            <span v-if="saved" class="text-sm text-accent-600 flex items-center gap-1.5 font-medium">
               <Check :size="16" />
               Profil mis à jour
             </span>

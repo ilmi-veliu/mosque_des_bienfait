@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section class="bg-[#030213] text-white py-16 px-4 text-center">
+    <section class="bg-stone-900 text-white py-16 px-4 text-center">
       <div class="max-w-7xl mx-auto">
         <h1 class="text-2xl sm:text-3xl font-semibold mb-2">Espace Professeur</h1>
         <p class="text-sm opacity-80">Corrigez les récitations envoyées par les élèves.</p>
@@ -18,12 +18,12 @@
           <div class="flex gap-2 mb-6">
             <button @click="filtre = 'en_attente'"
               class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              :class="filtre === 'en_attente' ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-600'">
+              :class="filtre === 'en_attente' ? 'bg-accent-600 text-white' : 'bg-white border text-gray-600'">
               À corriger ({{ enAttente.length }})
             </button>
             <button @click="filtre = 'corrigee'"
               class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              :class="filtre === 'corrigee' ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-600'">
+              :class="filtre === 'corrigee' ? 'bg-accent-600 text-white' : 'bg-white border text-gray-600'">
               Corrigées
             </button>
           </div>
@@ -39,9 +39,9 @@
             <template v-if="r.statut === 'en_attente'">
               <textarea v-model="corrections[r.id]" rows="3" maxlength="3000"
                 placeholder="Corrections écrites pour l'élève..."
-                class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 resize-none mb-2"></textarea>
+                class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-accent-600 resize-none mb-2"></textarea>
               <button @click="envoyerCorrection(r)" :disabled="sendingId === r.id || !corrections[r.id]?.trim()"
-                class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+                class="bg-accent-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-accent-700 disabled:opacity-50">
                 {{ sendingId === r.id ? 'Envoi...' : 'Envoyer la correction' }}
               </button>
             </template>

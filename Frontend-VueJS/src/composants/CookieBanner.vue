@@ -5,7 +5,7 @@
         class="fixed bottom-0 left-0 right-0 z-[9999] p-4"
       >
         <div class="max-w-6xl mx-auto">
-          <div class="bg-gradient-to-r from-emerald-800 to-teal-800 rounded-lg shadow-2xl p-6 text-white">
+          <div class="bg-stone-900 rounded-lg shadow-2xl p-6 text-white">
             <div class="flex flex-col md:flex-row items-center gap-4">
               <!-- Icon -->
               <div class="flex-shrink-0">
@@ -19,10 +19,10 @@
               <!-- Content -->
               <div class="flex-1 text-center md:text-left">
                 <h3 class="text-lg font-semibold mb-1">Cookies et confidentialité</h3>
-                <p class="text-emerald-100 text-sm">
+                <p class="text-accent-100 text-sm">
                   Ce site utilise le stockage local de votre navigateur pour le chat avec l'imam. Les messages sont hébergés en Europe (Supabase, Allemagne) et <strong>supprimés automatiquement après 7 jours</strong>.
                 </p>
-                <p class="text-emerald-200 text-xs mt-2">
+                <p class="text-accent-200 text-xs mt-2">
                   <router-link to="/politique-confidentialite" class="underline hover:text-white">
                     Politique de confidentialité
                   </router-link>
@@ -37,7 +37,7 @@
               <div class="flex gap-3 flex-shrink-0">
                 <button
                   @click="acceptCookies"
-                  class="bg-white text-emerald-800 px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-50 transition-all flex items-center gap-2 shadow-lg"
+                  class="bg-white text-accent-800 px-6 py-2.5 rounded-lg font-semibold hover:bg-accent-50 transition-all flex items-center gap-2 shadow-lg"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>

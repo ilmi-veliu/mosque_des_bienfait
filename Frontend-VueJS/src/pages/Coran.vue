@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section class="bg-[#030213] text-white py-24 px-4 text-center">
+    <section class="bg-stone-900 text-white py-24 px-4 text-center">
       <div class="max-w-7xl mx-auto">
         <router-link to="/" class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity">
           <ChevronLeft :size="20" />
@@ -22,7 +22,7 @@
           <p v-if="errorMsg" class="text-sm text-red-500 mb-3">{{ errorMsg }}</p>
           <div class="space-y-3">
             <input v-model="sourate" type="text" maxlength="200" placeholder="Sourate (ex : Al-Fatiha, versets 1-7)"
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
 
             <!-- Enregistrement direct depuis le navigateur -->
             <div class="border rounded-xl p-3">
@@ -55,13 +55,13 @@
             <p class="text-center text-xs text-gray-400">ou</p>
 
             <label class="flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm cursor-pointer hover:bg-gray-50">
-              <Paperclip :size="18" class="text-emerald-600 shrink-0" />
+              <Paperclip :size="18" class="text-accent-600 shrink-0" />
               <span class="truncate">{{ audioFile && !recordedLocally ? audioFile.name : 'Choisir un fichier audio existant...' }}</span>
               <input type="file" accept="audio/*" class="hidden" @change="onFileSelected" />
             </label>
 
             <button @click="submitRecitation" :disabled="sending || !sourate.trim() || !audioFile"
-              class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+              class="w-full bg-accent-600 text-white py-2.5 rounded-xl font-medium hover:bg-accent-700 disabled:opacity-50 transition-colors">
               {{ sending ? 'Envoi...' : 'Envoyer à l\'imam' }}
             </button>
           </div>
@@ -78,7 +78,7 @@
             <div class="flex items-center justify-between mb-2">
               <p class="font-medium text-gray-800">{{ r.sourate }}</p>
               <span class="text-xs px-2 py-1 rounded-full"
-                :class="r.statut === 'corrigee' ? 'bg-emerald-50 text-emerald-700' : 'bg-yellow-50 text-yellow-700'">
+                :class="r.statut === 'corrigee' ? 'bg-accent-50 text-accent-700' : 'bg-yellow-50 text-yellow-700'">
                 {{ r.statut === 'corrigee' ? 'Corrigée' : 'En attente' }}
               </span>
             </div>

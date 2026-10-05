@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section class="bg-[#030213] text-white py-24 px-4 text-center">
+    <section class="bg-stone-900 text-white py-24 px-4 text-center">
       <div class="max-w-7xl mx-auto">
         <router-link to="/" class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity">
           <ChevronLeft :size="20" />
@@ -23,7 +23,7 @@
           <p v-if="h.texte_arabe" class="text-right text-lg text-gray-800 mb-3" dir="rtl">{{ h.texte_arabe }}</p>
           <p class="text-gray-700 leading-relaxed">{{ h.texte_francais }}</p>
           <div class="flex items-center justify-between mt-4 text-xs text-gray-400">
-            <span v-if="h.theme" class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full">{{ h.theme }}</span>
+            <span v-if="h.theme" class="bg-accent-50 text-accent-700 px-2 py-1 rounded-full">{{ h.theme }}</span>
             <span v-if="h.source">{{ h.source }}</span>
           </div>
         </div>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section class="bg-[#030213] text-white py-24 px-4 text-center">
+    <section class="bg-stone-900 text-white py-24 px-4 text-center">
       <div class="max-w-7xl mx-auto">
         <router-link to="/" class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity">
           <ChevronLeft :size="20" />
@@ -22,14 +22,14 @@
           <div class="space-y-3">
             <div class="grid grid-cols-2 gap-3">
               <input v-model="dateDemandee" type="date" :min="todayStr"
-                class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+                class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
               <input v-model="heureDemandee" type="time"
-                class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+                class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
             </div>
             <textarea v-model="motif" rows="3" maxlength="1000" placeholder="Motif de la demande (facultatif)"
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm resize-none"></textarea>
+              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm resize-none"></textarea>
             <button @click="submitRdv" :disabled="sending || !dateDemandee || !heureDemandee"
-              class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+              class="w-full bg-accent-600 text-white py-2.5 rounded-xl font-medium hover:bg-accent-700 disabled:opacity-50 transition-colors">
               {{ sending ? 'Envoi...' : 'Envoyer la demande' }}
             </button>
           </div>
@@ -52,7 +52,7 @@
             <span class="text-xs px-3 py-1.5 rounded-full shrink-0"
               :class="{
                 'bg-yellow-50 text-yellow-700': r.statut === 'en_attente',
-                'bg-emerald-50 text-emerald-700': r.statut === 'confirme',
+                'bg-accent-50 text-accent-700': r.statut === 'confirme',
                 'bg-red-50 text-red-700': r.statut === 'refuse',
               }">
               {{ r.statut === 'en_attente' ? 'En attente' : r.statut === 'confirme' ? 'Confirmé' : 'Refusé' }}

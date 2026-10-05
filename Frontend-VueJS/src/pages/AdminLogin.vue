@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-[#030213] flex items-center justify-center px-4">
+  <div class="min-h-screen bg-stone-900 flex items-center justify-center px-4">
     <div class="max-w-md w-full">
       <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div class="w-16 h-16 bg-accent-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <Lock :size="32" class="text-white" />
         </div>
         <h1 class="text-3xl font-semibold text-white">Administration</h1>
@@ -24,7 +24,7 @@
               type="email"
               required
               placeholder="admin@exemple.com"
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors"
             />
           </div>
         </div>
@@ -39,7 +39,7 @@
               type="password"
               required
               placeholder="Votre mot de passe"
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors"
             />
           </div>
         </div>
@@ -47,7 +47,7 @@
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-3 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-800 transition-all disabled:opacity-50"
+          class="w-full bg-gradient-to-r from-accent-600 to-accent-700 text-white py-3 rounded-xl font-semibold hover:from-accent-700 hover:to-accent-800 transition-all disabled:opacity-50"
         >
           <span v-if="loading">Connexion...</span>
           <span v-else class="flex items-center justify-center gap-2">

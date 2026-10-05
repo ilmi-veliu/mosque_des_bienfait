@@ -1,9 +1,9 @@
 <template>
   <div>
     <!-- Hero Section -->
-    <div class="bg-[#030213] text-white py-16 px-4">
+    <div class="bg-stone-900 text-white py-16 px-4">
       <div class="max-w-4xl mx-auto text-center">
-        <router-link to="/" class="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mb-6 transition-colors">
+        <router-link to="/" class="inline-flex items-center gap-2 text-accent-400 hover:text-accent-300 mb-6 transition-colors">
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
@@ -19,7 +19,7 @@
         <!-- 1. Éditeur du site -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Building :size="24" class="text-emerald-600" />
+            <Building :size="24" class="text-accent-600" />
             1. Éditeur du site
           </h2>
           <div class="bg-gray-50 rounded-xl p-6 space-y-2">
@@ -27,14 +27,14 @@
             <p class="text-gray-700"><strong>Forme juridique :</strong> Association loi 1901</p>
             <p class="text-gray-700"><strong>Adresse :</strong> 18 Rue du Tennis, 24000 Périgueux, France</p>
             <p class="text-gray-700"><strong>Téléphone :</strong> 06 99 02 54 72</p>
-            <p class="text-gray-700"><strong>Email :</strong> <a href="mailto:mosquee.perigueux@gmail.com" class="text-emerald-600 hover:underline">mosquee.perigueux@gmail.com</a></p>
+            <p class="text-gray-700"><strong>Email :</strong> <a href="mailto:mosquee.perigueux@gmail.com" class="text-accent-600 hover:underline">mosquee.perigueux@gmail.com</a></p>
           </div>
         </section>
 
         <!-- 2. Directeur de la publication -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <User :size="24" class="text-emerald-600" />
+            <User :size="24" class="text-accent-600" />
             2. Directeur de la publication
           </h2>
           <div class="bg-gray-50 rounded-xl p-6">
@@ -47,25 +47,25 @@
         <!-- 3. Hébergeur -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Server :size="24" class="text-emerald-600" />
+            <Server :size="24" class="text-accent-600" />
             3. Hébergeur
           </h2>
           <div class="bg-gray-50 rounded-xl p-6 space-y-2">
             <p class="text-gray-700"><strong>Nom :</strong> Vercel Inc.</p>
             <p class="text-gray-700"><strong>Adresse :</strong> 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis</p>
-            <p class="text-gray-700"><strong>Site web :</strong> <a href="https://vercel.com" target="_blank" rel="noopener" class="text-emerald-600 hover:underline">vercel.com</a></p>
+            <p class="text-gray-700"><strong>Site web :</strong> <a href="https://vercel.com" target="_blank" rel="noopener" class="text-accent-600 hover:underline">vercel.com</a></p>
           </div>
           <div class="bg-gray-50 rounded-xl p-6 space-y-2 mt-4">
             <p class="text-gray-700"><strong>Base de données hébergée par :</strong> Supabase Inc.</p>
             <p class="text-gray-700"><strong>Région :</strong> Union Européenne (Frankfurt, Allemagne)</p>
-            <p class="text-gray-700"><strong>Site web :</strong> <a href="https://supabase.com" target="_blank" rel="noopener" class="text-emerald-600 hover:underline">supabase.com</a></p>
+            <p class="text-gray-700"><strong>Site web :</strong> <a href="https://supabase.com" target="_blank" rel="noopener" class="text-accent-600 hover:underline">supabase.com</a></p>
           </div>
         </section>
 
         <!-- 4. Propriété intellectuelle -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Shield :size="24" class="text-emerald-600" />
+            <Shield :size="24" class="text-accent-600" />
             4. Propriété intellectuelle
           </h2>
           <p class="text-gray-700 leading-relaxed">
@@ -76,7 +76,7 @@
         <!-- 5. Limitation de responsabilité -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <AlertTriangle :size="24" class="text-emerald-600" />
+            <AlertTriangle :size="24" class="text-accent-600" />
             5. Limitation de responsabilité
           </h2>
           <p class="text-gray-700 leading-relaxed mb-4">
@@ -90,12 +90,12 @@
         <!-- 6. Protection des données -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Lock :size="24" class="text-emerald-600" />
+            <Lock :size="24" class="text-accent-600" />
             6. Protection des données personnelles
           </h2>
           <p class="text-gray-700 leading-relaxed">
             Pour toute information relative à la protection de vos données personnelles, veuillez consulter notre
-            <router-link to="/politique-confidentialite" class="text-emerald-600 hover:underline font-semibold">
+            <router-link to="/politique-confidentialite" class="text-accent-600 hover:underline font-semibold">
               Politique de Confidentialité
             </router-link>.
           </p>
@@ -104,7 +104,7 @@
         <!-- 7. Droit applicable -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Scale :size="24" class="text-emerald-600" />
+            <Scale :size="24" class="text-accent-600" />
             7. Droit applicable
           </h2>
           <p class="text-gray-700 leading-relaxed">

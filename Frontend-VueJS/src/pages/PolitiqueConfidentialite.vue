@@ -1,9 +1,9 @@
 <template>
   <div>
     <!-- Hero Section -->
-    <div class="bg-[#030213] text-white py-16 px-4">
+    <div class="bg-stone-900 text-white py-16 px-4">
       <div class="max-w-4xl mx-auto text-center">
-        <router-link to="/" class="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mb-6 transition-colors">
+        <router-link to="/" class="inline-flex items-center gap-2 text-accent-400 hover:text-accent-300 mb-6 transition-colors">
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
@@ -19,7 +19,7 @@
         <!-- 1. Responsable du traitement -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Shield :size="24" class="text-emerald-600" />
+            <Shield :size="24" class="text-accent-600" />
             1. Responsable du traitement
           </h2>
           <div class="bg-gray-50 rounded-xl p-6">
@@ -30,7 +30,7 @@
               <li><strong>Association des Musulmans de Périgueux</strong></li>
               <li>Mosquée des Bienfaisants</li>
               <li>18 Rue du Tennis, 24000 Périgueux</li>
-              <li>Email : <a href="mailto:mosquee.perigueux@gmail.com" class="text-emerald-600 hover:underline">mosquee.perigueux@gmail.com</a></li>
+              <li>Email : <a href="mailto:mosquee.perigueux@gmail.com" class="text-accent-600 hover:underline">mosquee.perigueux@gmail.com</a></li>
               <li>Téléphone : 06 99 02 54 72</li>
             </ul>
           </div>
@@ -39,7 +39,7 @@
         <!-- 2. Données collectées -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <FileText :size="24" class="text-emerald-600" />
+            <FileText :size="24" class="text-accent-600" />
             2. Données personnelles collectées
           </h2>
           <p class="text-gray-700 leading-relaxed mb-4">
@@ -80,25 +80,25 @@
         <!-- 4. Finalités -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <FileText :size="24" class="text-emerald-600" />
+            <FileText :size="24" class="text-accent-600" />
             4. Finalités du traitement
           </h2>
           <p class="text-gray-700 leading-relaxed mb-4">Vos données sont collectées pour les finalités suivantes :</p>
           <ul class="space-y-3">
             <li class="flex items-start gap-3">
-              <div class="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
               <span class="text-gray-700">Permettre la communication avec l'imam et l'équipe de la mosquée</span>
             </li>
             <li class="flex items-start gap-3">
-              <div class="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
               <span class="text-gray-700">Gestion et information sur les événements communautaires</span>
             </li>
             <li class="flex items-start gap-3">
-              <div class="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
               <span class="text-gray-700">Organisation des cours religieux</span>
             </li>
             <li class="flex items-start gap-3">
-              <div class="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
               <span class="text-gray-700">Amélioration de l'expérience utilisateur sur le site</span>
             </li>
           </ul>
@@ -107,15 +107,15 @@
         <!-- 5. Durées de conservation -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Clock :size="24" class="text-emerald-600" />
+            <Clock :size="24" class="text-accent-600" />
             5. Durées de conservation
           </h2>
           <div class="overflow-x-auto">
             <table class="w-full border-collapse">
               <thead>
-                <tr class="bg-emerald-50">
-                  <th class="text-left p-4 font-semibold text-gray-800 border-b-2 border-emerald-200">Type de données</th>
-                  <th class="text-left p-4 font-semibold text-gray-800 border-b-2 border-emerald-200">Durée de conservation</th>
+                <tr class="bg-accent-50">
+                  <th class="text-left p-4 font-semibold text-gray-800 border-b-2 border-accent-200">Type de données</th>
+                  <th class="text-left p-4 font-semibold text-gray-800 border-b-2 border-accent-200">Durée de conservation</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,7 +143,7 @@
         <!-- 6. Sous-traitants -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Shield :size="24" class="text-emerald-600" />
+            <Shield :size="24" class="text-accent-600" />
             6. Sous-traitants et transferts de données
           </h2>
           <p class="text-gray-700 leading-relaxed mb-4">Nous faisons appel aux sous-traitants suivants :</p>
@@ -162,7 +162,7 @@
         <!-- 7. Droits des utilisateurs -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Users :size="24" class="text-emerald-600" />
+            <Users :size="24" class="text-accent-600" />
             7. Vos droits
           </h2>
           <p class="text-gray-700 leading-relaxed mb-4">
@@ -194,14 +194,14 @@
               <p class="text-gray-600 text-xs mt-1">Retirer votre consentement à tout moment</p>
             </div>
           </div>
-          <div class="bg-emerald-50 border-l-4 border-emerald-600 rounded-xl p-6 mt-6">
+          <div class="bg-accent-50 border-l-4 border-accent-600 rounded-xl p-6 mt-6">
             <p class="text-gray-700">
               Pour exercer vos droits, contactez-nous à :
-              <a href="mailto:mosquee.perigueux@gmail.com" class="text-emerald-600 font-semibold hover:underline">mosquee.perigueux@gmail.com</a>
+              <a href="mailto:mosquee.perigueux@gmail.com" class="text-accent-600 font-semibold hover:underline">mosquee.perigueux@gmail.com</a>
             </p>
             <p class="text-gray-600 text-sm mt-2">
               Nous nous engageons à répondre dans un délai d'un mois. En cas de litige, vous pouvez saisir la
-              <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener" class="text-emerald-600 hover:underline">CNIL</a>.
+              <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener" class="text-accent-600 hover:underline">CNIL</a>.
             </p>
           </div>
         </section>
@@ -209,7 +209,7 @@
         <!-- 8. Cookies -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <FileText :size="24" class="text-emerald-600" />
+            <FileText :size="24" class="text-accent-600" />
             8. Gestion des cookies
           </h2>
           <p class="text-gray-700 leading-relaxed mb-4">
@@ -241,7 +241,7 @@
         <!-- 9. Sécurité -->
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Lock :size="24" class="text-emerald-600" />
+            <Lock :size="24" class="text-accent-600" />
             9. Sécurité des données
           </h2>
           <p class="text-gray-700 leading-relaxed">

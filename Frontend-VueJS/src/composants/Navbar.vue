@@ -24,10 +24,10 @@
                 class="flex items-center gap-2 hover:text-gray-600 transition-colors"
               >
                 <!-- Avatar -->
-                <span v-if="avatarUrl" class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-emerald-100">
+                <span v-if="avatarUrl" class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-accent-100">
                   <img :src="avatarUrl" alt="avatar" class="w-full h-full object-cover" />
                 </span>
-                <span v-else-if="userInitiales" class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center flex-shrink-0">{{ userInitiales }}</span>
+                <span v-else-if="userInitiales" class="w-8 h-8 rounded-full bg-accent-100 text-accent-700 text-xs font-bold flex items-center justify-center flex-shrink-0">{{ userInitiales }}</span>
                 <span v-else class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <UserCircle :size="20" class="text-gray-500" />
                 </span>
@@ -95,7 +95,7 @@
                     v-if="isAdmin"
                     to="/admin/dashboard"
                     @click="dropdownOpen = false"
-                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-emerald-600 font-medium hover:bg-gray-50 transition-colors"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-accent-600 font-medium hover:bg-gray-50 transition-colors"
                   >
                     <Shield :size="16" />
                     Admin
@@ -173,7 +173,7 @@
               <span v-if="avatarUrl" class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                 <img :src="avatarUrl" alt="avatar" class="w-full h-full object-cover" />
               </span>
-              <span v-else class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
+              <span v-else class="w-10 h-10 rounded-full bg-accent-100 text-accent-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
                 {{ userInitiales || '?' }}
               </span>
               <div>
@@ -189,7 +189,7 @@
               <HandHelping :size="16" class="text-gray-400" />
               {{ isBenevole ? 'Espace Bénévole' : 'Devenir bénévole' }}
             </router-link>
-            <router-link v-if="isAdmin" @click="mobileOpen = false" to="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-emerald-600 font-medium">
+            <router-link v-if="isAdmin" @click="mobileOpen = false" to="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-accent-600 font-medium">
               <Shield :size="16" />
               Administration
             </router-link>

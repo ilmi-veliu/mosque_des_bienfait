@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Hero Events -->
-    <section class="bg-[#030213] text-white py-24 px-4 text-center">
+    <section class="bg-stone-900 text-white py-24 px-4 text-center">
       <div class="max-w-7xl mx-auto">
         <router-link 
           to="/"
@@ -52,7 +52,7 @@
           class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
         >
           <span>Toutes les catégories</span>
-          <span v-if="selectedCategory === null" class="text-green-600">✓</span>
+          <span v-if="selectedCategory === null" class="text-accent-600">✓</span>
         </button>
         
         <button 
@@ -60,7 +60,7 @@
           class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
         >
           <span>Religieux</span>
-          <span v-if="selectedCategory === 'Religieux'" class="text-green-600">✓</span>
+          <span v-if="selectedCategory === 'Religieux'" class="text-accent-600">✓</span>
         </button>
         
         <button 
@@ -68,7 +68,7 @@
           class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
         >
           <span>Éducation</span>
-          <span v-if="selectedCategory === 'Éducation'" class="text-green-600">✓</span>
+          <span v-if="selectedCategory === 'Éducation'" class="text-accent-600">✓</span>
         </button>
         
         <button 
@@ -76,7 +76,7 @@
           class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
         >
           <span>Social</span>
-          <span v-if="selectedCategory === 'Social'" class="text-green-600">✓</span>
+          <span v-if="selectedCategory === 'Social'" class="text-accent-600">✓</span>
         </button>
         
         <button 
@@ -84,7 +84,7 @@
           class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
         >
           <span>Culturel</span>
-          <span v-if="selectedCategory === 'Culturel'" class="text-green-600">✓</span>
+          <span v-if="selectedCategory === 'Culturel'" class="text-accent-600">✓</span>
         </button>
       </div>
     </div>
@@ -121,7 +121,7 @@
                 :alt="event.titre" 
                 class="w-full h-44 sm:h-56 object-cover"
               >
-              <span class="absolute top-4 left-4 bg-[#030213] text-white px-4 py-1.5 rounded-full text-xs font-semibold">
+              <span class="absolute top-4 left-4 bg-stone-900 text-white px-4 py-1.5 rounded-full text-xs font-semibold">
                 {{ event.categorie }}
               </span>
             </div>

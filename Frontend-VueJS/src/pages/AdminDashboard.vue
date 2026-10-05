@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
-    <div class="bg-[#030213] text-white px-4 py-4">
+    <div class="bg-stone-900 text-white px-4 py-4">
       <div class="max-w-7xl mx-auto flex justify-between items-center">
         <div class="flex items-center gap-3">
-          <Shield :size="24" class="text-emerald-400" />
+          <Shield :size="24" class="text-accent-400" />
           <h1 class="text-lg sm:text-xl font-semibold">Administration</h1>
         </div>
         <div class="flex items-center gap-3 sm:gap-4">
@@ -21,7 +21,7 @@
             <div v-if="showNotifPanel" class="absolute right-0 top-10 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border z-50 max-h-[70vh] overflow-hidden">
               <div class="px-4 py-3 border-b flex items-center justify-between">
                 <h4 class="font-semibold text-gray-800 text-sm">Notifications</h4>
-                <button v-if="notifications.length > 0" @click="markAllRead" class="text-xs text-emerald-600 hover:underline">
+                <button v-if="notifications.length > 0" @click="markAllRead" class="text-xs text-accent-600 hover:underline">
                   Tout marquer lu
                 </button>
               </div>
@@ -31,18 +31,18 @@
                 </div>
                 <div v-for="n in notifications" :key="n.id"
                   class="px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
-                  :class="!n.lu ? 'bg-emerald-50/40' : ''">
+                  :class="!n.lu ? 'bg-accent-50/40' : ''">
                   <div class="flex items-start gap-3">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                       :class="n.type === 'disponibilite' ? 'bg-amber-100' : 'bg-blue-100'">
                       <CalendarX v-if="n.message?.includes('indisponible')" :size="14" class="text-red-600" />
-                      <CalendarCheck v-else :size="14" class="text-emerald-600" />
+                      <CalendarCheck v-else :size="14" class="text-accent-600" />
                     </div>
                     <div class="flex-1 min-w-0">
                       <p class="text-sm text-gray-800">{{ n.message }}</p>
                       <p class="text-[11px] text-gray-400 mt-1">{{ formatNotifDate(n.created_at) }}</p>
                     </div>
-                    <button v-if="!n.lu" @click.stop="markRead(n)" class="text-[10px] text-emerald-600 hover:underline flex-shrink-0 mt-1">
+                    <button v-if="!n.lu" @click.stop="markRead(n)" class="text-[10px] text-accent-600 hover:underline flex-shrink-0 mt-1">
                       Lu
                     </button>
                   </div>
@@ -63,7 +63,7 @@
 
     <!-- Loading -->
     <div v-if="pageLoading" class="min-h-screen flex items-center justify-center">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
     </div>
 
     <div v-else>
@@ -72,7 +72,7 @@
       <div class="max-w-7xl mx-auto flex overflow-x-auto">
         <button
           @click="activeTab = 'evenements'"
-          :class="activeTab === 'evenements' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'evenements' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <Calendar :size="18" />
@@ -80,7 +80,7 @@
         </button>
         <button
           @click="activeTab = 'cours'"
-          :class="activeTab === 'cours' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'cours' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <BookOpen :size="18" />
@@ -88,7 +88,7 @@
         </button>
         <button
           @click="activeTab = 'hadiths'; fetchHadiths()"
-          :class="activeTab === 'hadiths' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'hadiths' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <ScrollText :size="18" />
@@ -96,7 +96,7 @@
         </button>
         <button
           @click="activeTab = 'eleves'; fetchEleves()"
-          :class="activeTab === 'eleves' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'eleves' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
         >
           <GraduationCap :size="18" />
@@ -107,7 +107,7 @@
         </button>
         <button v-if="isSuperAdmin"
           @click="activeTab = 'benevoles'"
-          :class="activeTab === 'benevoles' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'benevoles' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <HandHelping :size="18" />
@@ -115,7 +115,7 @@
         </button>
         <button v-if="isSuperAdmin"
           @click="activeTab = 'signalements'; fetchBugReports()"
-          :class="activeTab === 'signalements' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'signalements' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
         >
           <AlertTriangle :size="18" />
@@ -126,7 +126,7 @@
         </button>
         <button v-if="isSuperAdmin"
           @click="activeTab = 'gestion'; fetchAllBenevoles()"
-          :class="activeTab === 'gestion' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'gestion' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <Crown :size="18" />
@@ -134,7 +134,7 @@
         </button>
         <button v-if="canSeeImamChat"
           @click="activeTab = 'imam'; loadImamConversations()"
-          :class="activeTab === 'imam' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'imam' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
         >
           <MessageSquare :size="18" />
@@ -145,7 +145,7 @@
         </button>
         <button v-if="canSeeImamChat"
           @click="activeTab = 'rdv'; fetchRdvs()"
-          :class="activeTab === 'rdv' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          :class="activeTab === 'rdv' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <Calendar :size="18" />
@@ -159,7 +159,7 @@
       <div v-if="activeTab === 'evenements'">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Gestion des Événements</h2>
-          <button @click="openEventForm()" class="bg-emerald-600 text-white px-4 sm:px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors flex items-center gap-2 text-sm sm:text-base">
+          <button @click="openEventForm()" class="bg-accent-600 text-white px-4 sm:px-5 py-2.5 rounded-xl hover:bg-accent-700 transition-colors flex items-center gap-2 text-sm sm:text-base">
             <Plus :size="18" />
             Ajouter
           </button>
@@ -167,7 +167,7 @@
 
         <!-- Liste événements -->
         <div v-if="eventsLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
         </div>
         <div v-else-if="events.length === 0" class="text-center py-12 text-gray-500">
           Aucun événement. Cliquez sur "Ajouter" pour en créer un.
@@ -188,7 +188,7 @@
               </div>
             </div>
             <div class="flex gap-2 flex-shrink-0 self-end sm:self-center">
-              <button @click="openEventForm(event)" class="p-2 text-gray-400 hover:text-emerald-600 transition-colors">
+              <button @click="openEventForm(event)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors">
                 <Pencil :size="18" />
               </button>
               <button @click="deleteEvent(event.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
@@ -203,27 +203,27 @@
       <div v-if="activeTab === 'cours'">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Gestion des Cours Religieux</h2>
-          <button @click="openCoursForm()" class="bg-emerald-600 text-white px-4 sm:px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors flex items-center gap-2 text-sm sm:text-base">
+          <button @click="openCoursForm()" class="bg-accent-600 text-white px-4 sm:px-5 py-2.5 rounded-xl hover:bg-accent-700 transition-colors flex items-center gap-2 text-sm sm:text-base">
             <Plus :size="18" />
             Ajouter
           </button>
         </div>
 
         <div v-if="coursLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
         </div>
         <div v-else-if="cours.length === 0" class="text-center py-12 text-gray-500">
           Aucun cours. Cliquez sur "Ajouter" pour en créer un.
         </div>
         <div v-else class="space-y-4">
           <div v-for="c in cours" :key="c.id" class="bg-white rounded-xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-              <BookOpen :size="28" class="text-emerald-600" />
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-accent-50 flex items-center justify-center flex-shrink-0">
+              <BookOpen :size="28" class="text-accent-600" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <h3 class="font-semibold text-gray-800">{{ c.titre }}</h3>
-                <span :class="c.actif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" class="text-xs px-2 py-0.5 rounded">
+                <span :class="c.actif ? 'bg-accent-100 text-accent-700' : 'bg-red-100 text-red-700'" class="text-xs px-2 py-0.5 rounded">
                   {{ c.actif ? 'Actif' : 'Inactif' }}
                 </span>
                 <span v-if="c.prive" class="text-xs px-2 py-0.5 rounded bg-violet-100 text-violet-700">Privé</span>
@@ -236,7 +236,7 @@
               </div>
             </div>
             <div class="flex gap-2 flex-shrink-0 self-end sm:self-center">
-              <button @click="openCoursForm(c)" class="p-2 text-gray-400 hover:text-emerald-600 transition-colors">
+              <button @click="openCoursForm(c)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors">
                 <Pencil :size="18" />
               </button>
               <button @click="deleteCours(c.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
@@ -254,27 +254,27 @@
         <form @submit.prevent="saveHadith" class="bg-white rounded-xl border p-4 sm:p-5 mb-6 space-y-3">
           <h3 class="font-semibold text-gray-800">{{ editingHadithId ? 'Modifier le hadith' : 'Publier un hadith' }}</h3>
           <textarea v-model="hadithForm.texte_arabe" rows="2" maxlength="3000" dir="rtl" placeholder="Texte arabe (facultatif)"
-            class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm"></textarea>
+            class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
           <textarea v-model="hadithForm.texte_francais" rows="3" required maxlength="3000" placeholder="Traduction française *"
-            class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm"></textarea>
+            class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input v-model="hadithForm.source" maxlength="300" placeholder="Source (ex : Sahih al-Bukhari, 1)"
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
             <input v-model="hadithForm.theme" maxlength="100" placeholder="Thème (ex : Patience)"
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
           </div>
           <div class="flex justify-end gap-3">
             <button v-if="editingHadithId" type="button" @click="resetHadithForm" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors text-sm">
               Annuler
             </button>
-            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 text-sm">
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-50 text-sm">
               {{ saving ? 'Enregistrement...' : (editingHadithId ? 'Modifier' : 'Publier') }}
             </button>
           </div>
         </form>
 
         <div v-if="hadithsLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
         </div>
         <div v-else-if="hadiths.length === 0" class="text-center py-12 text-gray-500">Aucun hadith publié.</div>
         <div v-else class="space-y-3">
@@ -283,12 +283,12 @@
               <p v-if="h.texte_arabe" class="text-right text-gray-800 mb-1" dir="rtl">{{ h.texte_arabe }}</p>
               <p class="text-sm text-gray-700">{{ h.texte_francais }}</p>
               <div class="flex flex-wrap gap-2 mt-2 text-xs text-gray-400">
-                <span v-if="h.theme" class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">{{ h.theme }}</span>
+                <span v-if="h.theme" class="bg-accent-50 text-accent-700 px-2 py-0.5 rounded">{{ h.theme }}</span>
                 <span v-if="h.source">{{ h.source }}</span>
               </div>
             </div>
             <div class="flex gap-1 flex-shrink-0 self-start">
-              <button @click="editHadith(h)" class="p-2 text-gray-400 hover:text-emerald-600 transition-colors">
+              <button @click="editHadith(h)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors">
                 <Pencil :size="16" />
               </button>
               <button @click="deleteHadith(h.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
@@ -303,7 +303,7 @@
       <div v-if="activeTab === 'eleves'">
         <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Inscriptions aux cours</h2>
         <div v-if="elevesLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
         </div>
         <template v-else>
           <div v-if="inscriptions.length === 0" class="text-center py-8 text-gray-500 mb-8">Aucune inscription.</div>
@@ -315,11 +315,11 @@
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <template v-if="i.statut === 'en_attente'">
-                  <button @click="updateInscription(i, 'validee')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">Valider</button>
+                  <button @click="updateInscription(i, 'validee')" class="px-3 py-1.5 bg-accent-600 text-white rounded-lg text-xs font-medium hover:bg-accent-700">Valider</button>
                   <button @click="updateInscription(i, 'refusee')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Refuser</button>
                 </template>
                 <span v-else class="text-xs px-3 py-1.5 rounded-full"
-                  :class="i.statut === 'validee' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'">
+                  :class="i.statut === 'validee' ? 'bg-accent-50 text-accent-700' : 'bg-red-50 text-red-700'">
                   {{ i.statut === 'validee' ? 'Validée' : 'Refusée' }}
                 </span>
               </div>
@@ -333,14 +333,14 @@
           <div class="relative mb-4 max-w-sm">
             <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input v-model="eleveSearch" placeholder="Rechercher un nom..."
-              class="w-full pl-9 pr-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+              class="w-full pl-9 pr-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
           </div>
           <p v-if="roleError" class="text-sm text-red-500 mb-3">{{ roleError }}</p>
           <div class="bg-white rounded-xl border divide-y">
             <div v-for="p in profilsFiltres" :key="p.id" class="px-4 py-3 flex items-center justify-between gap-3">
               <span class="text-sm text-gray-800 truncate">{{ [p.prenom, p.nom].filter(Boolean).join(' ') || 'Sans nom' }}</span>
               <select :value="p.role_eleve" @change="changerRoleEleve(p, $event.target.value)"
-                class="text-sm border rounded-lg px-2 py-1.5 focus:outline-none focus:border-emerald-600">
+                class="text-sm border rounded-lg px-2 py-1.5 focus:outline-none focus:border-accent-600">
                 <option value="standard">Standard</option>
                 <option value="etudiant">Étudiant</option>
                 <option value="etudiant_prive">Étudiant privé</option>
@@ -363,7 +363,7 @@
             </div>
 
             <div v-if="benevolesLoading" class="text-center py-12">
-              <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
             </div>
             <div v-else-if="demandes.length === 0" class="text-center py-12 text-gray-500">
               Aucune demande pour le moment.
@@ -386,8 +386,8 @@
                       </span>
                     </div>
                     <div class="space-y-1 text-sm text-gray-600">
-                      <p><strong>Email :</strong> <a :href="'mailto:' + b.email" class="text-emerald-600 hover:underline">{{ b.email }}</a></p>
-                      <p><strong>Téléphone :</strong> <a :href="'tel:' + b.telephone" class="text-emerald-600 hover:underline">{{ b.telephone }}</a></p>
+                      <p><strong>Email :</strong> <a :href="'mailto:' + b.email" class="text-accent-600 hover:underline">{{ b.email }}</a></p>
+                      <p><strong>Téléphone :</strong> <a :href="'tel:' + b.telephone" class="text-accent-600 hover:underline">{{ b.telephone }}</a></p>
                       <p><strong>Domaine :</strong> <span class="bg-gray-100 px-2 py-0.5 rounded">{{ b.domaine }}</span></p>
                       <p v-if="b.message" class="mt-2 text-gray-500 italic">"{{ b.message }}"</p>
                       <p class="text-xs text-gray-400 mt-2">Reçu le {{ new Date(b.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) }}</p>
@@ -397,7 +397,7 @@
                     <select
                       :value="b.statut"
                       @change="updateBenevoleStatut(b.id, $event.target.value)"
-                      class="text-xs border rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-600"
+                      class="text-xs border rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-600"
                     >
                       <option value="nouveau">Nouveau</option>
                       <option value="contacté">Contacté</option>
@@ -421,26 +421,26 @@
             </div>
 
             <div v-if="benevolesLoading" class="text-center py-12">
-              <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
             </div>
             <div v-else-if="benevolesActuels.length === 0" class="text-center py-12 text-gray-500 bg-white rounded-xl border">
               Aucun bénévole accepté pour le moment.
             </div>
             <div v-else class="space-y-3">
               <div v-for="b in benevolesActuels" :key="b.id" class="bg-white rounded-xl border p-4 flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <UserCheck :size="18" class="text-emerald-600" />
+                <div class="w-10 h-10 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <UserCheck :size="18" class="text-accent-600" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <h3 class="font-semibold text-gray-800 text-sm">{{ b.prenom }} {{ b.nom }}</h3>
-                  <p class="text-xs text-emerald-600">{{ b.domaine }}</p>
+                  <p class="text-xs text-accent-600">{{ b.domaine }}</p>
                   <p class="text-xs text-gray-400">{{ b.email }}</p>
                 </div>
                 <div class="flex gap-1 flex-shrink-0">
                   <select
                     :value="b.statut"
                     @change="updateBenevoleStatut(b.id, $event.target.value)"
-                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600"
+                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-accent-600"
                   >
                     <option value="nouveau">Nouveau</option>
                     <option value="contacté">Contacté</option>
@@ -475,7 +475,7 @@
         </div>
 
         <div v-if="bugReportsLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
         </div>
         <div v-else-if="bugReports.length === 0" class="text-center py-16">
           <AlertTriangle :size="48" class="mx-auto text-gray-300 mb-4" />
@@ -491,7 +491,7 @@
                       'bg-red-100 text-red-700': bug.type === 'bug',
                       'bg-amber-100 text-amber-700': bug.type === 'affichage',
                       'bg-blue-100 text-blue-700': bug.type === 'fonctionnalite',
-                      'bg-emerald-100 text-emerald-700': bug.type === 'suggestion',
+                      'bg-accent-100 text-accent-700': bug.type === 'suggestion',
                       'bg-gray-100 text-gray-600': bug.type === 'autre'
                     }">
                     {{ bug.type === 'bug' ? 'Bug' : bug.type === 'affichage' ? 'Affichage' : bug.type === 'fonctionnalite' ? 'Fonctionnalité' : bug.type === 'suggestion' ? 'Suggestion' : 'Autre' }}
@@ -520,11 +520,11 @@
         <div class="relative mb-6">
           <Search :size="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input v-model="roleSearch" type="text" placeholder="Rechercher par nom ou prénom..."
-            class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+            class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
         </div>
 
         <div v-if="allBenevolesLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
         </div>
         <div v-else-if="filteredRoleBenevoles.length === 0" class="text-center py-12 text-gray-500">
           {{ roleSearch ? 'Aucun résultat pour cette recherche.' : 'Aucun bénévole trouvé.' }}
@@ -554,7 +554,7 @@
                 <select v-if="b.id !== adminUser.id"
                   :value="b.role || 'benevole'"
                   @change="updateRole(b, $event.target.value)"
-                  class="text-xs border rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-600">
+                  class="text-xs border rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-600">
                   <option value="benevole">Bénévole</option>
                   <option value="admin">Admin</option>
                 </select>
@@ -568,8 +568,8 @@
             <div class="flex flex-wrap items-center gap-3 pl-13 text-sm border-t pt-3">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" :checked="b.disponible !== false" @change="toggleDispo(b)"
-                  class="w-4 h-4 accent-emerald-600" />
-                <span :class="b.disponible !== false ? 'text-emerald-600 font-medium' : 'text-red-500 font-medium'">
+                  class="w-4 h-4 accent-accent-600" />
+                <span :class="b.disponible !== false ? 'text-accent-600 font-medium' : 'text-red-500 font-medium'">
                   {{ b.disponible !== false ? 'Disponible' : 'Indisponible' }}
                 </span>
               </label>
@@ -577,10 +577,10 @@
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-gray-500">Du</span>
                   <input type="date" :value="b.dispo_debut || ''" @change="updateDispoDates(b, 'dispo_debut', $event.target.value)"
-                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600" />
+                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-accent-600" />
                   <span class="text-xs text-gray-500">au</span>
                   <input type="date" :value="b.dispo_fin || ''" @change="updateDispoDates(b, 'dispo_fin', $event.target.value)"
-                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-600" />
+                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-accent-600" />
                 </div>
               </template>
             </div>
@@ -595,7 +595,7 @@
       <p class="text-sm text-gray-500 mb-6">Répondez aux messages des fidèles en tant qu'Imam.</p>
 
       <div v-if="imamLoading" class="flex items-center justify-center py-20">
-        <div class="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-emerald-600"></div>
+        <div class="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
       </div>
 
       <div v-else class="flex flex-col md:flex-row gap-4 md:h-[600px]">
@@ -612,7 +612,7 @@
             v-for="conv in imamConversations" :key="conv.key"
             @click="selectImamConversation(conv)"
             class="w-full px-4 py-3 text-left border-b last:border-0 hover:bg-gray-50 transition-colors relative"
-            :class="selectedImamConv?.key === conv.key ? 'bg-emerald-50 border-r-2 border-emerald-500' : ''"
+            :class="selectedImamConv?.key === conv.key ? 'bg-accent-50 border-r-2 border-accent-500' : ''"
           >
             <div class="flex items-center justify-between gap-2">
               <p class="text-sm font-medium text-gray-800 truncate">{{ conv.label }}</p>
@@ -636,7 +636,7 @@
               <button @click="selectedImamConv = null" class="md:hidden p-1 text-gray-500 hover:text-gray-700 shrink-0">
                 <ChevronLeft :size="20" />
               </button>
-              <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center shrink-0">
+              <div class="w-9 h-9 rounded-full bg-accent-100 text-accent-700 font-bold text-sm flex items-center justify-center shrink-0">
                 {{ (selectedImamConv.label[0] || '?').toUpperCase() }}
               </div>
               <div class="min-w-0">
@@ -651,7 +651,7 @@
                 class="flex gap-2"
                 :class="msg.isImamReply ? 'flex-row-reverse' : ''">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1"
-                  :style="{ background: msg.isImamReply ? '#10b981' : '#6b7280' }">
+                  :style="{ background: msg.isImamReply ? '#96784b' : '#6b7280' }">
                   {{ msg.isImamReply ? 'I' : (msg.sender_name?.[0] || '?').toUpperCase() }}
                 </div>
                 <div class="max-w-[70%]" :class="msg.isImamReply ? 'items-end flex flex-col' : ''">
@@ -659,10 +659,10 @@
                   <!-- Audio -->
                   <div v-if="msg.type === 'audio'"
                     class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
-                    :class="msg.isImamReply ? 'bg-emerald-600 text-white' : 'bg-white border'">
+                    :class="msg.isImamReply ? 'bg-accent-600 text-white' : 'bg-white border'">
                     <button @click="toggleImamAudio(msg)"
                       class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                      :class="msg.isImamReply ? 'bg-white/20' : 'bg-emerald-100 text-emerald-700'">
+                      :class="msg.isImamReply ? 'bg-white/20' : 'bg-accent-100 text-accent-700'">
                       <Play v-if="!msg.playing" :size="12" />
                       <Pause v-else :size="12" />
                     </button>
@@ -674,13 +674,13 @@
                   <img v-else-if="msg.type === 'image'" :src="msg.file_url" class="max-w-[200px] rounded-xl" />
                   <!-- Fichier -->
                   <a v-else-if="msg.type === 'file'" :href="msg.file_url" target="_blank"
-                    class="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm text-emerald-600 hover:underline bg-white">
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm text-accent-600 hover:underline bg-white">
                     📎 {{ msg.file_name || 'Fichier' }}
                   </a>
                   <!-- Texte -->
                   <div v-else
                     class="px-3 py-2 rounded-xl text-sm leading-relaxed"
-                    :class="msg.isImamReply ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-800'">
+                    :class="msg.isImamReply ? 'bg-accent-600 text-white' : 'bg-white border text-gray-800'">
                     {{ msg.content }}
                   </div>
                 </div>
@@ -692,7 +692,7 @@
               <!-- Fichiers en attente -->
               <div v-if="imamPendingFiles.length" class="px-4 pt-2 flex gap-2 flex-wrap">
                 <div v-for="(f, i) in imamPendingFiles" :key="i"
-                  class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 text-xs text-gray-700">
+                  class="flex items-center gap-1.5 bg-accent-50 border border-accent-200 rounded-lg px-2 py-1 text-xs text-gray-700">
                   <span>📎</span>
                   <span class="truncate max-w-[120px]">{{ f.name }}</span>
                   <button @click="imamPendingFiles = imamPendingFiles.filter((_, idx) => idx !== i)" class="text-gray-400 hover:text-red-500 ml-1">✕</button>
@@ -701,7 +701,7 @@
               <p v-if="imamFileError" class="px-4 pt-1 text-xs text-red-500">{{ imamFileError }}</p>
               <div class="px-4 py-3 flex items-end gap-2">
                 <input ref="imamFileInput" type="file" multiple class="hidden" @change="onImamFileChange" />
-                <button @click="imamFileInput.click()" class="p-2 text-gray-400 hover:text-emerald-600 transition-colors shrink-0" title="Joindre un fichier">
+                <button @click="imamFileInput.click()" class="p-2 text-gray-400 hover:text-accent-600 transition-colors shrink-0" title="Joindre un fichier">
                   <Paperclip :size="18" />
                 </button>
                 <textarea
@@ -709,12 +709,12 @@
                   @keydown.enter.exact.prevent="sendImamReply"
                   placeholder="Répondre en tant qu'Imam... (Entrée pour envoyer)"
                   rows="1"
-                  class="flex-1 px-3 py-2 border rounded-xl text-sm resize-none focus:outline-none focus:border-emerald-500 transition-colors"
+                  class="flex-1 px-3 py-2 border rounded-xl text-sm resize-none focus:outline-none focus:border-accent-500 transition-colors"
                   style="min-height:38px; max-height:90px; overflow-y:auto;"
                   @input="e => { e.target.style.height='auto'; e.target.style.height=Math.min(e.target.scrollHeight,90)+'px' }"
                 ></textarea>
                 <button @click="sendImamReply" :disabled="(!imamReply.trim() && !imamPendingFiles.length) || imamSending"
-                  class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-40 shrink-0">
+                  class="p-2 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-40 shrink-0">
                   <div v-if="imamSending" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <Send v-else :size="18" />
                 </button>
@@ -741,11 +741,11 @@
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <template v-if="r.statut === 'en_attente'">
-            <button @click="updateRdvStatut(r, 'confirme')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">Confirmer</button>
+            <button @click="updateRdvStatut(r, 'confirme')" class="px-3 py-1.5 bg-accent-600 text-white rounded-lg text-xs font-medium hover:bg-accent-700">Confirmer</button>
             <button @click="updateRdvStatut(r, 'refuse')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Refuser</button>
           </template>
           <span v-else class="text-xs px-3 py-1.5 rounded-full"
-            :class="r.statut === 'confirme' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'">
+            :class="r.statut === 'confirme' ? 'bg-accent-50 text-accent-700' : 'bg-red-50 text-red-700'">
             {{ r.statut === 'confirme' ? 'Confirmé' : 'Refusé' }}
           </span>
         </div>
@@ -764,16 +764,16 @@
         <form @submit.prevent="saveEvent" class="p-6 space-y-5">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-            <input v-model="eventForm.titre" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+            <input v-model="eventForm.titre" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea v-model="eventForm.description" rows="3" maxlength="5000" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600"></textarea>
+            <textarea v-model="eventForm.description" rows="3" maxlength="5000" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600"></textarea>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-              <select v-model="eventForm.categorie" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600">
+              <select v-model="eventForm.categorie" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600">
                 <option value="Religieux">Religieux</option>
                 <option value="Éducation">Éducation</option>
                 <option value="Social">Social</option>
@@ -782,42 +782,42 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Lieu *</label>
-              <input v-model="eventForm.lieu" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="eventForm.lieu" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-              <input v-model="eventForm.date" type="date" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="eventForm.date" type="date" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Heure *</label>
-              <input v-model="eventForm.heure" type="time" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="eventForm.heure" type="time" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Participants max</label>
-              <input v-model.number="eventForm.participants_max" type="number" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model.number="eventForm.participants_max" type="number" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Image</label>
             <div class="flex flex-col sm:flex-row gap-3">
               <label class="flex-1 cursor-pointer">
-                <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 transition-colors bg-gray-50">
+                <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-gray-50">
                   <Upload :size="18" class="text-gray-400" />
                   <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un fichier' }}</span>
                 </div>
                 <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleEventImageUpload" :disabled="uploading" />
               </label>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
-              <input v-model="eventForm.image_url" type="text" placeholder="Coller une URL..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+              <input v-model="eventForm.image_url" type="text" placeholder="Coller une URL..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">URL vidéo YouTube</label>
-            <input v-model="eventForm.video_url" type="url" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+            <input v-model="eventForm.video_url" type="url" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
           </div>
 
           <div v-if="eventForm.image_url" class="rounded-xl overflow-hidden border">
@@ -828,7 +828,7 @@
             <button type="button" @click="showEventModal = false" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors">
               Annuler
             </button>
-            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50">
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-50">
               {{ saving ? 'Enregistrement...' : (editingEvent ? 'Modifier' : 'Ajouter') }}
             </button>
           </div>
@@ -848,37 +848,37 @@
         <form @submit.prevent="saveCours" class="p-6 space-y-5">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-            <input v-model="coursForm.titre" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+            <input v-model="coursForm.titre" required maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea v-model="coursForm.description" rows="3" maxlength="5000" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600"></textarea>
+            <textarea v-model="coursForm.description" rows="3" maxlength="5000" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600"></textarea>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Enseignant</label>
-              <input v-model="coursForm.enseignant" maxlength="200" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="coursForm.enseignant" maxlength="200" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Lieu</label>
-              <input v-model="coursForm.lieu" maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="coursForm.lieu" maxlength="300" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Jour</label>
-              <select v-model="coursForm.jour" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600">
+              <select v-model="coursForm.jour" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600">
                 <option value="">--</option>
                 <option v-for="j in jours" :key="j" :value="j">{{ j }}</option>
               </select>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Heure</label>
-              <input v-model="coursForm.heure" type="time" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+              <input v-model="coursForm.heure" type="time" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-              <select v-model="coursForm.categorie" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600">
+              <select v-model="coursForm.categorie" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600">
                 <option value="">--</option>
                 <option value="Tajwid">Tajwid</option>
                 <option value="Croyance">Croyance</option>
@@ -895,41 +895,41 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Image</label>
             <div class="flex flex-col sm:flex-row gap-3">
               <label class="flex-1 cursor-pointer">
-                <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 transition-colors bg-gray-50">
+                <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-gray-50">
                   <Upload :size="18" class="text-gray-400" />
                   <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un fichier' }}</span>
                 </div>
                 <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleCoursImageUpload" :disabled="uploading" />
               </label>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
-              <input v-model="coursForm.image_url" type="text" placeholder="Coller une URL..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+              <input v-model="coursForm.image_url" type="text" placeholder="Coller une URL..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">URL vidéo YouTube</label>
-            <input v-model="coursForm.video_url" type="url" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600" />
+            <input v-model="coursForm.video_url" type="url" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Audio (cours audio, récitation, etc.)</label>
             <div class="flex flex-col sm:flex-row gap-3">
               <label class="flex-1 cursor-pointer">
-                <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-emerald-500 transition-colors bg-gray-50">
+                <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-gray-50">
                   <Music :size="18" class="text-gray-400" />
                   <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir un audio' }}</span>
                 </div>
                 <input type="file" class="hidden" @change="handleCoursAudioUpload" :disabled="uploading" />
               </label>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
-              <input v-model="coursForm.audio_url" type="text" placeholder="Coller une URL audio..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-emerald-600 text-sm" />
+              <input v-model="coursForm.audio_url" type="text" placeholder="Coller une URL audio..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
             </div>
             <audio v-if="coursForm.audio_url" :src="coursForm.audio_url" controls class="w-full mt-2 rounded-lg"></audio>
           </div>
           <div class="flex items-center gap-3">
-            <input v-model="coursForm.actif" type="checkbox" id="actif" class="w-4 h-4 accent-emerald-600" />
+            <input v-model="coursForm.actif" type="checkbox" id="actif" class="w-4 h-4 accent-accent-600" />
             <label for="actif" class="text-sm font-medium text-gray-700">Cours actif (visible sur le site)</label>
           </div>
           <div class="flex items-center gap-3">
-            <input v-model="coursForm.prive" type="checkbox" id="prive" class="w-4 h-4 accent-emerald-600" />
+            <input v-model="coursForm.prive" type="checkbox" id="prive" class="w-4 h-4 accent-accent-600" />
             <label for="prive" class="text-sm font-medium text-gray-700">Cours privé (réservé aux étudiants privés, voir onglet Élèves)</label>
           </div>
 
@@ -937,7 +937,7 @@
             <button type="button" @click="showCoursModal = false" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors">
               Annuler
             </button>
-            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50">
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-50">
               {{ saving ? 'Enregistrement...' : (editingCours ? 'Modifier' : 'Ajouter') }}
             </button>
           </div>

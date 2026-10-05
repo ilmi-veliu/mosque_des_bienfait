@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="text-center mb-12">
         <div class="flex justify-center mb-4">
-          <UserPlus :size="48" class="text-emerald-700" />
+          <UserPlus :size="48" class="text-accent-700" />
         </div>
         <h1 class="text-3xl font-semibold text-gray-900 mb-3">S'inscrire</h1>
         <p class="text-gray-500 max-w-xl mx-auto">
@@ -21,7 +21,7 @@
           <div class="space-y-6">
             <div>
               <h3 class="font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-2 h-2 bg-emerald-600 rounded-full"></div>
+                <div class="w-2 h-2 bg-accent-600 rounded-full"></div>
                 Événements et activités
               </h3>
               <p class="text-sm text-gray-500 ml-4 mt-1">
@@ -31,7 +31,7 @@
 
             <div>
               <h3 class="font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-2 h-2 bg-emerald-600 rounded-full"></div>
+                <div class="w-2 h-2 bg-accent-600 rounded-full"></div>
                 Cours et formation
               </h3>
               <p class="text-sm text-gray-500 ml-4 mt-1">
@@ -41,7 +41,7 @@
 
             <div>
               <h3 class="font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-2 h-2 bg-emerald-600 rounded-full"></div>
+                <div class="w-2 h-2 bg-accent-600 rounded-full"></div>
                 Services communautaires
               </h3>
               <p class="text-sm text-gray-500 ml-4 mt-1">
@@ -50,7 +50,7 @@
             </div>
           </div>
 
-          <div class="mt-8 bg-emerald-50 rounded-xl p-5 border-l-4 border-emerald-600">
+          <div class="mt-8 bg-accent-50 rounded-xl p-5 border-l-4 border-accent-600">
             <h3 class="font-semibold text-gray-800 mb-2">Protection des données</h3>
             <p class="text-xs text-gray-500 leading-relaxed">
               Vos informations personnelles sont protégées et utilisées uniquement pour la communication de la mosquée. Nous ne partageons jamais vos données avec des tiers et respectons votre vie privée.
@@ -77,7 +77,7 @@
                     required
                     maxlength="100"
                     placeholder="Votre prénom"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors"
                   />
                 </div>
                 <div>
@@ -87,7 +87,7 @@
                     required
                     maxlength="100"
                     placeholder="Votre nom de famille"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors"
                   />
                 </div>
               </div>
@@ -99,7 +99,7 @@
                   type="email"
                   required
                   placeholder="votre.email@exemple.com"
-                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors"
                   :class="emailError ? 'border-red-400' : ''"
                   @blur="validateEmail"
                 />
@@ -115,7 +115,7 @@
                     required
                     minlength="8"
                     placeholder="Minimum 8 caractères"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors pr-12"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors pr-12"
                     :class="passwordError ? 'border-red-400' : ''"
                     @blur="validatePassword"
                   />
@@ -134,12 +134,12 @@
                 <div class="grid grid-cols-2 gap-3">
                   <button type="button" @click="form.sexe = 'homme'"
                     class="py-2.5 rounded-xl border-2 text-sm font-medium transition-all"
-                    :class="form.sexe === 'homme' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
+                    :class="form.sexe === 'homme' ? 'border-accent-600 bg-accent-50 text-accent-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
                     Homme
                   </button>
                   <button type="button" @click="form.sexe = 'femme'"
                     class="py-2.5 rounded-xl border-2 text-sm font-medium transition-all"
-                    :class="form.sexe === 'femme' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
+                    :class="form.sexe === 'femme' ? 'border-accent-600 bg-accent-50 text-accent-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
                     Femme
                   </button>
                 </div>
@@ -149,7 +149,7 @@
               <button
                 type="submit"
                 :disabled="loading"
-                class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-3 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-800 transition-all disabled:opacity-50"
+                class="w-full bg-gradient-to-r from-accent-600 to-accent-700 text-white py-3 rounded-xl font-semibold hover:from-accent-700 hover:to-accent-800 transition-all disabled:opacity-50"
               >
                 {{ loading ? 'Inscription...' : "S'inscrire maintenant" }}
               </button>
@@ -158,7 +158,7 @@
             <div class="mt-6 text-center space-y-3">
               <p class="text-sm text-gray-500">
                 Déjà inscrit ?
-                <router-link to="/connexion" class="text-emerald-700 font-medium hover:underline">Se connecter</router-link>
+                <router-link to="/connexion" class="text-accent-700 font-medium hover:underline">Se connecter</router-link>
               </p>
               <router-link to="/" class="text-sm text-gray-400 hover:text-gray-600 inline-flex items-center gap-1">
                 <ChevronLeft :size="14" />

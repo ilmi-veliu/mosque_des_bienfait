@@ -5,7 +5,7 @@
       <!-- Header -->
       <div class="text-center mb-8">
         <div class="flex justify-center mb-4">
-          <KeyRound :size="48" class="text-emerald-600" />
+          <KeyRound :size="48" class="text-accent-600" />
         </div>
         <h1 class="text-3xl font-semibold text-gray-900 mb-3">Nouveau mot de passe</h1>
         <p class="text-gray-500">Choisissez un nouveau mot de passe pour votre compte.</p>
@@ -20,15 +20,15 @@
           </div>
           <h2 class="text-lg font-semibold text-gray-900 mb-2">Lien invalide ou expiré</h2>
           <p class="text-sm text-gray-500 mb-5">Ce lien de réinitialisation n'est plus valide. Veuillez en demander un nouveau.</p>
-          <router-link to="/connexion" class="inline-block px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors text-sm">
+          <router-link to="/connexion" class="inline-block px-5 py-2.5 bg-accent-600 text-white rounded-xl font-medium hover:bg-accent-700 transition-colors text-sm">
             Retour à la connexion
           </router-link>
         </div>
 
         <!-- Succès -->
         <div v-else-if="success" class="text-center py-6">
-          <div class="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check :size="28" class="text-emerald-600" />
+          <div class="w-14 h-14 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Check :size="28" class="text-accent-600" />
           </div>
           <h2 class="text-lg font-semibold text-gray-900 mb-2">Mot de passe modifié !</h2>
           <p class="text-sm text-gray-500 mb-5">Vous allez être redirigé vers la page de connexion...</p>
@@ -36,7 +36,7 @@
 
         <!-- Chargement token -->
         <div v-else-if="loading && !ready" class="text-center py-10">
-          <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-emerald-600 mb-4"></div>
+          <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-accent-600 mb-4"></div>
           <p class="text-gray-500 text-sm">Vérification du lien...</p>
         </div>
 
@@ -55,7 +55,7 @@
                 required
                 minlength="8"
                 placeholder="Minimum 8 caractères"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors pr-12"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors pr-12"
               />
               <button type="button" @click="showPassword = !showPassword"
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -72,7 +72,7 @@
               :type="showPassword ? 'text' : 'password'"
               required
               placeholder="Répétez le mot de passe"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 transition-colors"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors"
               :class="confirmPassword && password !== confirmPassword ? 'border-red-400' : ''"
             />
             <p v-if="confirmPassword && password !== confirmPassword" class="text-xs text-red-500 mt-1">Les mots de passe ne correspondent pas</p>
@@ -81,7 +81,7 @@
           <button
             type="submit"
             :disabled="saving || (confirmPassword && password !== confirmPassword)"
-            class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-3 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-800 transition-all disabled:opacity-50"
+            class="w-full bg-gradient-to-r from-accent-600 to-accent-700 text-white py-3 rounded-xl font-semibold hover:from-accent-700 hover:to-accent-800 transition-all disabled:opacity-50"
           >
             {{ saving ? 'Enregistrement...' : 'Enregistrer le nouveau mot de passe' }}
           </button>

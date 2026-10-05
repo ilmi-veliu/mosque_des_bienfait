@@ -61,14 +61,14 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-3 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-800 transition-all disabled:opacity-50"
+            class="w-full bg-gradient-to-r from-accent-600 to-accent-700 text-white py-3 rounded-xl font-semibold hover:from-accent-700 hover:to-accent-800 transition-all disabled:opacity-50"
           >
             {{ loading ? 'Connexion...' : 'Se connecter' }}
           </button>
         </form>
 
         <div class="mt-6 text-center space-y-3">
-          <button @click="showReset = !showReset" class="text-sm text-emerald-600 hover:underline">
+          <button @click="showReset = !showReset" class="text-sm text-accent-600 hover:underline">
             Mot de passe oublié ?
           </button>
 
@@ -80,17 +80,17 @@
                 v-model="resetEmail"
                 type="email"
                 placeholder="votre.email@exemple.com"
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-emerald-600"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-accent-600"
               />
               <button
                 @click="sendResetEmail"
                 :disabled="resetLoading"
-                class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                class="px-4 py-2 bg-accent-600 text-white rounded-lg text-sm font-medium hover:bg-accent-700 transition-colors disabled:opacity-50"
               >
                 {{ resetLoading ? '...' : 'Envoyer' }}
               </button>
             </div>
-            <p v-if="resetMsg" class="text-xs mt-2" :class="resetError ? 'text-red-500' : 'text-emerald-600'">{{ resetMsg }}</p>
+            <p v-if="resetMsg" class="text-xs mt-2" :class="resetError ? 'text-red-500' : 'text-accent-600'">{{ resetMsg }}</p>
           </div>
 
           <p class="text-sm text-gray-500">

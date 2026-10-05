@@ -7,13 +7,13 @@
       <div v-if="open" class="w-[calc(100vw-1rem)] max-w-sm sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col" style="height: 500px;">
 
         <!-- Header -->
-        <div class="bg-[#030213] text-white px-4 py-3 flex items-center justify-between shrink-0">
+        <div class="bg-stone-900 text-white px-4 py-3 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-emerald-600 rounded-full flex items-center justify-center text-sm font-bold shrink-0">I</div>
+            <div class="w-9 h-9 bg-accent-600 rounded-full flex items-center justify-center text-sm font-bold shrink-0">I</div>
             <div>
               <p class="text-sm font-semibold">Imam de la Mosquée</p>
               <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                <span class="w-2 h-2 bg-accent-400 rounded-full"></span>
                 <p class="text-xs text-white/60">Mosquée des Bienfaisants</p>
               </div>
             </div>
@@ -25,7 +25,7 @@
 
         <!-- Chargement room -->
         <div v-if="loadingRoom" class="flex-1 flex items-center justify-center">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-emerald-600"></div>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-accent-600"></div>
         </div>
 
         <!-- Room introuvable -->
@@ -41,7 +41,7 @@
 
             <!-- Message de bienvenue fixe -->
             <div class="flex gap-2">
-              <div class="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1">I</div>
+              <div class="w-8 h-8 bg-accent-600 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1">I</div>
               <div class="max-w-[80%]">
                 <span class="text-xs text-gray-400 mb-1 block">Imam · Mosquée des Bienfaisants</span>
                 <div class="px-3 py-2.5 bg-white rounded-2xl shadow-sm border text-sm text-gray-800 leading-relaxed">
@@ -56,7 +56,7 @@
               :class="msg.isOwn ? 'flex-row-reverse' : ''">
 
               <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1"
-                :style="{ background: msg.isOwn ? (userColor || '#6b7280') : '#10b981' }">
+                :style="{ background: msg.isOwn ? (userColor || '#6b7280') : '#96784b' }">
                 {{ msg.isOwn ? myInitial : 'I' }}
               </div>
 
@@ -68,17 +68,17 @@
                 <!-- Audio -->
                 <div v-if="msg.type === 'audio'"
                   class="flex items-center gap-3 px-4 py-2.5 rounded-2xl shadow-sm"
-                  :class="msg.isOwn ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-800'">
+                  :class="msg.isOwn ? 'bg-accent-600 text-white' : 'bg-white border text-gray-800'">
                   <button @click="toggleAudio(msg)"
                     class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
-                    :class="msg.isOwn ? 'bg-white/20 hover:bg-white/30' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'">
+                    :class="msg.isOwn ? 'bg-white/20 hover:bg-white/30' : 'bg-accent-100 hover:bg-accent-200 text-accent-700'">
                     <Play v-if="!msg.playing" :size="14" />
                     <Pause v-else :size="14" />
                   </button>
                   <div class="flex flex-col gap-1 min-w-20">
                     <div class="h-1.5 rounded-full" :class="msg.isOwn ? 'bg-white/30' : 'bg-gray-200'">
                       <div class="h-full rounded-full transition-all"
-                        :class="msg.isOwn ? 'bg-white' : 'bg-emerald-500'"
+                        :class="msg.isOwn ? 'bg-white' : 'bg-accent-500'"
                         :style="{ width: (msg.audioProgress || 0) + '%' }"></div>
                     </div>
                     <span class="text-xs" :class="msg.isOwn ? 'text-white/70' : 'text-gray-400'">
@@ -102,9 +102,9 @@
                 <!-- Fichier -->
                 <div v-else-if="msg.type === 'file'"
                   class="flex items-center gap-2 px-3 py-2.5 rounded-2xl shadow-sm border text-xs"
-                  :class="msg.isOwn ? 'bg-emerald-50 border-emerald-200' : 'bg-white'">
+                  :class="msg.isOwn ? 'bg-accent-50 border-accent-200' : 'bg-white'">
                   <span>📎</span>
-                  <a :href="msg.file_url" target="_blank" class="text-emerald-600 hover:underline truncate max-w-[140px]">
+                  <a :href="msg.file_url" target="_blank" class="text-accent-600 hover:underline truncate max-w-[140px]">
                     {{ msg.file_name }}
                   </a>
                 </div>
@@ -112,7 +112,7 @@
                 <!-- Texte -->
                 <div v-else-if="msg.content"
                   class="px-3 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed"
-                  :class="msg.isOwn ? 'bg-emerald-600 text-white' : 'bg-white border text-gray-800'">
+                  :class="msg.isOwn ? 'bg-accent-600 text-white' : 'bg-white border text-gray-800'">
                   {{ msg.content }}
                 </div>
               </div>
@@ -132,7 +132,7 @@
           <!-- Fichiers en attente -->
           <div v-if="pendingFiles.length" class="px-3 pt-2 flex gap-2 flex-wrap shrink-0 bg-white border-t">
             <div v-for="(f, i) in pendingFiles" :key="i"
-              class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 text-xs text-gray-700">
+              class="flex items-center gap-1.5 bg-accent-50 border border-accent-200 rounded-lg px-2 py-1 text-xs text-gray-700">
               <span>📎</span>
               <span class="truncate max-w-[100px]">{{ f.name }}</span>
               <button @click="removePendingFile(i)" class="text-gray-400 hover:text-red-500 ml-1">✕</button>
@@ -159,7 +159,7 @@
               <!-- Emoji -->
               <button @click="showEmojis = !showEmojis" :disabled="isRecording"
                 class="p-2 rounded-xl transition-colors shrink-0 disabled:opacity-40"
-                :class="showEmojis ? 'bg-emerald-100 text-emerald-600' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'">
+                :class="showEmojis ? 'bg-accent-100 text-accent-600' : 'text-gray-400 hover:text-accent-600 hover:bg-accent-50'">
                 <Smile :size="18" />
               </button>
 
@@ -175,7 +175,7 @@
               <!-- Vocal -->
               <button @click="isRecording ? stopRecording() : startRecording()"
                 class="p-2 rounded-xl transition-colors shrink-0"
-                :class="isRecording ? 'bg-red-100 text-red-600' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'">
+                :class="isRecording ? 'bg-red-100 text-red-600' : 'text-gray-400 hover:text-accent-600 hover:bg-accent-50'">
                 <Mic :size="18" />
               </button>
 
@@ -186,7 +186,7 @@
                 placeholder="Écrire un message..."
                 rows="1"
                 :disabled="sending || isRecording"
-                class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 transition-colors resize-none disabled:opacity-50"
+                class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-accent-500 transition-colors resize-none disabled:opacity-50"
                 style="min-height: 38px; max-height: 90px; overflow-y: auto;"
                 @input="autoResize($event.target)"
               ></textarea>
@@ -194,7 +194,7 @@
               <!-- Envoyer -->
               <button @click="sendMessage"
                 :disabled="sending || isRecording || (!newMessage.trim() && !pendingFiles.length)"
-                class="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shrink-0 disabled:opacity-50">
+                class="p-2 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors shrink-0 disabled:opacity-50">
                 <div v-if="sending" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <Send v-else :size="18" />
               </button>
@@ -208,7 +208,7 @@
     <!-- Bouton flottant -->
     <button
       @click="open = !open"
-      class="w-14 h-14 bg-[#030213] text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform relative"
+      class="w-14 h-14 bg-stone-900 text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform relative"
       :title="open ? 'Fermer' : 'Contacter l\'Imam'"
     >
       <Transition name="icon" mode="out-in">

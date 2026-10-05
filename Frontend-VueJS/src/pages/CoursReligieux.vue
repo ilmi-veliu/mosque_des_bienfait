@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Hero Section -->
-    <section class="bg-[#030213] text-white py-24 px-4 text-center">
+    <section class="bg-stone-900 text-white py-24 px-4 text-center">
       <div class="max-w-7xl mx-auto">
         <router-link
           to="/"
@@ -110,7 +110,7 @@
                 :alt="c.titre"
                 class="w-full h-44 sm:h-56 object-cover"
               />
-              <span v-if="c.categorie" class="absolute top-4 left-4 bg-[#030213] text-white px-4 py-1.5 rounded-full text-xs font-semibold">
+              <span v-if="c.categorie" class="absolute top-4 left-4 bg-stone-900 text-white px-4 py-1.5 rounded-full text-xs font-semibold">
                 {{ c.categorie }}
               </span>
             </div>
@@ -140,8 +140,8 @@
               <!-- Lecteur audio avec reprise -->
               <div v-if="c.audio_url" class="mt-4 pt-4 border-t border-gray-100">
                 <button v-if="currentUserId && getAudioStart(c.id) > 0" @click="resumeAudio(c.id)" class="flex items-center gap-2 mb-2 hover:opacity-70 transition-opacity cursor-pointer">
-                  <RotateCcw :size="14" class="text-emerald-600" />
-                  <span class="text-xs text-emerald-600 font-medium">Reprendre à {{ formatTime(getAudioStart(c.id)) }}</span>
+                  <RotateCcw :size="14" class="text-accent-600" />
+                  <span class="text-xs text-accent-600 font-medium">Reprendre à {{ formatTime(getAudioStart(c.id)) }}</span>
                 </button>
                 <audio
                   :ref="el => { if (el) audioRefs[c.id] = el }"
@@ -159,13 +159,13 @@
                    inutile pour une simple vidéo déjà enregistrée, sans suite -->
               <div v-if="c.jour" class="mt-4 pt-4 border-t border-gray-100">
                 <button v-if="!inscriptionsMap[c.id]" @click="sInscrire(c.id)" :disabled="inscrivant === c.id"
-                  class="w-full bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                  class="w-full bg-accent-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-accent-700 disabled:opacity-50 transition-colors">
                   {{ inscrivant === c.id ? 'Envoi...' : "S'inscrire à ce cours" }}
                 </button>
                 <p v-else class="text-center text-sm py-2 rounded-xl"
                   :class="{
                     'bg-yellow-50 text-yellow-700': inscriptionsMap[c.id] === 'en_attente',
-                    'bg-emerald-50 text-emerald-700': inscriptionsMap[c.id] === 'validee',
+                    'bg-accent-50 text-accent-700': inscriptionsMap[c.id] === 'validee',
                     'bg-red-50 text-red-700': inscriptionsMap[c.id] === 'refusee',
                   }">
                   {{ inscriptionsMap[c.id] === 'en_attente' ? 'Inscription en attente de validation'
