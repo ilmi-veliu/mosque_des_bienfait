@@ -178,5 +178,7 @@ export const useHorairesPriere = () => {
     document.removeEventListener('visibilitychange', surRetour)
   })
 
-  return { prieres, prochaine, compteARebours, chourouk, joumoua, source, erreur, dateLabel }
+  const calendrier = computed(() => donnees.value?.calendar || null)
+
+  return { prieres, prochaine, compteARebours, chourouk, joumoua, source, erreur, dateLabel, calendrier, now }
 }

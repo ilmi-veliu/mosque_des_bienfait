@@ -16,6 +16,24 @@ const routes = [
     meta: { title: 'La mosquée | Mosquée des Bienfaisants Périgueux' }
   },
   {
+    path: '/actualites',
+    name: 'Actualites',
+    component: () => import('./pages/Actualites.vue'),
+    meta: { title: 'Actualités | Mosquée des Bienfaisants Périgueux' }
+  },
+  {
+    path: '/actualites/:id',
+    name: 'Actualite',
+    component: () => import('./pages/Actualite.vue'),
+    meta: { title: 'Actualités | Mosquée des Bienfaisants Périgueux' }
+  },
+  {
+    path: '/horaires',
+    name: 'Horaires',
+    component: () => import('./pages/Horaires.vue'),
+    meta: { title: 'Horaires de prière | Mosquée des Bienfaisants Périgueux' }
+  },
+  {
     path: '/evenements',
     name: 'Evenements',
     component: () => import('./pages/Evenements.vue'),

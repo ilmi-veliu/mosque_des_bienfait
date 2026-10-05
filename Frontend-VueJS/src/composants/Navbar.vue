@@ -11,11 +11,23 @@
 
         <!-- Navigation Desktop -->
         <div class="hidden lg:flex items-center gap-8 text-sm">
-          <router-link to="/" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Accueil</router-link>
-          <router-link to="/la-mosquee" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">La mosquée</router-link>
-          <router-link to="/cours" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Cours Vidéo</router-link>
-          <router-link to="/evenements" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Événements</router-link>
-          <router-link to="/hadith" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Hadiths</router-link>
+          <!-- Menus regroupés : s'ouvrent au survol (ou au clavier avec Tab) -->
+          <div v-for="g in groupes" :key="g.titre" class="group relative">
+            <button class="flex items-center gap-1 py-5 text-muted transition-colors group-hover:text-ink group-focus-within:text-ink"
+              :class="g.liens.some(l => $route.path.startsWith(l.to)) ? '!text-ink' : ''">
+              {{ g.titre }}<ChevronDown :size="14" class="transition-transform group-hover:rotate-180" />
+            </button>
+            <div class="invisible absolute left-1/2 top-full z-50 w-64 -translate-x-1/2 border border-line bg-card py-2 opacity-0 shadow-lg transition
+              group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+              <router-link v-for="l in g.liens" :key="l.to" :to="l.to" class="block px-4 py-2.5 hover:bg-paper">
+                <span class="block text-ink">{{ l.label }}</span>
+                <span class="block text-xs text-muted">{{ l.texte }}</span>
+              </router-link>
+            </div>
+          </div>
+          <router-link to="/actualites" class="text-muted hover:text-ink transition-colors" active-class="!text-ink">Actualités</router-link>
+          <router-link to="/horaires" class="text-muted hover:text-ink transition-colors" active-class="!text-ink">Horaires</router-link>
+          <a :href="DON_URL" target="_blank" rel="noopener noreferrer" class="btn bg-accent-600 text-paper hover:bg-accent-700 !py-2">Faire un don</a>
           <!-- Connecté : avatar dropdown -->
           <template v-if="isLoggedIn">
             <div class="relative" ref="dropdownRef">
@@ -135,41 +147,17 @@
     <!-- Menu Mobile -->
     <div v-if="mobileOpen" class="lg:hidden border-t border-line bg-paper">
       <div class="px-5 py-3">
-        <!-- Liens principaux -->
-        <router-link @click="mobileOpen = false" to="/" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
-          <Home :size="18" class="text-gray-400" />
-          Accueil
-        </router-link>
-        <router-link @click="mobileOpen = false" to="/la-mosquee" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
-          <Landmark :size="18" class="text-gray-400" />
-          La mosquée
-        </router-link>
-        <router-link @click="mobileOpen = false" to="/cours" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
-          <Video :size="18" class="text-gray-400" />
-          Cours Vidéo
-        </router-link>
-        <router-link @click="mobileOpen = false" to="/evenements" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
-          <Calendar :size="18" class="text-gray-400" />
-          Événements
-        </router-link>
-        <router-link @click="mobileOpen = false" to="/hadith" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
-          <BookOpen :size="18" class="text-gray-400" />
-          Hadiths
-        </router-link>
-        <template v-if="isLoggedIn">
-          <router-link @click="mobileOpen = false" to="/coran" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
-            <BookOpen :size="18" class="text-gray-400" />
-            Récitation du Coran
-          </router-link>
-          <router-link @click="mobileOpen = false" to="/rdv-imam" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
-            <Calendar :size="18" class="text-gray-400" />
-            RDV avec l'Imam
-          </router-link>
-          <router-link v-if="isProfesseur" @click="mobileOpen = false" to="/espace-professeur" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
-            <GraduationCap :size="18" class="text-gray-400" />
-            Espace Professeur
-          </router-link>
-        </template>
+        <!-- Liens principaux, regroupés comme sur ordinateur -->
+        <router-link @click="mobileOpen = false" to="/" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Accueil</router-link>
+        <div v-for="g in groupes" :key="g.titre" class="border-b border-line py-3">
+          <p class="eyebrow mb-1">{{ g.titre }}</p>
+          <router-link v-for="l in g.liens" :key="l.to" @click="mobileOpen = false" :to="l.to"
+            class="block py-1.5 font-serif text-lg hover:text-accent-600 transition-colors">{{ l.label }}</router-link>
+        </div>
+        <router-link @click="mobileOpen = false" to="/actualites" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Actualités</router-link>
+        <router-link @click="mobileOpen = false" to="/horaires" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Horaires de prière</router-link>
+        <router-link v-if="isLoggedIn && isProfesseur" @click="mobileOpen = false" to="/espace-professeur" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Espace Professeur</router-link>
+        <a :href="DON_URL" target="_blank" rel="noopener noreferrer" class="btn bg-accent-600 text-paper hover:bg-accent-700 mt-4 w-full">Faire un don</a>
         <!-- Connecté : section compte -->
         <template v-if="isLoggedIn">
           <div class="pt-3 mt-1">
@@ -220,11 +208,28 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Home, Landmark, Video, Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
+import { Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import Etoile from './Etoile.vue'
 
 const router = useRouter()
+
+const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
+
+// Menus regroupés (même contenu sur ordinateur et sur mobile)
+const groupes = [
+  { titre: 'La mosquée', liens: [
+    { to: '/la-mosquee', label: 'Présentation', texte: 'Le lieu, les services, venir' },
+    { to: '/evenements', label: 'Événements', texte: 'Conférences, repas, rencontres' },
+    { to: '/rdv-imam', label: "Rendez-vous avec l'imam", texte: "Un temps d'écoute" },
+    { to: '/benevole', label: 'Bénévolat', texte: 'Donner de son temps' },
+  ] },
+  { titre: 'Apprendre', liens: [
+    { to: '/cours', label: 'Cours religieux', texte: 'Tajwid, croyance, fiqh, arabe' },
+    { to: '/hadith', label: 'Hadiths', texte: 'Tout le Sahih al-Bukhari' },
+    { to: '/coran', label: 'Récitation du Coran', texte: 'Faire corriger sa récitation' },
+  ] },
+]
 const isLoggedIn = ref(false)
 const isAdmin = ref(false)
 const isBenevole = ref(false)

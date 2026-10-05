@@ -87,6 +87,14 @@
           Cours
         </button>
         <button
+          @click="activeTab = 'actualites'; fetchActus()"
+          :class="activeTab === 'actualites' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+        >
+          <Newspaper :size="18" />
+          Actualités
+        </button>
+        <button
           @click="activeTab = 'hadiths'; fetchHadiths()"
           :class="activeTab === 'hadiths' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
@@ -242,6 +250,69 @@
               <button @click="deleteCours(c.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors">
                 <Trash2 :size="18" />
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTUALITÉS -->
+      <div v-if="activeTab === 'actualites'">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Actualités</h2>
+
+        <form @submit.prevent="saveActu" class="bg-card rounded-xl border p-4 sm:p-5 mb-6 space-y-3">
+          <h3 class="font-semibold text-gray-800">{{ editingActuId ? "Modifier l'article" : 'Publier un article' }}</h3>
+          <input v-model="actuForm.titre" required maxlength="300" placeholder="Titre *" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <input v-model="actuForm.categorie" required maxlength="60" list="categories-actu" placeholder="Catégorie *" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+              <datalist id="categories-actu">
+                <option v-for="c in categoriesActu" :key="c" :value="c" />
+              </datalist>
+            </div>
+            <input v-model="actuForm.date_publication" type="date" required class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <label class="flex-1 cursor-pointer">
+              <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-paper">
+                <Upload :size="18" class="text-gray-400" />
+                <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : 'Choisir une image' }}</span>
+              </div>
+              <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleActuImageUpload" :disabled="uploading" />
+            </label>
+            <input v-model="actuForm.image_url" type="text" placeholder="ou coller une URL d'image..." class="flex-1 w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+          </div>
+          <img v-if="actuForm.image_url" :src="actuForm.image_url" class="w-full h-40 object-cover rounded-xl border" @error="actuForm.image_url = ''" />
+          <textarea v-model="actuForm.extrait" rows="2" maxlength="500" placeholder="Extrait (résumé affiché sur la carte)" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
+          <textarea v-model="actuForm.contenu" rows="8" required maxlength="20000" placeholder="Texte de l'article * (laissez une ligne vide entre les paragraphes)" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
+          <label class="flex items-center gap-3 text-sm text-gray-700">
+            <input v-model="actuForm.publie" type="checkbox" class="w-4 h-4 accent-accent-600" />
+            Publié (décocher pour garder en brouillon)
+          </label>
+          <div class="flex justify-end gap-3">
+            <button v-if="editingActuId" type="button" @click="resetActuForm" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors text-sm">Annuler</button>
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-50 text-sm">
+              {{ saving ? 'Enregistrement...' : (editingActuId ? 'Modifier' : 'Publier') }}
+            </button>
+          </div>
+        </form>
+
+        <div v-if="actusLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
+        </div>
+        <div v-else-if="actus.length === 0" class="text-center py-12 text-gray-500">Aucun article.</div>
+        <div v-else class="space-y-3">
+          <div v-for="a in actus" :key="a.id" class="bg-card rounded-xl border p-4 flex gap-4 items-center">
+            <img v-if="a.image_url" :src="a.image_url" class="w-20 h-16 object-cover rounded-lg flex-shrink-0" />
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-gray-800 truncate">{{ a.titre }}</p>
+              <p class="text-xs text-gray-400 mt-1">
+                {{ a.date_publication }} · {{ a.categorie }}
+                <span v-if="!a.publie" class="ml-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Brouillon</span>
+              </p>
+            </div>
+            <div class="flex gap-1 flex-shrink-0">
+              <button @click="editActu(a)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors"><Pencil :size="16" /></button>
+              <button @click="deleteActu(a.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors"><Trash2 :size="16" /></button>
             </div>
           </div>
         </div>
@@ -950,7 +1021,7 @@
 <script setup>
 import { ref, shallowRef, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip, ScrollText, GraduationCap } from 'lucide-vue-next'
+import { Shield, LogOut, Calendar, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip, ScrollText, GraduationCap, Newspaper } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 
 const router = useRouter()
@@ -978,6 +1049,66 @@ const fetchRdvs = async () => {
 const updateRdvStatut = async (r, statut) => {
   const { error } = await supabase.from('rdv_imam').update({ statut }).eq('id', r.id)
   if (!error) r.statut = statut
+}
+
+// --- ACTUALITÉS ---
+const actus = ref([])
+const actusLoading = ref(false)
+const categoriesActu = ['Actualités', 'Événements', 'Conférences', 'Solidarité', 'Annonces']
+const aujourdhuiISO = () => new Date().toISOString().slice(0, 10)
+const emptyActu = () => ({ titre: '', categorie: 'Actualités', date_publication: aujourdhuiISO(), image_url: '', extrait: '', contenu: '', publie: true })
+const actuForm = ref(emptyActu())
+const editingActuId = ref(null)
+
+const fetchActus = async () => {
+  actusLoading.value = true
+  const { data } = await supabase.from('actualites').select('*').order('date_publication', { ascending: false })
+  actus.value = data || []
+  actusLoading.value = false
+}
+
+const resetActuForm = () => {
+  actuForm.value = emptyActu()
+  editingActuId.value = null
+}
+
+const editActu = (a) => {
+  actuForm.value = {
+    titre: a.titre, categorie: a.categorie, date_publication: a.date_publication,
+    image_url: a.image_url || '', extrait: a.extrait || '', contenu: a.contenu, publie: a.publie,
+  }
+  editingActuId.value = a.id
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const handleActuImageUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  const url = await uploadFile(file)
+  if (url) actuForm.value.image_url = url
+}
+
+const saveActu = async () => {
+  saving.value = true
+  const f = actuForm.value
+  const payload = {
+    titre: f.titre.trim(), categorie: f.categorie.trim(), date_publication: f.date_publication,
+    image_url: f.image_url.trim() || null, extrait: f.extrait.trim() || null, contenu: f.contenu.trim(),
+    publie: f.publie, updated_at: new Date().toISOString(),
+  }
+  const { error } = editingActuId.value
+    ? await supabase.from('actualites').update(payload).eq('id', editingActuId.value)
+    : await supabase.from('actualites').insert(payload)
+  saving.value = false
+  if (error) { alert("Erreur lors de l'enregistrement. Réessayez."); return }
+  resetActuForm()
+  fetchActus()
+}
+
+const deleteActu = async (id) => {
+  if (!confirm('Supprimer cet article ?')) return
+  await supabase.from('actualites').delete().eq('id', id)
+  fetchActus()
 }
 
 // --- HADITHS ---

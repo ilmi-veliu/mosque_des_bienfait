@@ -25,6 +25,8 @@
         <p class="eyebrow !text-accent-500 mb-3">Liens</p>
         <ul class="space-y-1.5">
           <li><router-link to="/la-mosquee" class="hover:text-accent-400 transition-colors">La mosquée</router-link></li>
+          <li><router-link to="/actualites" class="hover:text-accent-400 transition-colors">Actualités</router-link></li>
+          <li><router-link to="/horaires" class="hover:text-accent-400 transition-colors">Horaires de prière</router-link></li>
           <li><router-link to="/cours" class="hover:text-accent-400 transition-colors">Cours</router-link></li>
           <li><router-link to="/evenements" class="hover:text-accent-400 transition-colors">Événements</router-link></li>
           <li><router-link to="/hadith" class="hover:text-accent-400 transition-colors">Hadiths</router-link></li>

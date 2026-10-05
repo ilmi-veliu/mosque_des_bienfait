@@ -145,3 +145,24 @@ export const chargerLivre = async (numero) => {
   cache.set(numero, hadiths)
   return hadiths
 }
+
+// Hadith du jour : change chaque jour, identique pour tous les visiteurs ce jour-là.
+// On garde des hadiths assez courts pour la page d'accueil (le texte français
+// contient déjà le nom du rapporteur).
+// Livres choisis pour la page d'accueil : thèmes qui conviennent à tous les publics
+// (foi, science, prière, jeûne, invocations, comportement, Coran, unicité d'Allah…)
+const LIVRES_DU_JOUR = [2, 3, 8, 10, 11, 19, 24, 30, 32, 60, 61, 66, 78, 80, 81, 97]
+
+export const hadithDuJour = async (date = new Date()) => {
+  const jour = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000)
+  for (let essai = 0; essai < 5; essai++) {
+    const numero = LIVRES_DU_JOUR[(jour + essai) % LIVRES_DU_JOUR.length]
+    const livre = LIVRES.find(l => l.numero === numero)
+    const courts = (await chargerLivre(livre.numero)).filter(h => h.francais.length >= 60 && h.francais.length <= 320)
+    if (courts.length) {
+      const h = courts[jour % courts.length]
+      return { ...h, livre }
+    }
+  }
+  return null
+}

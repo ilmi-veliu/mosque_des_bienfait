@@ -849,3 +849,44 @@ CREATE POLICY "rdv_update" ON rdv_imam FOR UPDATE TO authenticated
 CREATE POLICY "rdv_delete" ON rdv_imam FOR DELETE TO authenticated USING (
   auth.uid() = user_id OR is_admin_or_superadmin()
 );
+
+
+-- ============================================================
+-- ACTUALITÉS (articles publiés depuis l'admin, page /actualites)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS actualites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  titre TEXT NOT NULL,
+  categorie TEXT NOT NULL DEFAULT 'Actualités',
+  extrait TEXT,
+  contenu TEXT NOT NULL,
+  image_url TEXT,
+  publie BOOLEAN NOT NULL DEFAULT TRUE,   -- FALSE = brouillon, invisible sur le site
+  date_publication DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE actualites DROP CONSTRAINT IF EXISTS actu_titre_max;
+ALTER TABLE actualites ADD CONSTRAINT actu_titre_max CHECK (length(titre) <= 300);
+ALTER TABLE actualites DROP CONSTRAINT IF EXISTS actu_categorie_max;
+ALTER TABLE actualites ADD CONSTRAINT actu_categorie_max CHECK (length(categorie) <= 60);
+ALTER TABLE actualites DROP CONSTRAINT IF EXISTS actu_extrait_max;
+ALTER TABLE actualites ADD CONSTRAINT actu_extrait_max CHECK (length(extrait) <= 500);
+ALTER TABLE actualites DROP CONSTRAINT IF EXISTS actu_contenu_max;
+ALTER TABLE actualites ADD CONSTRAINT actu_contenu_max CHECK (length(contenu) <= 20000);
+
+CREATE INDEX IF NOT EXISTS idx_actualites_date ON actualites(date_publication DESC);
+
+ALTER TABLE actualites ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "actu_select" ON actualites;
+DROP POLICY IF EXISTS "actu_insert" ON actualites;
+DROP POLICY IF EXISTS "actu_update" ON actualites;
+DROP POLICY IF EXISTS "actu_delete" ON actualites;
+-- Tout le monde lit les articles publiés ; l'admin voit aussi les brouillons
+CREATE POLICY "actu_select" ON actualites FOR SELECT TO anon, authenticated USING (
+  publie IS TRUE OR is_admin_or_superadmin()
+);
+CREATE POLICY "actu_insert" ON actualites FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "actu_update" ON actualites FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "actu_delete" ON actualites FOR DELETE TO authenticated USING (is_admin_or_superadmin());

@@ -136,7 +136,8 @@ const aLaUne = computed(() => hadiths.value[0])
 
 // ─── Sahih al-Bukhari ───
 const PAR_PAGE = 20
-const categorie = ref('Toutes')
+// Catégorie choisie depuis un lien (ex. /hadith?categorie=Prière depuis l'accueil)
+const categorie = ref(CATEGORIES.includes(route.query.categorie) ? route.query.categorie : 'Toutes')
 const livresFiltres = computed(() => categorie.value === 'Toutes' ? LIVRES : LIVRES.filter(l => l.categorie === categorie.value))
 
 // Le livre ouvert et le numéro cherché sont dans l'adresse (?livre=8&n=350) :
@@ -194,6 +195,8 @@ watch(() => route.query.livre, async () => {
 }, { immediate: true })
 
 onMounted(async () => {
+  // Arrivée depuis une carte « Apprendre » de l'accueil : on descend directement aux livres
+  if (route.query.categorie) setTimeout(haut, 300)
   const { data } = await supabase.from('hadiths').select('*').order('created_at', { ascending: false })
   hadiths.value = data || []
 })
