@@ -4,16 +4,25 @@ import imageParDefaut from './assets/cour-entree.jpg'
 
 export { imageParDefaut }
 
+// En local seulement (npm run dev) : fausses actualités tant qu'aucun vrai article n'existe
+const DEMO = import.meta.env.DEV
+const demo = async () => (await import('./actualitesDemo')).ACTUALITES_DEMO
+
 export const chargerActualites = async (limite) => {
   let req = supabase.from('actualites').select('*').eq('publie', true)
     .order('date_publication', { ascending: false }).order('created_at', { ascending: false })
   if (limite) req = req.limit(limite)
   const { data, error } = await req
+  if ((error || !data?.length) && DEMO) {
+    const liste = await demo()
+    return limite ? liste.slice(0, limite) : liste
+  }
   if (error) throw error
   return data || []
 }
 
 export const chargerActualite = async (id) => {
+  if (DEMO && id.startsWith('demo-')) return (await demo()).find(a => a.id === id) || null
   const { data, error } = await supabase.from('actualites').select('*').eq('id', id).eq('publie', true).maybeSingle()
   if (error) throw error
   return data
