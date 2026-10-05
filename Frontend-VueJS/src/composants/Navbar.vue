@@ -238,7 +238,6 @@ const DON_URL = 'https://www.helloasso.com/associations/association-des-musulman
 const groupes = [
   { titre: 'La mosquée', liens: [
     { to: '/la-mosquee', label: 'Présentation', texte: 'Le lieu, les services, venir' },
-    { to: '/evenements', label: 'Événements', texte: 'Conférences, repas, rencontres' },
     { to: '/rdv-imam', label: "Rendez-vous avec l'imam", texte: "Un temps d'écoute", compte: true },
     { to: '/benevole', label: 'Bénévolat', texte: 'Donner de son temps' },
   ] },

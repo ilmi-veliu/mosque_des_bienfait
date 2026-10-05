@@ -28,7 +28,6 @@
           <li><router-link to="/actualites" class="hover:text-accent-400 transition-colors">Actualités</router-link></li>
           <li><router-link to="/horaires" class="hover:text-accent-400 transition-colors">Horaires de prière</router-link></li>
           <li><router-link to="/cours" class="hover:text-accent-400 transition-colors">Cours</router-link></li>
-          <li><router-link to="/evenements" class="hover:text-accent-400 transition-colors">Événements</router-link></li>
           <li><router-link to="/hadith" class="hover:text-accent-400 transition-colors">Hadiths</router-link></li>
           <li><button @click="ouvrirChat" class="hover:text-accent-400 transition-colors">Contacter l'imam</button></li>
           <li><router-link to="/benevole" class="hover:text-accent-400 transition-colors">Devenir bénévole</router-link></li>

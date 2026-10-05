@@ -60,29 +60,19 @@
       </template>
     </section>
 
-    <!-- À la une : dernières actualités, sinon prochains événements -->
+    <!-- À la une : les 3 dernières actualités -->
     <section v-if="aLaUne.length" class="mx-auto max-w-6xl px-5 py-16 md:py-24">
       <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <p class="eyebrow">À la une</p>
-          <h2 class="mt-3 text-4xl md:text-5xl">{{ actus.length ? 'Actualités' : 'Prochains événements' }}</h2>
+          <h2 class="mt-3 text-4xl md:text-5xl">Actualités</h2>
         </div>
-        <router-link :to="actus.length ? '/actualites' : '/evenements'" class="inline-flex w-fit items-center gap-2 border-b border-ink pb-0.5 text-sm">
-          {{ actus.length ? 'Toutes les actualités' : 'Tous les événements' }} <ArrowRight class="h-4 w-4" />
+        <router-link to="/actualites" class="inline-flex w-fit items-center gap-2 border-b border-ink pb-0.5 text-sm">
+          Toutes les actualités <ArrowRight class="h-4 w-4" />
         </router-link>
       </div>
       <div class="mt-10 grid gap-x-8 gap-y-12 md:grid-cols-3">
-        <template v-if="actus.length">
-          <CarteActualite v-for="a in aLaUne" :key="a.id" :article="a" />
-        </template>
-        <router-link v-else v-for="ev in aLaUne" :key="ev.id" to="/evenements" class="group flex flex-col">
-          <div class="overflow-hidden">
-            <img :src="ev.image_url || facade" :alt="ev.titre" loading="lazy" class="aspect-[3/2] w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-          </div>
-          <p class="eyebrow mt-5 capitalize">{{ dateEvenement(ev.date) }}<template v-if="ev.categorie"> · {{ ev.categorie }}</template></p>
-          <h3 class="mt-2 text-2xl leading-tight group-hover:text-accent-600 transition-colors">{{ ev.titre }}</h3>
-          <p v-if="ev.lieu" class="mt-2 text-sm text-muted">{{ ev.lieu }}<template v-if="ev.heure"> · {{ ev.heure.slice(0, 5) }}</template></p>
-        </router-link>
+        <CarteActualite v-for="a in aLaUne" :key="a.id" :article="a" />
       </div>
     </section>
 
@@ -231,10 +221,7 @@ const euros = (n) => n.toLocaleString('fr-FR') + ' €'
 
 // ─── À la une ───
 const actus = ref([])
-const aujourdhui = new Date().toISOString().slice(0, 10)
-const evenementsAVenir = computed(() => store.evenements.filter(e => e.date >= aujourdhui).slice(0, 3))
-const aLaUne = computed(() => actus.value.length ? actus.value : evenementsAVenir.value)
-const dateEvenement = (d) => { const [a, m, j] = d.split('-').map(Number); return new Date(a, m - 1, j).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) }
+const aLaUne = actus
 
 // ─── Apprendre ───
 const apprendre = [
@@ -265,7 +252,7 @@ const semaine = computed(() => JOURS.map((nom, i) => {
 }))
 
 onMounted(async () => {
-  preloadAll() // charge aussi les événements et les cours pour « À la une » et le programme
+  preloadAll() // charge les cours pour le programme de la semaine
   chargerActualites(3).then(a => { actus.value = a }).catch(() => {})
 })
 

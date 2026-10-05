@@ -34,10 +34,9 @@ const routes = [
     meta: { title: 'Horaires de prière | Mosquée des Bienfaisants Périgueux' }
   },
   {
+    // Les événements sont remplacés par les actualités : l'ancienne adresse y renvoie
     path: '/evenements',
-    name: 'Evenements',
-    component: () => import('./pages/Evenements.vue'),
-    meta: { title: 'Événements | Mosquée des Bienfaisants Périgueux' }
+    redirect: '/actualites'
   },
   {
     path: '/hadith',
