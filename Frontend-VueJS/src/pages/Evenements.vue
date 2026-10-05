@@ -1,235 +1,120 @@
 <template>
   <div>
-    <!-- Hero Events -->
-    <section class="border-b border-line">
-      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
-        <router-link 
-          to="/"
-          class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors"
-        >
-          <ChevronLeft :size="20" />
-          Retour à l'accueil
-        </router-link>
-        <h1 class="text-4xl md:text-6xl">Événements de la Mosquée de Périgueux</h1>
-        <p class="mt-5 max-w-xl text-muted">
-          Découvrez tous les événements passés et à venir de la Mosquée des Bienfaisants de Périgueux. La communauté musulmane de Dordogne organise régulièrement des activités spirituelles, éducatives et culturelles.
-        </p>
-      </div>
-    </section>
+    <PageIntro eyebrow="Agenda" title="Événements"
+      text="Conférences, rencontres et actions solidaires proposées à la communauté." />
 
-    <!-- Filters -->
-<section class="bg-card py-10 px-4 border-b border-gray-200">
-  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-5 items-stretch sm:items-center">
-    <!-- Barre de recherche -->
-    <div class="flex-1 min-w-0 sm:min-w-[300px] relative">
-      <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" :size="20" />
-      <input 
-        v-model="searchQuery"
-        type="text" 
-        placeholder="Rechercher un événement..."
-        class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-gray-900 transition-colors"
-      >
-    </div>
-    
-    <!-- Dropdown filtres (À DROITE) -->
-    <div class="relative">
-      <button 
-        @click="dropdownOpen = !dropdownOpen"
-        class="flex items-center gap-3 px-5 py-3 border border-gray-300 rounded-xl bg-card hover:bg-gray-50 transition-colors"
-      >
-        <Filter :size="18" />
-        <span class="text-sm font-medium">{{ selectedCategoryLabel }}</span>
-        <ChevronDown :size="16" :class="{ 'rotate-180': dropdownOpen }" class="transition-transform" />
-      </button>
+    <div v-if="loading" class="py-20 text-center text-muted">Chargement des événements…</div>
+    <p v-else-if="error" class="py-20 text-center text-red-700">{{ error }}</p>
 
-      <!-- Menu dropdown -->
-      <div 
-        v-show="dropdownOpen"
-        class="absolute right-0 top-full mt-2 w-56 bg-card border border-gray-200 rounded-xl shadow-lg overflow-hidden z-10"
-      >
-        <button 
-          @click="selectCategory(null)"
-          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
-        >
-          <span>Toutes les catégories</span>
-          <span v-if="selectedCategory === null" class="text-accent-600">✓</span>
-        </button>
-        
-        <button 
-          @click="selectCategory('Religieux')"
-          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
-        >
-          <span>Religieux</span>
-          <span v-if="selectedCategory === 'Religieux'" class="text-accent-600">✓</span>
-        </button>
-        
-        <button 
-          @click="selectCategory('Éducation')"
-          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
-        >
-          <span>Éducation</span>
-          <span v-if="selectedCategory === 'Éducation'" class="text-accent-600">✓</span>
-        </button>
-        
-        <button 
-          @click="selectCategory('Social')"
-          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
-        >
-          <span>Social</span>
-          <span v-if="selectedCategory === 'Social'" class="text-accent-600">✓</span>
-        </button>
-        
-        <button 
-          @click="selectCategory('Culturel')"
-          class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between"
-        >
-          <span>Culturel</span>
-          <span v-if="selectedCategory === 'Culturel'" class="text-accent-600">✓</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-    <!-- Events List -->
-    <section class="py-16 px-4">
-      <div class="max-w-6xl mx-auto">
-        <h2 class="text-3xl font-semibold text-gray-900 mb-10">Événements à Venir</h2>
-
-        <!-- Loading -->
-        <div v-if="loading" class="text-center py-20">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-900"></div>
-          <p class="mt-4 text-gray-600">Chargement des événements...</p>
-        </div>
-
-        <!-- Erreur -->
-        <div v-else-if="error" class="text-center py-20">
-          <p class="text-red-600">{{ error }}</p>
-        </div>
-
-        <!-- Events Grid -->
-        <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          
-          <div 
-            v-for="event in filteredEvents" 
-            :key="event.id"
-            class="bg-card rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all cursor-pointer"
-          >
-            <div class="relative">
-              <img 
-                :src="event.image_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800'" 
-                :alt="event.titre" 
-                class="w-full h-44 sm:h-56 object-cover"
-              >
-              <span class="absolute top-4 left-4 bg-ink text-paper px-4 py-1.5 rounded-full text-xs font-semibold">
-                {{ event.categorie }}
-              </span>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-3">{{ event.titre }}</h3>
-              <p class="text-gray-600 text-sm leading-relaxed mb-5">
-                {{ event.description }}
-              </p>
-              <div class="space-y-2.5">
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Calendar :size="18" class="text-gray-400" />
-                  <span>{{ formatDate(event.date) }}</span>
-                </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Clock :size="18" class="text-gray-400" />
-                  <span>{{ formatTime(event.heure) }}</span>
-                </div>
-                <div class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <MapPin :size="18" class="text-gray-400" />
-                  <span>{{ event.lieu }}</span>
-                </div>
-                <div v-if="event.participants_max" class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Users :size="18" class="text-gray-400" />
-                  <span>{{ event.participants_max }} participants attendus</span>
-                </div>
-              </div>
+    <template v-else>
+      <!-- Prochain rendez-vous mis en avant -->
+      <section v-if="principal" class="border-b border-line bg-pierre">
+        <div class="mx-auto grid max-w-6xl md:grid-cols-2">
+          <img :src="principal.image_url || imageParDefaut" :alt="principal.titre" class="h-full min-h-80 w-full object-cover" />
+          <div class="flex flex-col justify-center px-5 py-12 md:px-12 md:py-16">
+            <p class="eyebrow">Prochain rendez-vous<template v-if="principal.categorie"> · {{ principal.categorie }}</template></p>
+            <h2 class="mt-3 text-4xl leading-tight md:text-5xl">{{ principal.titre }}</h2>
+            <p v-if="principal.description" class="mt-5 text-muted">{{ principal.description }}</p>
+            <div class="mt-7 space-y-3 border-y border-line py-5 text-sm">
+              <p class="flex items-center gap-3 capitalize"><CalendarDays class="h-4 w-4 text-accent-500" />{{ dateLongue(principal.date) }}</p>
+              <p v-if="principal.heure" class="flex items-center gap-3"><Clock class="h-4 w-4 text-accent-500" />{{ heure(principal.heure) }}</p>
+              <p v-if="principal.lieu" class="flex items-center gap-3"><MapPin class="h-4 w-4 text-accent-500" />{{ principal.lieu }}</p>
+              <p v-if="principal.participants_max" class="flex items-center gap-3"><Users class="h-4 w-4 text-accent-500" />{{ principal.participants_max }} places</p>
             </div>
           </div>
+        </div>
+      </section>
 
+      <section class="mx-auto max-w-6xl px-5 py-14 md:py-20">
+        <div class="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <p class="eyebrow">{{ aVenir.length ? 'À venir' : 'Agenda' }}</p>
+            <h2 class="mt-3 text-4xl md:text-5xl">Tous les rendez-vous</h2>
+          </div>
+          <div class="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:px-0">
+            <button v-for="cat in categories" :key="cat" @click="categorie = cat"
+              class="shrink-0 border px-4 py-1.5 text-sm transition-colors"
+              :class="categorie === cat ? 'border-ink bg-ink text-paper' : 'border-line text-muted hover:text-ink'">
+              {{ cat }}
+            </button>
+          </div>
         </div>
 
-        <!-- Aucun événement -->
-        <div v-if="!loading && !error && filteredEvents.length === 0" class="text-center py-20">
-          <p class="text-gray-600">Aucun événement trouvé.</p>
+        <p v-if="liste.length === 0" class="mt-10 text-muted">Aucun événement pour le moment.</p>
+
+        <div v-else class="mt-10 grid gap-5 md:grid-cols-2">
+          <article v-for="ev in liste" :key="ev.id" class="grid grid-cols-[4.5rem_1fr] border border-line bg-card"
+            :class="estPasse(ev) ? 'opacity-60' : ''">
+            <div class="border-r border-line px-3 py-5 text-center">
+              <p class="font-serif text-4xl leading-none tabular-nums">{{ jour(ev.date) }}</p>
+              <p class="eyebrow mt-2 !text-accent-600">{{ mois(ev.date) }}</p>
+            </div>
+            <div class="flex flex-col p-5">
+              <p class="eyebrow">{{ ev.categorie }}<template v-if="estPasse(ev)"> · Passé</template></p>
+              <h3 class="mt-2 text-2xl leading-tight">{{ ev.titre }}</h3>
+              <p v-if="ev.description" class="mt-3 flex-1 text-sm text-muted">{{ ev.description }}</p>
+              <div class="mt-5 space-y-2 border-t border-line pt-4 text-sm">
+                <p v-if="ev.heure" class="flex items-center gap-2"><Clock class="h-4 w-4 text-accent-500" />{{ heure(ev.heure) }}</p>
+                <p v-if="ev.lieu" class="flex items-center gap-2"><MapPin class="h-4 w-4 text-accent-500" />{{ ev.lieu }}</p>
+                <p v-if="ev.participants_max" class="flex items-center gap-2"><Users class="h-4 w-4 text-accent-500" />{{ ev.participants_max }} places</p>
+              </div>
+            </div>
+          </article>
         </div>
-      </div>
-    </section>
+      </section>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ChevronLeft, ChevronDown, Search, Filter, Calendar, Clock, MapPin, Users } from 'lucide-vue-next'
+import { CalendarDays, Clock, MapPin, Users } from 'lucide-vue-next'
 import { store, preloadEvenements } from '../store'
+import PageIntro from '../composants/PageIntro.vue'
+import imageParDefaut from '../assets/salle-priere-large.jpg'
 
-const searchQuery = ref('')
-const selectedCategory = ref(null)
-const dropdownOpen = ref(false)
 const events = ref([])
 const loading = ref(true)
 const error = ref(null)
+const categorie = ref('Tous')
 
-const selectedCategoryLabel = computed(() => {
-  return selectedCategory.value || 'Toutes les catégories'
+const aujourdhui = new Date().toISOString().slice(0, 10)
+const estPasse = (ev) => ev.date < aujourdhui
+
+// Événements à venir d'abord (du plus proche au plus lointain), puis les passés (du plus récent au plus ancien)
+const aVenir = computed(() => events.value.filter(e => !estPasse(e)).sort((a, b) => a.date.localeCompare(b.date)))
+const passes = computed(() => events.value.filter(estPasse).sort((a, b) => b.date.localeCompare(a.date)))
+const principal = computed(() => aVenir.value[0] || null)
+
+const categories = computed(() => ['Tous', ...new Set(events.value.map(e => e.categorie).filter(Boolean))])
+
+const liste = computed(() => {
+  const tous = [...aVenir.value, ...passes.value]
+  return categorie.value === 'Tous' ? tous : tous.filter(e => e.categorie === categorie.value)
 })
 
-const selectCategory = (category) => {
-  selectedCategory.value = category
-  dropdownOpen.value = false
-}
-
-const filteredEvents = computed(() => {
-  let filtered = events.value
-
-  if (searchQuery.value) {
-    filtered = filtered.filter(event =>
-      event.titre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      (event.description && event.description.toLowerCase().includes(searchQuery.value.toLowerCase()))
-    )
-  }
-
-  if (selectedCategory.value) {
-    filtered = filtered.filter(event => event.categorie === selectedCategory.value)
-  }
-
-  return filtered
-})
-
-const formatDate = (dateString) => {
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-  return new Date(dateString).toLocaleDateString('fr-FR', options)
-}
-
-const formatTime = (timeString) => {
-  if (!timeString) return ''
-  return timeString.substring(0, 5)
-}
+// La date vient de la base au format AAAA-MM-JJ : on la lit sans fuseau pour ne pas décaler d'un jour
+const enDate = (d) => { const [a, m, j] = d.split('-').map(Number); return new Date(a, m - 1, j) }
+const jour = (d) => d.slice(8, 10)
+const mois = (d) => enDate(d).toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '').toUpperCase()
+const dateLongue = (d) => enDate(d).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+const heure = (h) => h.substring(0, 5).replace(':', ' h ')
 
 const fetchEvents = async () => {
   try {
-    // Afficher le cache immédiatement si dispo
+    // Afficher le cache immédiatement si dispo, puis les données fraîches
     if (store.evenements.length > 0) {
       events.value = store.evenements
       loading.value = false
     }
-    // Toujours chercher les données fraîches
     await preloadEvenements(true)
     events.value = store.evenements
-  } catch (err) {
-    if (events.value.length === 0) {
-      error.value = 'Impossible de charger les événements.'
-    }
+  } catch {
+    if (events.value.length === 0) error.value = 'Impossible de charger les événements.'
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
-  fetchEvents()
-})
+onMounted(fetchEvents)
 </script>

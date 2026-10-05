@@ -1,16 +1,7 @@
 <template>
   <div>
-    <!-- Hero Section -->
-    <div class="border-b border-line">
-      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
-        <router-link to="/" class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors">
-          <ChevronLeft :size="20" />
-          Retour à l'accueil
-        </router-link>
-        <h1 class="text-4xl md:text-6xl">Politique de Confidentialité</h1>
-        <p class="mt-5 max-w-xl text-muted">Dernière mise à jour : 26 février 2026</p>
-      </div>
-    </div>
+    <PageIntro eyebrow="Données personnelles" title="Politique de confidentialité"
+      text="Dernière mise à jour : 26 février 2026." />
 
     <!-- Content -->
     <div class="max-w-4xl mx-auto px-4 py-12">
@@ -255,5 +246,6 @@
 </template>
 
 <script setup>
-import { ChevronLeft, Shield, FileText, AlertTriangle, Clock, Users, Lock } from 'lucide-vue-next'
+import PageIntro from '../composants/PageIntro.vue'
+import { Shield, FileText, AlertTriangle, Clock, Users, Lock } from 'lucide-vue-next'
 </script>

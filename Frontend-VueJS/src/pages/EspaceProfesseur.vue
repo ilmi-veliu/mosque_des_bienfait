@@ -1,11 +1,7 @@
 <template>
   <div>
-    <section class="border-b border-line">
-      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
-        <h1 class="text-4xl md:text-6xl">Espace Professeur</h1>
-        <p class="mt-5 max-w-xl text-muted">Corrigez les récitations envoyées par les élèves.</p>
-      </div>
-    </section>
+    <PageIntro eyebrow="Enseignants" title="Espace professeur"
+      text="Corrigez les récitations envoyées par les élèves." />
 
     <section class="bg-paper py-10 px-4 min-h-[60vh]">
       <div class="max-w-3xl mx-auto space-y-5">
@@ -60,6 +56,7 @@
 </template>
 
 <script setup>
+import PageIntro from '../composants/PageIntro.vue'
 import { ref, computed, onMounted } from 'vue'
 import { supabase } from '../supabase'
 

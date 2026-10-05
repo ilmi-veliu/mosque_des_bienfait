@@ -1,174 +1,86 @@
 <template>
   <div>
-    <!-- Hero -->
-    <section class="border-b border-line">
-      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
-        <router-link
-          to="/"
-          class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors"
-        >
-          <ChevronLeft :size="20" />
-          Retour à l'accueil
-        </router-link>
-        <h1 class="text-4xl md:text-6xl">Devenir Bénévole à la Mosquée de Périgueux</h1>
-        <p class="mt-5 max-w-xl text-muted">
-          Rejoignez l'équipe de bénévoles de la Mosquée des Bienfaisants de Périgueux et contribuez au bien-être de la communauté musulmane de Dordogne. Chaque aide compte.
-        </p>
+    <PageIntro eyebrow="Vie communautaire" title="Devenir bénévole"
+      text="Quelques heures peuvent faire une vraie différence. Choisissez une mission adaptée à vos disponibilités." />
+
+    <!-- Missions -->
+    <section class="mx-auto max-w-6xl px-5 py-14 md:py-20">
+      <div class="grid gap-5 md:grid-cols-2">
+        <article v-for="m in missions" :key="m.titre" class="border bg-card p-6 transition-colors"
+          :class="form.domaine === m.titre ? 'border-accent-500' : 'border-line'">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="eyebrow">Mission</p>
+              <h2 class="mt-2 text-3xl">{{ m.titre }}</h2>
+            </div>
+            <component :is="m.icone" class="h-6 w-6 shrink-0 text-accent-500" />
+          </div>
+          <p class="mt-4 text-sm text-muted">{{ m.texte }}</p>
+          <button @click="choisir(m.titre)" class="btn btn-outline mt-5 !py-2">Choisir cette mission</button>
+        </article>
       </div>
     </section>
 
-    <!-- Domaines -->
-    <section class="py-16 px-4 bg-gray-50">
-      <div class="max-w-6xl mx-auto">
-        <h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Nos domaines de bénévolat</h2>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-card rounded-xl p-6 shadow-sm border">
-            <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-              <BookOpen :size="24" class="text-accent-600" />
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-2">Enseignement</h3>
-            <p class="text-sm text-gray-600">Cours de Coran, langue arabe, soutien scolaire pour les enfants et adultes.</p>
-          </div>
-          <div class="bg-card rounded-xl p-6 shadow-sm border">
-            <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-              <Heart :size="24" class="text-accent-600" />
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-2">Social & Entraide</h3>
-            <p class="text-sm text-gray-600">Distribution alimentaire, aide aux familles, accompagnement des personnes isolées.</p>
-          </div>
-          <div class="bg-card rounded-xl p-6 shadow-sm border">
-            <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-              <Calendar :size="24" class="text-accent-600" />
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-2">Événements</h3>
-            <p class="text-sm text-gray-600">Organisation des événements, accueil des visiteurs, logistique.</p>
-          </div>
-          <div class="bg-card rounded-xl p-6 shadow-sm border">
-            <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-              <Wrench :size="24" class="text-accent-600" />
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-2">Entretien & Travaux</h3>
-            <p class="text-sm text-gray-600">Nettoyage, petits travaux, maintenance de la mosquée.</p>
-          </div>
-          <div class="bg-card rounded-xl p-6 shadow-sm border">
-            <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-              <Monitor :size="24" class="text-accent-600" />
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-2">Communication & Informatique</h3>
-            <p class="text-sm text-gray-600">Réseaux sociaux, site web, graphisme, photo/vidéo.</p>
-          </div>
-          <div class="bg-card rounded-xl p-6 shadow-sm border">
-            <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-              <UtensilsCrossed :size="24" class="text-accent-600" />
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-2">Cuisine Ramadan</h3>
-            <p class="text-sm text-gray-600">Préparation des repas d'iftar, organisation de la cuisine pendant le mois de Ramadan.</p>
-          </div>
-          <div class="bg-card rounded-xl p-6 shadow-sm border">
-            <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-              <HandHelping :size="24" class="text-accent-600" />
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-2">Autre</h3>
-            <p class="text-sm text-gray-600">Toute autre compétence ou envie d'aider est la bienvenue !</p>
-          </div>
+    <!-- Candidature -->
+    <section id="candidature" class="border-t border-line bg-pierre">
+      <div class="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-[0.8fr_1.2fr] md:py-20">
+        <div>
+          <p class="eyebrow">Candidature</p>
+          <h2 class="mt-3 text-4xl">Rejoindre l'équipe</h2>
+          <p class="mt-5 text-muted">Dites-nous comment vous souhaitez aider. L'équipe vous recontactera pour faire connaissance.</p>
         </div>
-      </div>
-    </section>
-
-    <!-- Formulaire -->
-    <section class="py-16 px-4 bg-gray-50">
-      <div class="max-w-2xl mx-auto">
-        <h2 class="text-2xl font-semibold text-gray-900 mb-2 text-center">Envoyer votre candidature</h2>
-        <p class="text-gray-500 text-center mb-10">Remplissez le formulaire ci-dessous et nous vous recontacterons.</p>
 
         <!-- Déjà candidaté -->
-        <div v-if="alreadyApplied" class="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-          <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Clock :size="32" class="text-amber-600" />
-          </div>
-          <h3 class="text-lg font-semibold text-amber-800 mb-2">Candidature déjà envoyée</h3>
-          <p class="text-amber-700 text-sm">
+        <div v-if="alreadyApplied" class="border border-line bg-card p-5 md:p-7">
+          <Clock class="h-6 w-6 text-accent-500" />
+          <h3 class="mt-4 text-2xl">Candidature déjà envoyée</h3>
+          <p class="mt-3 text-sm text-muted">
             Vous avez déjà envoyé une candidature avec ce compte.
             <span v-if="existingStatus === 'nouveau'">Elle est en cours d'examen.</span>
             <span v-else-if="existingStatus === 'accepté'">Vous êtes déjà accepté(e) !</span>
             <span v-else-if="existingStatus === 'refusé'">Votre candidature a été refusée. Vous pouvez en envoyer une nouvelle demain.</span>
           </p>
-          <router-link v-if="existingStatus === 'accepté'" to="/espace-benevole"
-            class="mt-4 inline-block bg-ink text-paper px-6 py-2 rounded-xl hover:bg-accent-600 transition-colors font-medium text-sm">
-            Accéder à l'espace bénévole
-          </router-link>
+          <router-link v-if="existingStatus === 'accepté'" to="/espace-benevole" class="btn btn-primary mt-6">Accéder à l'espace bénévole</router-link>
         </div>
 
-        <!-- Message succès -->
-        <div v-else-if="success" class="bg-accent-50 border border-accent-200 rounded-xl p-6 text-center">
-          <div class="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check :size="32" class="text-accent-600" />
-          </div>
-          <h3 class="text-lg font-semibold text-accent-800 mb-2">Candidature envoyée !</h3>
-          <p class="text-accent-700 text-sm">Merci pour votre intérêt. Nous reviendrons vers vous très prochainement incha'Allah.</p>
+        <!-- Envoyée -->
+        <div v-else-if="success" class="border border-line bg-card p-5 md:p-7">
+          <Check class="h-6 w-6 text-accent-500" />
+          <h3 class="mt-4 text-2xl">Candidature envoyée</h3>
+          <p class="mt-3 text-sm text-muted">Merci pour votre intérêt. Nous reviendrons vers vous très prochainement, incha'Allah.</p>
         </div>
 
-        <!-- Formulaire -->
-        <form v-else @submit.prevent="submitForm" class="space-y-5">
-          <!-- Email verrouillé (du compte connecté) -->
-          <div class="bg-accent-50 border border-accent-200 rounded-xl px-4 py-3 flex items-center gap-3">
-            <Mail :size="18" class="text-accent-600 flex-shrink-0" />
-            <div>
-              <p class="text-xs text-accent-700 font-medium">Connecté en tant que</p>
-              <p class="text-sm text-accent-900 font-semibold">{{ userEmail }}</p>
-            </div>
-          </div>
+        <form v-else @submit.prevent="submitForm" class="border border-line bg-card p-5 md:p-7">
+          <p class="flex items-center gap-2 text-sm text-muted"><Mail class="h-4 w-4 text-accent-500" />Connecté en tant que <strong class="font-medium text-ink">{{ userEmail }}</strong></p>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
-              <input v-model="form.prenom" required maxlength="100" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-              <input v-model="form.nom" required maxlength="100" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors" />
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
-            <input v-model="form.telephone" type="tel" required maxlength="20" placeholder="06 12 34 56 78"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors"
-              :class="telError ? 'border-red-400' : ''"
-              @blur="validateTel" />
-            <p v-if="telError" class="text-xs text-red-500 mt-1">{{ telError }}</p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Domaine(s) souhaité(s) *</label>
-            <select v-model="form.domaine" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors">
-              <option value="" disabled>Choisir un domaine</option>
-              <option value="Enseignement">Enseignement</option>
-              <option value="Social & Entraide">Social & Entraide</option>
-              <option value="Événements">Événements</option>
-              <option value="Entretien & Travaux">Entretien & Travaux</option>
-              <option value="Communication & Informatique">Communication & Informatique</option>
-              <option value="Cuisine Ramadan">Cuisine Ramadan</option>
-              <option value="Autre">Autre</option>
+          <label class="mt-5 block">
+            <span class="eyebrow">Mission choisie</span>
+            <select v-model="form.domaine" required class="mt-2 w-full border border-line bg-paper px-3 py-2.5 text-sm outline-none focus:border-accent-500">
+              <option value="" disabled>Choisir une mission</option>
+              <option v-for="m in missions" :key="m.titre" :value="m.titre">{{ m.titre }}</option>
             </select>
+          </label>
+
+          <div class="mt-5 grid gap-5 sm:grid-cols-2">
+            <label><span class="eyebrow">Prénom</span><input v-model="form.prenom" required maxlength="100" class="mt-2 w-full border border-line bg-paper px-3 py-2.5 text-sm outline-none focus:border-accent-500" /></label>
+            <label><span class="eyebrow">Nom</span><input v-model="form.nom" required maxlength="100" class="mt-2 w-full border border-line bg-paper px-3 py-2.5 text-sm outline-none focus:border-accent-500" /></label>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Message (optionnel)</label>
-            <textarea v-model="form.message" rows="4" maxlength="2000" placeholder="Décrivez vos motivations, disponibilités, compétences..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors"></textarea>
-          </div>
+          <label class="mt-5 block">
+            <span class="eyebrow">Téléphone</span>
+            <input v-model="form.telephone" type="tel" required maxlength="20" placeholder="06 12 34 56 78" @blur="validateTel"
+              class="mt-2 w-full border border-line bg-paper px-3 py-2.5 text-sm outline-none focus:border-accent-500" :class="telError ? '!border-red-700' : ''" />
+            <span v-if="telError" class="mt-1 block text-xs text-red-700">{{ telError }}</span>
+          </label>
 
-          <div v-if="errorMsg" class="bg-red-50 text-red-700 px-4 py-3 rounded-xl text-sm">
-            {{ errorMsg }}
-          </div>
+          <label class="mt-5 block">
+            <span class="eyebrow">Disponibilités et motivations</span>
+            <textarea v-model="form.message" rows="3" maxlength="2000" placeholder="Vos disponibilités, vos compétences…" class="mt-2 w-full border border-line bg-paper px-3 py-2.5 text-sm outline-none focus:border-accent-500"></textarea>
+          </label>
 
-          <button
-            type="submit"
-            :disabled="loading"
-            class="w-full bg-ink text-paper py-3 rounded-xl hover:bg-accent-600 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <Send :size="18" />
-            {{ loading ? 'Envoi en cours...' : 'Envoyer ma candidature' }}
+          <p v-if="errorMsg" class="mt-4 text-sm text-red-700">{{ errorMsg }}</p>
+          <button type="submit" :disabled="loading" class="btn btn-primary mt-6 w-full disabled:opacity-50">
+            {{ loading ? 'Envoi en cours…' : 'Proposer mon aide' }}
           </button>
         </form>
       </div>
@@ -178,7 +90,25 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ChevronLeft, BookOpen, Heart, Calendar, Wrench, Monitor, HandHelping, UtensilsCrossed, Check, Send, Clock, Mail } from 'lucide-vue-next'
+import { BookOpen, Heart, Calendar, Wrench, Monitor, HandHelping, UtensilsCrossed, Check, Clock, Mail } from 'lucide-vue-next'
+import PageIntro from '../composants/PageIntro.vue'
+
+// Domaines de bénévolat (le titre est enregistré tel quel dans benevoles.domaine)
+const missions = [
+  { titre: 'Enseignement', icone: BookOpen, texte: 'Cours de Coran, langue arabe, soutien scolaire pour les enfants et les adultes.' },
+  { titre: 'Social & Entraide', icone: Heart, texte: 'Distribution alimentaire, aide aux familles, accompagnement des personnes isolées.' },
+  { titre: 'Événements', icone: Calendar, texte: 'Organisation des événements, accueil des visiteurs, logistique.' },
+  { titre: 'Entretien & Travaux', icone: Wrench, texte: 'Nettoyage, petits travaux, maintenance de la mosquée.' },
+  { titre: 'Communication & Informatique', icone: Monitor, texte: 'Réseaux sociaux, site web, graphisme, photo et vidéo.' },
+  { titre: 'Cuisine Ramadan', icone: UtensilsCrossed, texte: "Préparation des repas d'iftar pendant le mois de Ramadan." },
+  { titre: 'Autre', icone: HandHelping, texte: "Toute autre compétence ou envie d'aider est la bienvenue." },
+]
+
+// « Choisir cette mission » : pré-remplit le formulaire et descend jusqu'à lui
+const choisir = (titre) => {
+  form.value.domaine = titre
+  document.getElementById('candidature')?.scrollIntoView({ behavior: 'smooth' })
+}
 import { supabase } from '../supabase'
 
 const loading = ref(false)

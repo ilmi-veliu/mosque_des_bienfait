@@ -1,96 +1,75 @@
 <template>
   <div>
-    <section class="border-b border-line">
-      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
-        <router-link to="/" class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors">
-          <ChevronLeft :size="20" />
-          Retour à l'accueil
-        </router-link>
-        <h1 class="text-4xl md:text-6xl">Récitation du Coran</h1>
-        <p class="mt-5 max-w-xl text-muted">
-          Envoyez un enregistrement de votre récitation, l'imam vous répond avec ses corrections.
-        </p>
-      </div>
-    </section>
+    <PageIntro eyebrow="Apprentissage" title="Récitation du Coran"
+      text="Enregistrez ou déposez votre récitation afin de recevoir les remarques d'un enseignant." />
 
-    <section class="bg-paper py-12 px-4">
-      <div class="max-w-2xl mx-auto space-y-8">
+    <section class="mx-auto grid max-w-6xl gap-12 px-5 py-14 lg:grid-cols-[1fr_0.9fr] lg:py-20">
+      <!-- Nouvel envoi -->
+      <div>
+        <p class="eyebrow">Nouvel envoi</p>
+        <h2 class="mt-3 text-4xl">Déposer une récitation</h2>
+        <form @submit.prevent="submitRecitation" class="mt-8 space-y-6 border border-line bg-card p-5 md:p-7">
+          <label class="block">
+            <span class="eyebrow">Sourate ou passage</span>
+            <input v-model="sourate" required maxlength="200" placeholder="Ex. Al-Fâtiha, versets 1 à 7"
+              class="mt-2 w-full border border-line bg-paper px-3 py-2.5 text-sm outline-none focus:border-accent-500" />
+          </label>
 
-        <!-- Nouvel envoi -->
-        <div class="bg-card rounded-2xl shadow-sm border p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Envoyer une récitation</h2>
-          <p v-if="errorMsg" class="text-sm text-red-500 mb-3">{{ errorMsg }}</p>
-          <div class="space-y-3">
-            <input v-model="sourate" type="text" maxlength="200" placeholder="Sourate (ex : Al-Fatiha, versets 1-7)"
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
-
-            <!-- Enregistrement direct depuis le navigateur -->
-            <div class="border rounded-xl p-3">
-              <div v-if="!isRecording && !audioFile" class="flex items-center justify-between">
-                <span class="text-sm text-gray-500">Enregistrer directement depuis le site</span>
-                <button @click="startRecording" type="button"
-                  class="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors">
-                  <Mic :size="16" />
-                  Enregistrer
-                </button>
-              </div>
-              <div v-else-if="isRecording" class="flex items-center justify-between">
-                <span class="text-sm text-red-600 flex items-center gap-2">
-                  <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                  Enregistrement... {{ formatDuration(recordingSeconds) }}
-                </span>
-                <button @click="stopRecording" type="button"
-                  class="px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
-                  Arrêter
-                </button>
-              </div>
-              <div v-else-if="audioFile && recordedLocally" class="space-y-2">
-                <audio :src="audioPreviewUrl" controls class="w-full"></audio>
-                <button @click="resetRecording" type="button" class="text-xs text-gray-400 hover:text-red-500">
-                  Supprimer et recommencer
-                </button>
-              </div>
-            </div>
-
-            <p class="text-center text-xs text-gray-400">ou</p>
-
-            <label class="flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm cursor-pointer hover:bg-gray-50">
-              <Paperclip :size="18" class="text-accent-600 shrink-0" />
-              <span class="truncate">{{ audioFile && !recordedLocally ? audioFile.name : 'Choisir un fichier audio existant...' }}</span>
-              <input type="file" accept="audio/*" class="hidden" @change="onFileSelected" />
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="flex min-h-28 cursor-pointer flex-col items-center justify-center border border-dashed border-line bg-paper px-4 text-center text-sm text-muted hover:text-ink">
+              <Upload class="mb-2 h-5 w-5" />
+              <span class="max-w-full truncate">{{ audioFile && !recordedLocally ? audioFile.name : 'Choisir un fichier audio' }}</span>
+              <input type="file" accept="audio/*" class="sr-only" @change="onFileSelected" />
             </label>
 
-            <button @click="submitRecitation" :disabled="sending || !sourate.trim() || !audioFile"
-              class="w-full bg-ink text-paper py-2.5 rounded-xl font-medium hover:bg-accent-600 disabled:opacity-50 transition-colors">
-              {{ sending ? 'Envoi...' : 'Envoyer à l\'imam' }}
+            <button v-if="!isRecording" type="button" @click="startRecording"
+              class="flex min-h-28 flex-col items-center justify-center border border-dashed border-line bg-paper px-4 text-sm text-muted hover:text-ink">
+              <Mic class="mb-2 h-5 w-5" />
+              {{ recordedLocally ? 'Réenregistrer' : 'Enregistrer maintenant' }}
+            </button>
+            <button v-else type="button" @click="stopRecording"
+              class="flex min-h-28 flex-col items-center justify-center border border-red-700 bg-paper px-4 text-sm text-red-700">
+              <span class="mb-2 flex items-center gap-2"><span class="h-2 w-2 animate-pulse rounded-full bg-red-700"></span>{{ formatDuration(recordingSeconds) }}</span>
+              Arrêter l'enregistrement
             </button>
           </div>
-        </div>
 
-        <!-- Historique -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Mes récitations</h2>
-          <div v-if="loading" class="text-center text-gray-400 py-10">Chargement...</div>
-          <div v-else-if="recitations.length === 0" class="text-center text-gray-400 py-10">
-            Aucune récitation envoyée pour l'instant.
+          <div v-if="audioFile && recordedLocally" class="space-y-2">
+            <audio :src="audioPreviewUrl" controls class="w-full"></audio>
+            <button type="button" @click="resetRecording" class="text-xs text-muted hover:text-red-700">Supprimer et recommencer</button>
           </div>
-          <div v-for="r in recitations" :key="r.id" class="bg-card rounded-2xl shadow-sm border p-5 mb-3">
-            <div class="flex items-center justify-between mb-2">
-              <p class="font-medium text-gray-800">{{ r.sourate }}</p>
-              <span class="text-xs px-2 py-1 rounded-full"
-                :class="r.statut === 'corrigee' ? 'bg-accent-50 text-accent-700' : 'bg-yellow-50 text-yellow-700'">
-                {{ r.statut === 'corrigee' ? 'Corrigée' : 'En attente' }}
-              </span>
-            </div>
-            <audio :src="r.audio_url" controls class="w-full mb-2"></audio>
-            <div v-if="r.statut === 'corrigee'" class="bg-paper rounded-xl p-3 mt-2">
-              <p class="text-xs font-medium text-gray-500 mb-1">Correction de l'imam :</p>
-              <p v-if="r.correction_texte" class="text-sm text-gray-700">{{ r.correction_texte }}</p>
-              <audio v-if="r.correction_audio_url" :src="r.correction_audio_url" controls class="w-full mt-2"></audio>
-            </div>
-          </div>
-        </div>
 
+          <p v-if="errorMsg" class="text-sm text-red-700">{{ errorMsg }}</p>
+          <button type="submit" :disabled="sending || !sourate.trim() || !audioFile" class="btn btn-primary w-full disabled:opacity-50">
+            {{ sending ? 'Envoi…' : 'Envoyer pour correction' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Historique -->
+      <div>
+        <p class="eyebrow">Suivi</p>
+        <h2 class="mt-3 text-4xl">Mes récitations</h2>
+        <p v-if="loading" class="mt-8 text-muted">Chargement…</p>
+        <p v-else-if="recitations.length === 0" class="mt-8 text-muted">Aucune récitation envoyée pour l'instant.</p>
+        <div v-else class="mt-8 space-y-4">
+          <article v-for="r in recitations" :key="r.id" class="border border-line bg-card p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="font-serif text-2xl">{{ r.sourate }}</p>
+                <p class="mt-1 text-sm text-muted">Envoyée le {{ dateCourte(r.created_at) }}</p>
+              </div>
+              <FileAudio class="h-5 w-5 shrink-0 text-accent-500" />
+            </div>
+            <audio :src="r.audio_url" controls class="mt-5 w-full"></audio>
+            <p class="mt-4 text-sm"><span class="text-muted">Statut :</span> {{ r.statut === 'corrigee' ? 'Correction reçue' : "En attente d'écoute" }}</p>
+            <div v-if="r.statut === 'corrigee'" class="mt-4 border-l-2 border-accent-500 pl-4">
+              <p class="eyebrow">Correction</p>
+              <p v-if="r.correction_texte" class="mt-2 text-sm">{{ r.correction_texte }}</p>
+              <audio v-if="r.correction_audio_url" :src="r.correction_audio_url" controls class="mt-2 w-full"></audio>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
   </div>
@@ -98,7 +77,8 @@
 
 <script setup>
 import { ref, shallowRef, onMounted, onBeforeUnmount } from 'vue'
-import { ChevronLeft, Mic, Paperclip } from 'lucide-vue-next'
+import { Mic, Upload, FileAudio } from 'lucide-vue-next'
+import PageIntro from '../composants/PageIntro.vue'
 import { supabase } from '../supabase'
 
 const sourate = ref('')
@@ -139,6 +119,7 @@ let recordedChunks = []
 let recordingTimer = null
 let activeStream = null
 
+const dateCourte = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 const formatDuration = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
 
 const startRecording = async () => {

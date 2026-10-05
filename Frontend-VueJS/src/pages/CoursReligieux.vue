@@ -1,208 +1,105 @@
 <template>
   <div>
-    <!-- Hero Section -->
-    <section class="border-b border-line">
-      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
-        <router-link
-          to="/"
-          class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors"
-        >
-          <ChevronLeft :size="20" />
-          Retour à l'accueil
-        </router-link>
-        <h1 class="text-4xl md:text-6xl">Cours Religieux Islamiques à Périgueux</h1>
-        <p class="mt-5 max-w-xl text-muted">
-          Approfondissez vos connaissances islamiques avec les cours dispensés à la Mosquée des Bienfaisants de Périgueux — Coran, Tajwid, jurisprudence et langue arabe pour tous les niveaux.
-        </p>
+    <PageIntro eyebrow="Enseignement" title="Cours religieux"
+      text="Des cours hebdomadaires ouverts à tous, et des cours privés réservés aux élèves de l'imam." />
+
+    <div class="mx-auto max-w-6xl px-5 py-10">
+      <!-- Filtres par catégorie -->
+      <div class="-mx-5 flex gap-2 overflow-x-auto px-5 pb-2">
+        <button v-for="cat in filtres" :key="cat" @click="selectedCategorie = cat"
+          class="shrink-0 border px-4 py-1.5 text-sm transition-colors"
+          :class="selectedCategorie === cat ? 'border-ink bg-ink text-paper' : 'border-line text-muted hover:text-ink'">
+          {{ cat }}
+        </button>
       </div>
-    </section>
 
-    <!-- Filters -->
-    <section class="bg-card py-10 px-4 border-b border-gray-200">
-      <div class="max-w-6xl mx-auto flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-5 items-stretch sm:items-center">
-        <div class="flex-1 min-w-0 sm:min-w-[300px] relative">
-          <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" :size="20" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Rechercher un cours..."
-            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-gray-900 transition-colors"
-          />
-        </div>
+      <div v-if="loading" class="py-20 text-center text-muted">Chargement des cours…</div>
+      <p v-else-if="error" class="py-20 text-center text-red-700">{{ error }}</p>
+      <p v-else-if="filteredCours.length === 0" class="py-20 text-center text-muted">Aucun cours pour le moment.</p>
 
-        <!-- Filtre catégorie -->
-        <select
-          v-model="selectedCategorie"
-          class="px-5 py-3 border border-gray-300 rounded-xl bg-card focus:outline-none focus:border-gray-900 transition-colors"
-        >
-          <option value="">Toutes les catégories</option>
-          <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-        </select>
-
-        <!-- Filtre jour -->
-        <select
-          v-model="selectedJour"
-          class="px-5 py-3 border border-gray-300 rounded-xl bg-card focus:outline-none focus:border-gray-900 transition-colors"
-        >
-          <option value="">Tous les jours</option>
-          <option v-for="j in jours" :key="j" :value="j">{{ j }}</option>
-        </select>
-      </div>
-    </section>
-
-    <!-- Cours List -->
-    <section class="py-16 px-4">
-      <div class="max-w-6xl mx-auto">
-        <h2 class="text-3xl font-semibold text-gray-900 mb-10">Nos Cours</h2>
-
-        <!-- Loading -->
-        <div v-if="loading" class="text-center py-20">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-900"></div>
-          <p class="mt-4 text-gray-600">Chargement des cours...</p>
-        </div>
-
-        <!-- Error -->
-        <div v-else-if="error" class="text-center py-20">
-          <p class="text-red-600">{{ error }}</p>
-        </div>
-
-        <!-- Cours Grid -->
-        <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div
-            v-for="c in filteredCours"
-            :key="c.id"
-            class="bg-card rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all"
-          >
-            <!-- Video or Image -->
-            <div class="relative">
-              <!-- YouTube : miniature + bouton play, iframe chargé seulement au clic -->
-              <div v-if="c.video_url && getYoutubeId(c.video_url)" class="aspect-video bg-black">
-                <template v-if="!youtubeActive[c.id]">
-                  <img
-                    :src="`https://img.youtube.com/vi/${getYoutubeId(c.video_url)}/hqdefault.jpg`"
-                    :alt="c.titre"
-                    class="w-full h-full object-cover opacity-90"
-                  />
-                  <button
-                    @click="activerYoutube(c.id)"
-                    class="absolute inset-0 flex items-center justify-center group"
-                    :aria-label="`Lancer ${c.titre}`"
-                  >
-                    <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-xl group-hover:bg-red-700 group-hover:scale-110 transition-all">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="white" class="ml-1">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                      </svg>
-                    </div>
-                  </button>
-                </template>
-                <iframe
-                  v-else
-                  :src="`https://www.youtube.com/embed/${getYoutubeId(c.video_url)}?autoplay=1${getVideoStart(c.id) ? '&start=' + Math.floor(getVideoStart(c.id)) : ''}`"
-                  class="w-full h-full"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen
-                ></iframe>
+      <div v-else class="mt-8 grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+        <article v-for="c in filteredCours" :key="c.id" class="flex flex-col">
+          <!-- Média : vidéo YouTube (chargée au clic), sinon image du cours -->
+          <div class="relative aspect-[3/2] bg-ink">
+            <iframe v-if="youtubeActive[c.id]"
+              :src="`https://www.youtube.com/embed/${getYoutubeId(c.video_url)}?autoplay=1${getVideoStart(c.id) ? '&start=' + Math.floor(getVideoStart(c.id)) : ''}`"
+              class="absolute inset-0 h-full w-full" frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <template v-else>
+              <img :src="miniature(c)" :alt="c.titre" loading="lazy" class="h-full w-full object-cover grayscale-[40%]" />
+              <button v-if="getYoutubeId(c.video_url)" @click="activerYoutube(c.id)"
+                class="absolute inset-0 flex items-center justify-center" :aria-label="`Lancer la vidéo ${c.titre}`">
+                <span class="flex h-12 w-12 items-center justify-center rounded-full bg-paper/90"><Play class="h-5 w-5" /></span>
+              </button>
+              <div v-else-if="c.audio_url" class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <span class="flex h-12 w-12 items-center justify-center rounded-full bg-paper/90"><Headphones class="h-5 w-5" /></span>
               </div>
-              <img
-                v-else
-                :src="c.image_url || 'https://images.unsplash.com/photo-1585036156171-384164a8c159?q=80&w=800'"
-                :alt="c.titre"
-                class="w-full h-44 sm:h-56 object-cover"
-              />
-              <span v-if="c.categorie" class="absolute top-4 left-4 bg-ink text-paper px-4 py-1.5 rounded-full text-xs font-semibold">
-                {{ c.categorie }}
-              </span>
-            </div>
-
-            <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-3">{{ c.titre }}</h3>
-              <p class="text-gray-600 text-sm leading-relaxed mb-5">{{ c.description }}</p>
-              <div class="space-y-2.5">
-                <div v-if="c.enseignant" class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <User :size="18" class="text-gray-400" />
-                  <span>{{ c.enseignant }}</span>
-                </div>
-                <div v-if="c.jour" class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <Calendar :size="18" class="text-gray-400" />
-                  <span>{{ c.jour }}{{ c.heure ? ' à ' + c.heure.substring(0, 5) : '' }}</span>
-                </div>
-                <div v-if="c.lieu" class="flex items-center gap-2.5 text-sm text-gray-700">
-                  <MapPin :size="18" class="text-gray-400" />
-                  <span>{{ c.lieu }}</span>
-                </div>
-                <!-- Compteur de vues (visible pour les admins uniquement) -->
-                <div v-if="isAdmin" class="flex items-center gap-2.5 text-sm text-gray-400">
-                  <Eye :size="18" />
-                  <span>{{ vuesMap[c.id] || 0 }} vue{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }} unique{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }}</span>
-                </div>
-              </div>
-              <!-- Lecteur audio avec reprise -->
-              <div v-if="c.audio_url" class="mt-4 pt-4 border-t border-gray-100">
-                <button v-if="currentUserId && getAudioStart(c.id) > 0" @click="resumeAudio(c.id)" class="flex items-center gap-2 mb-2 hover:opacity-70 transition-opacity cursor-pointer">
-                  <RotateCcw :size="14" class="text-accent-600" />
-                  <span class="text-xs text-accent-600 font-medium">Reprendre à {{ formatTime(getAudioStart(c.id)) }}</span>
-                </button>
-                <audio
-                  :ref="el => { if (el) audioRefs[c.id] = el }"
-                  :src="c.audio_url"
-                  controls
-                  class="w-full rounded-lg"
-                  @loadedmetadata="onAudioLoaded(c.id)"
-                  @timeupdate="onAudioTimeUpdate(c.id)"
-                  @pause="saveProgress(c.id)"
-                  @play="enregistrerVue(c.id)"
-                ></audio>
-              </div>
-
-              <!-- Inscription : seulement pour un cours récurrent (jour fixe, ex: chaque lundi) —
-                   inutile pour une simple vidéo déjà enregistrée, sans suite -->
-              <div v-if="c.jour" class="mt-4 pt-4 border-t border-gray-100">
-                <button v-if="!inscriptionsMap[c.id]" @click="sInscrire(c.id)" :disabled="inscrivant === c.id"
-                  class="w-full bg-ink text-paper py-2 rounded-xl text-sm font-medium hover:bg-accent-600 disabled:opacity-50 transition-colors">
-                  {{ inscrivant === c.id ? 'Envoi...' : "S'inscrire à ce cours" }}
-                </button>
-                <p v-else class="text-center text-sm py-2 rounded-xl"
-                  :class="{
-                    'bg-yellow-50 text-yellow-700': inscriptionsMap[c.id] === 'en_attente',
-                    'bg-accent-50 text-accent-700': inscriptionsMap[c.id] === 'validee',
-                    'bg-red-50 text-red-700': inscriptionsMap[c.id] === 'refusee',
-                  }">
-                  {{ inscriptionsMap[c.id] === 'en_attente' ? 'Inscription en attente de validation'
-                     : inscriptionsMap[c.id] === 'validee' ? 'Inscrit ✓' : 'Inscription refusée' }}
-                </p>
-              </div>
-            </div>
+            </template>
+            <span v-if="c.prive" class="absolute left-3 top-3 flex items-center gap-1.5 bg-ink px-2.5 py-1 text-xs text-ink-foreground">
+              <Lock class="h-3 w-3" />Privé
+            </span>
           </div>
-        </div>
 
-        <!-- Aucun cours -->
-        <div v-if="!loading && !error && filteredCours.length === 0" class="text-center py-20">
-          <p class="text-gray-600">Aucun cours trouvé.</p>
-        </div>
+          <p class="eyebrow mt-5">
+            {{ getYoutubeId(c.video_url) ? 'Vidéo' : c.audio_url ? 'Audio' : (c.categorie || 'Cours') }}<template v-if="c.enseignant"> · {{ c.enseignant }}</template>
+          </p>
+          <h2 class="mt-2 text-3xl">{{ c.titre }}</h2>
+          <p class="mt-2 flex-1 text-sm text-muted">{{ c.description }}</p>
+          <p v-if="isAdmin" class="mt-2 flex items-center gap-1.5 text-xs text-muted">
+            <Eye class="h-3.5 w-3.5" />{{ vuesMap[c.id] || 0 }} vue{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }}
+          </p>
+
+          <!-- Lecteur audio, avec reprise là où on s'était arrêté -->
+          <div v-if="c.audio_url" class="mt-4">
+            <button v-if="currentUserId && getAudioStart(c.id) > 0" @click="resumeAudio(c.id)"
+              class="mb-2 flex items-center gap-2 text-xs text-accent-600 hover:opacity-70">
+              <RotateCcw class="h-3.5 w-3.5" />Reprendre à {{ formatTime(getAudioStart(c.id)) }}
+            </button>
+            <audio :ref="el => { if (el) audioRefs[c.id] = el }" :src="c.audio_url" controls class="w-full"
+              @loadedmetadata="onAudioLoaded(c.id)" @timeupdate="onAudioTimeUpdate(c.id)"
+              @pause="saveProgress(c.id)" @play="enregistrerVue(c.id)"></audio>
+          </div>
+
+          <!-- Jour, heure et inscription (cours récurrents seulement) -->
+          <div v-if="c.jour" class="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">
+            <p class="text-sm">
+              <span class="font-medium">{{ c.jour }}</span>
+              <span v-if="c.heure" class="text-muted"> · {{ c.heure.substring(0, 5) }}</span>
+            </p>
+            <button v-if="!inscriptionsMap[c.id]" @click="sInscrire(c.id)" :disabled="inscrivant === c.id"
+              class="btn btn-primary !px-4 !py-2 disabled:opacity-50">
+              {{ inscrivant === c.id ? 'Envoi…' : "S'inscrire" }}
+            </button>
+            <span v-else class="text-sm"
+              :class="inscriptionsMap[c.id] === 'refusee' ? 'text-red-700' : inscriptionsMap[c.id] === 'validee' ? 'text-accent-600' : 'text-muted'">
+              {{ inscriptionsMap[c.id] === 'en_attente' ? 'En attente de validation'
+                 : inscriptionsMap[c.id] === 'validee' ? 'Inscrit ✓' : 'Inscription refusée' }}
+            </span>
+          </div>
+        </article>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, Search, Calendar, MapPin, User, RotateCcw, Eye } from 'lucide-vue-next'
+import { Play, Headphones, Lock, RotateCcw, Eye } from 'lucide-vue-next'
+import PageIntro from '../composants/PageIntro.vue'
+import imageParDefaut from '../assets/mihrab.jpg'
 import { supabase } from '../supabase'
 import { store, preloadCours } from '../store'
 
 const router = useRouter()
 const isAdmin = ref(false)
 
-const searchQuery = ref('')
-const selectedCategorie = ref('')
-const selectedJour = ref('')
+const selectedCategorie = ref('Tous')
 const coursList = ref([])
 const loading = ref(true)
 const error = ref(null)
-const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-const categories = ['Tajwid', 'Croyance', 'Jurisprudence', 'Langue arabe', 'Coran', 'Hadith', 'Sira', 'Éducation islamique']
+// Pastilles de filtre : seulement les catégories qui ont au moins un cours
+const filtres = computed(() => ['Tous', ...new Set(coursList.value.map(c => c.categorie).filter(Boolean))])
 
 // --- Progression ---
 const currentUserId = ref(null)
@@ -366,28 +263,16 @@ const fetchProgress = async () => {
 }
 
 // --- Filtres ---
-const filteredCours = computed(() => {
-  let filtered = coursList.value
+const filteredCours = computed(() => selectedCategorie.value === 'Tous'
+  ? coursList.value
+  : coursList.value.filter(c => c.categorie === selectedCategorie.value))
 
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(c =>
-      c.titre.toLowerCase().includes(q) ||
-      (c.description && c.description.toLowerCase().includes(q)) ||
-      (c.enseignant && c.enseignant.toLowerCase().includes(q))
-    )
-  }
-
-  if (selectedCategorie.value) {
-    filtered = filtered.filter(c => c.categorie === selectedCategorie.value)
-  }
-
-  if (selectedJour.value) {
-    filtered = filtered.filter(c => c.jour === selectedJour.value)
-  }
-
-  return filtered
-})
+// Image de la carte : miniature YouTube, sinon image du cours, sinon photo du mihrab
+const miniature = (c) => {
+  const id = getYoutubeId(c.video_url)
+  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+  return c.image_url || imageParDefaut
+}
 
 const getYoutubeId = (url) => {
   if (!url) return null
