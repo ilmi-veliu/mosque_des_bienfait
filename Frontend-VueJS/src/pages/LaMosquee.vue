@@ -1,7 +1,16 @@
 <template>
   <div>
-    <PageIntro eyebrow="Présentation" title="La mosquée"
-      text="Un lieu de prière, d'apprentissage et de rencontre au cœur de Périgueux, ouvert à tous." />
+    <!-- En-tête avec le logo 3D de la mosquée -->
+    <section class="border-b border-line">
+      <div class="mx-auto grid max-w-6xl items-center gap-6 px-5 py-10 md:grid-cols-[1fr_1.1fr] md:py-12">
+        <div>
+          <p class="eyebrow">Présentation</p>
+          <h1 class="mt-3 text-4xl md:text-6xl">La mosquée</h1>
+          <p class="mt-5 max-w-xl text-muted">Un lieu de prière, d'apprentissage et de rencontre au cœur de Périgueux, ouvert à tous.</p>
+        </div>
+        <div class="h-64 md:h-80"><Logo3D /></div>
+      </div>
+    </section>
 
     <!-- Bienvenue -->
     <section class="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-2 md:items-center md:py-24">
@@ -127,7 +136,7 @@
 
 <script setup>
 import { Shirt, BookOpen, Footprints, Bike, Car, MapPin, Phone, Navigation } from 'lucide-vue-next'
-import PageIntro from '../composants/PageIntro.vue'
+import { defineAsyncComponent } from 'vue'
 import Etoile from '../composants/Etoile.vue'
 import { useHorairesPriere } from '../horairesPriere'
 import courEntree from '../assets/cour-entree.jpg'
@@ -138,6 +147,9 @@ import qamis from '../assets/qamis.jpg'
 import bibliotheque from '../assets/bibliotheque-mosquee.jpg'
 import chaussures from '../assets/chaussures.jpg'
 import parking from '../assets/parking.jpg'
+
+// three.js n'est téléchargé que sur cette page, dans un fichier séparé
+const Logo3D = defineAsyncComponent(() => import('../composants/Logo3D.vue'))
 
 const ITINERAIRE = 'https://www.google.com/maps/dir/?api=1&destination=18+Rue+du+Tennis+24000+P%C3%A9rigueux'
 
