@@ -151,10 +151,19 @@
       <div class="px-5 py-3">
         <!-- Liens principaux, regroupés comme sur ordinateur -->
         <router-link @click="mobileOpen = false" to="/" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Accueil</router-link>
-        <div v-for="g in groupes" :key="g.titre" class="border-b border-line py-3">
-          <p class="eyebrow mb-1">{{ g.titre }}</p>
-          <router-link v-for="l in g.liens" :key="l.to" @click="mobileOpen = false" :to="l.to"
-            class="block py-1.5 font-serif text-lg hover:text-accent-600 transition-colors">{{ l.label }}</router-link>
+        <!-- Groupes repliés par défaut : on touche le titre pour voir la liste -->
+        <div v-for="g in groupes" :key="g.titre" class="border-b border-line">
+          <button @click="groupeMobile = groupeMobile === g.titre ? null : g.titre" :aria-expanded="groupeMobile === g.titre"
+            class="flex w-full items-center justify-between py-3 font-serif text-lg hover:text-accent-600 transition-colors">
+            {{ g.titre }}
+            <ChevronDown :size="18" class="text-muted transition-transform" :class="groupeMobile === g.titre ? 'rotate-180' : ''" />
+          </button>
+          <div v-if="groupeMobile === g.titre" class="pb-3 pl-4">
+            <router-link v-for="l in g.liens" :key="l.to" @click="mobileOpen = false" :to="l.to"
+              class="block py-1.5 text-base hover:text-accent-600 transition-colors">
+              {{ l.label }}<span v-if="l.compte && !isLoggedIn" class="ml-1.5 text-xs text-muted">· compte requis</span>
+            </router-link>
+          </div>
         </div>
         <router-link @click="mobileOpen = false" to="/actualites" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Actualités</router-link>
         <router-link @click="mobileOpen = false" to="/horaires" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Horaires de prière</router-link>
@@ -219,7 +228,9 @@ const route = useRoute()
 
 // Menu groupé ouvert au clic/toucher (en plus du survol)
 const menuOuvert = ref(null)
-watch(() => route.fullPath, () => { menuOuvert.value = null })
+// Groupe déplié dans le menu mobile (un seul à la fois, tous fermés par défaut)
+const groupeMobile = ref(null)
+watch(() => route.fullPath, () => { menuOuvert.value = null; groupeMobile.value = null })
 
 const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
 
