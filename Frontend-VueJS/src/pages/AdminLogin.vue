@@ -5,7 +5,7 @@
         <div class="w-16 h-16 bg-accent-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <Lock :size="32" class="text-white" />
         </div>
-        <h1 class="text-3xl font-semibold text-white">Administration</h1>
+        <h1 class="text-4xl text-paper">Administration</h1>
         <p class="text-gray-400 mt-2">Mosquée des Bienfaisants</p>
       </div>
 
@@ -47,7 +47,7 @@
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-gradient-to-r from-accent-600 to-accent-700 text-white py-3 rounded-xl font-semibold hover:from-accent-700 hover:to-accent-800 transition-all disabled:opacity-50"
+          class="w-full bg-ink text-paper py-3 rounded font-medium hover:bg-accent-600 transition-colors disabled:opacity-50"
         >
           <span v-if="loading">Connexion...</span>
           <span v-else class="flex items-center justify-center gap-2">

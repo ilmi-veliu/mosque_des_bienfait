@@ -117,7 +117,8 @@
       <h2 class="mt-3 text-4xl md:text-5xl">Accès rapide</h2>
       <div class="mt-10 grid border-t border-line sm:grid-cols-2 lg:grid-cols-3">
         <router-link v-for="(s, i) in services" :key="s.to" :to="s.to"
-          class="group flex items-start justify-between gap-4 border-b border-line py-6 sm:px-6 sm:[&:nth-child(odd)]:border-r lg:[&:nth-child(odd)]:border-r-0 lg:[&:not(:nth-child(3n))]:border-r">
+          class="group flex items-start justify-between gap-4 border-b border-line py-6 sm:px-6"
+          :class="[i % 2 === 0 ? 'sm:border-r' : 'sm:border-r-0', i % 3 === 2 ? 'lg:border-r-0' : 'lg:border-r']">
           <div>
             <p class="text-xs tabular-nums text-muted">0{{ i + 1 }}</p>
             <p class="mt-2 font-serif text-2xl">{{ s.titre }}</p>

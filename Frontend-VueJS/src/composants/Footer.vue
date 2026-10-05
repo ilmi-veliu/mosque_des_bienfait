@@ -29,6 +29,7 @@
           <li><router-link to="/hadith" class="hover:text-accent-400 transition-colors">Hadiths</router-link></li>
           <li><button @click="ouvrirChat" class="hover:text-accent-400 transition-colors">Contacter l'imam</button></li>
           <li><router-link to="/benevole" class="hover:text-accent-400 transition-colors">Devenir bénévole</router-link></li>
+          <li><router-link to="/admin" class="hover:text-accent-400 transition-colors">Administration</router-link></li>
         </ul>
       </div>
     </div>
