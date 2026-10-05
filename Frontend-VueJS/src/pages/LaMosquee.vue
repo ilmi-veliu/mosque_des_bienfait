@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- En-tête avec le logo 3D de la mosquée -->
+    <!-- En-tête avec une photo de la salle de prière -->
     <section class="border-b border-line">
       <div class="mx-auto grid max-w-6xl items-center gap-6 px-5 py-10 md:grid-cols-[1fr_1.1fr] md:py-12">
         <div>
@@ -8,7 +8,7 @@
           <h1 class="mt-3 text-4xl md:text-6xl">La mosquée</h1>
           <p class="mt-5 max-w-xl text-muted">Un lieu de prière, d'apprentissage et de rencontre au cœur de Périgueux, ouvert à tous.</p>
         </div>
-        <div class="h-64 md:h-80"><Logo3D /></div>
+        <img :src="salleLarge" alt="La salle de prière de la mosquée" class="aspect-[4/3] w-full object-cover md:aspect-[3/2]" />
       </div>
     </section>
 
@@ -136,10 +136,10 @@
 
 <script setup>
 import { Shirt, BookOpen, Footprints, Bike, Car, MapPin, Phone, Navigation } from 'lucide-vue-next'
-import { defineAsyncComponent } from 'vue'
 import Etoile from '../composants/Etoile.vue'
 import { useHorairesPriere } from '../horairesPriere'
 import courEntree from '../assets/cour-entree.jpg'
+import salleLarge from '../assets/salle-priere-large.jpg'
 import salle from '../assets/salle-priere.jpg'
 import salleColonnes from '../assets/salle-colonnes.jpg'
 import mihrabDetail from '../assets/mihrab-detail.jpg'
@@ -147,9 +147,6 @@ import qamis from '../assets/qamis.jpg'
 import bibliotheque from '../assets/bibliotheque-mosquee.jpg'
 import chaussures from '../assets/chaussures.jpg'
 import parking from '../assets/parking.jpg'
-
-// three.js n'est téléchargé que sur cette page, dans un fichier séparé
-const Logo3D = defineAsyncComponent(() => import('../composants/Logo3D.vue'))
 
 const ITINERAIRE = 'https://www.google.com/maps/dir/?api=1&destination=18+Rue+du+Tennis+24000+P%C3%A9rigueux'
 
