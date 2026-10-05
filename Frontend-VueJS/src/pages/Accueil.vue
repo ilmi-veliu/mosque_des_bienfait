@@ -44,17 +44,6 @@
       </div>
     </section>
 
-    <!-- Hadith du jour (Sahih al-Bukhari, change chaque jour) -->
-    <section v-if="hadithJour" class="border-y border-line bg-card">
-      <div class="mx-auto max-w-3xl px-5 py-20 text-center md:py-24">
-        <Etoile class="mx-auto h-8 w-8 text-accent-500" />
-        <p class="eyebrow mt-6">Hadith du jour</p>
-        <blockquote class="mt-6 font-serif text-2xl italic leading-snug md:text-3xl">{{ hadithJour.francais }}</blockquote>
-        <p class="eyebrow mt-6">Sahih al-Bukhari · n° {{ hadithJour.numero }} · {{ hadithJour.livre.titre }}</p>
-        <router-link to="/hadith" class="btn btn-outline mt-8">Lire le Sahih al-Bukhari</router-link>
-      </div>
-    </section>
-
     <!-- Apprendre -->
     <section class="mx-auto max-w-6xl px-5 py-16 md:py-24">
       <p class="eyebrow">Apprendre</p>
@@ -208,11 +197,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { ArrowRight } from 'lucide-vue-next'
 import { store, preloadAll } from '../store'
-import { hadithDuJour } from '../bukhari'
 import { chargerActualites } from '../actualites'
 import CarteActualite from '../composants/CarteActualite.vue'
 import { useHorairesPriere } from '../horairesPriere'
-import Etoile from '../composants/Etoile.vue'
 // Photos de la mosquée (prises le 5 octobre 2026)
 import hero from '../assets/salle-priere-large.jpg'
 import facade from '../assets/cour-entree.jpg'
@@ -251,9 +238,6 @@ const evenementsAVenir = computed(() => store.evenements.filter(e => e.date >= a
 const aLaUne = computed(() => actus.value.length ? actus.value : evenementsAVenir.value)
 const dateEvenement = (d) => { const [a, m, j] = d.split('-').map(Number); return new Date(a, m - 1, j).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) }
 
-// ─── Hadith du jour ───
-const hadithJour = ref(null)
-
 // ─── Apprendre ───
 const apprendre = [
   { titre: 'Cours religieux', texte: 'Tajwid, croyance, jurisprudence, langue arabe, en vidéo et en audio.', to: '/cours', image: imgCours },
@@ -281,7 +265,6 @@ const semaine = computed(() => JOURS.map((nom, i) => {
 onMounted(async () => {
   preloadAll() // charge aussi les événements et les cours pour « À la une » et le programme
   chargerActualites(3).then(a => { actus.value = a }).catch(() => {})
-  hadithDuJour().then(h => { hadithJour.value = h }).catch(() => {})
 })
 
 // ─── Horaires de prière (Mawaqit de la mosquée, voir src/horairesPriere.js) ───
