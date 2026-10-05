@@ -1,22 +1,22 @@
 <template>
   <div>
-    <section class="bg-stone-900 text-white py-24 px-4 text-center">
-      <div class="max-w-7xl mx-auto">
-        <router-link to="/" class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity">
+    <section class="border-b border-line">
+      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
+        <router-link to="/" class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors">
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold mb-5">Rendez-vous avec l'Imam</h1>
-        <p class="max-w-3xl mx-auto text-base sm:text-lg leading-relaxed opacity-90">
+        <h1 class="text-4xl md:text-6xl">Rendez-vous avec l'Imam</h1>
+        <p class="mt-5 max-w-xl text-muted">
           Demandez un créneau, l'imam confirme selon ses disponibilités.
         </p>
       </div>
     </section>
 
-    <section class="bg-stone-50 py-12 px-4">
+    <section class="bg-paper py-12 px-4">
       <div class="max-w-2xl mx-auto space-y-8">
 
-        <div class="bg-white rounded-2xl shadow-sm border p-6">
+        <div class="bg-card rounded-2xl shadow-sm border p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">Demander un rendez-vous</h2>
           <p v-if="errorMsg" class="text-sm text-red-500 mb-3">{{ errorMsg }}</p>
           <div class="space-y-3">
@@ -29,7 +29,7 @@
             <textarea v-model="motif" rows="3" maxlength="1000" placeholder="Motif de la demande (facultatif)"
               class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm resize-none"></textarea>
             <button @click="submitRdv" :disabled="sending || !dateDemandee || !heureDemandee"
-              class="w-full bg-accent-600 text-white py-2.5 rounded-xl font-medium hover:bg-accent-700 disabled:opacity-50 transition-colors">
+              class="w-full bg-ink text-paper py-2.5 rounded-xl font-medium hover:bg-accent-600 disabled:opacity-50 transition-colors">
               {{ sending ? 'Envoi...' : 'Envoyer la demande' }}
             </button>
           </div>
@@ -41,7 +41,7 @@
           <div v-else-if="rdvs.length === 0" class="text-center text-gray-400 py-10">
             Aucune demande de rendez-vous.
           </div>
-          <div v-for="r in rdvs" :key="r.id" class="bg-white rounded-2xl shadow-sm border p-5 mb-3 flex items-center justify-between gap-4">
+          <div v-for="r in rdvs" :key="r.id" class="bg-card rounded-2xl shadow-sm border p-5 mb-3 flex items-center justify-between gap-4">
             <div class="min-w-0">
               <p class="font-medium text-gray-800">
                 {{ new Date(r.date_demandee).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) }}

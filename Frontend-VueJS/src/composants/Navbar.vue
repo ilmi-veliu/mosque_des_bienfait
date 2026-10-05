@@ -1,33 +1,32 @@
 <template>
-  <nav class="bg-white shadow-sm sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4">
+  <nav class="bg-paper border-b border-line sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-5">
       <div class="flex justify-between items-center h-16">
 
         <!-- Logo -->
-        <router-link to="/" class="flex items-center gap-2 text-lg sm:text-xl font-semibold flex-shrink-0">
-          <Building2 :size="24" />
-          <span class="hidden sm:inline">Mosquée des Bienfaisants</span>
-          <span class="sm:hidden">Mosquée</span>
+        <router-link to="/" class="flex items-center gap-3 flex-shrink-0">
+          <Etoile class="w-7 h-7 text-accent-500" />
+          <span class="font-serif text-xl leading-none">Mosquée des Bienfaisants</span>
         </router-link>
 
         <!-- Navigation Desktop -->
-        <div class="hidden lg:flex items-center gap-6 text-sm">
-          <router-link to="/" class="hover:text-gray-600 transition-colors">Accueil</router-link>
-          <router-link to="/cours" class="hover:text-gray-600 transition-colors">Cours Vidéo</router-link>
-          <router-link to="/evenements" class="hover:text-gray-600 transition-colors">Événements</router-link>
-          <router-link to="/hadith" class="hover:text-gray-600 transition-colors">Hadiths</router-link>
+        <div class="hidden lg:flex items-center gap-8 text-sm">
+          <router-link to="/" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Accueil</router-link>
+          <router-link to="/cours" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Cours Vidéo</router-link>
+          <router-link to="/evenements" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Événements</router-link>
+          <router-link to="/hadith" class="text-muted hover:text-ink transition-colors" exact-active-class="!text-ink">Hadiths</router-link>
           <!-- Connecté : avatar dropdown -->
           <template v-if="isLoggedIn">
             <div class="relative" ref="dropdownRef">
               <button
                 @click="dropdownOpen = !dropdownOpen"
-                class="flex items-center gap-2 hover:text-gray-600 transition-colors"
+                class="flex items-center gap-2 hover:text-ink transition-colors"
               >
                 <!-- Avatar -->
-                <span v-if="avatarUrl" class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-accent-100">
+                <span v-if="avatarUrl" class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-line">
                   <img :src="avatarUrl" alt="avatar" class="w-full h-full object-cover" />
                 </span>
-                <span v-else-if="userInitiales" class="w-8 h-8 rounded-full bg-accent-100 text-accent-700 text-xs font-bold flex items-center justify-center flex-shrink-0">{{ userInitiales }}</span>
+                <span v-else-if="userInitiales" class="w-8 h-8 rounded-full bg-pierre text-ink font-serif text-base flex items-center justify-center flex-shrink-0">{{ userInitiales }}</span>
                 <span v-else class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <UserCircle :size="20" class="text-gray-500" />
                 </span>
@@ -38,7 +37,7 @@
               <Transition name="dropdown">
                 <div
                   v-if="dropdownOpen"
-                  class="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50"
+                  class="absolute right-0 top-full mt-3 w-60 bg-card border border-line shadow-lg py-2 z-50"
                 >
                   <router-link
                     to="/profil"
@@ -117,7 +116,7 @@
           <template v-else>
             <router-link
               to="/connexion"
-              class="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              class="btn btn-outline !py-2"
             >
               Connexion
             </router-link>
@@ -125,7 +124,7 @@
         </div>
 
         <!-- Bouton Menu Mobile -->
-        <button @click="mobileOpen = !mobileOpen" class="lg:hidden p-2 -mr-2 text-gray-700">
+        <button @click="mobileOpen = !mobileOpen" class="lg:hidden p-2 -mr-2 text-ink" :aria-label="mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'">
           <X v-if="mobileOpen" :size="24" />
           <MenuIcon v-else :size="24" />
         </button>
@@ -133,47 +132,47 @@
     </div>
 
     <!-- Menu Mobile -->
-    <div v-if="mobileOpen" class="lg:hidden border-t bg-white">
-      <div class="px-4 py-3 space-y-1">
+    <div v-if="mobileOpen" class="lg:hidden border-t border-line bg-paper">
+      <div class="px-5 py-3">
         <!-- Liens principaux -->
-        <router-link @click="mobileOpen = false" to="/" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+        <router-link @click="mobileOpen = false" to="/" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
           <Home :size="18" class="text-gray-400" />
           Accueil
         </router-link>
-        <router-link @click="mobileOpen = false" to="/cours" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+        <router-link @click="mobileOpen = false" to="/cours" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
           <Video :size="18" class="text-gray-400" />
           Cours Vidéo
         </router-link>
-        <router-link @click="mobileOpen = false" to="/evenements" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+        <router-link @click="mobileOpen = false" to="/evenements" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
           <Calendar :size="18" class="text-gray-400" />
           Événements
         </router-link>
-        <router-link @click="mobileOpen = false" to="/hadith" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+        <router-link @click="mobileOpen = false" to="/hadith" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
           <BookOpen :size="18" class="text-gray-400" />
           Hadiths
         </router-link>
         <template v-if="isLoggedIn">
-          <router-link @click="mobileOpen = false" to="/coran" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+          <router-link @click="mobileOpen = false" to="/coran" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
             <BookOpen :size="18" class="text-gray-400" />
             Récitation du Coran
           </router-link>
-          <router-link @click="mobileOpen = false" to="/rdv-imam" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+          <router-link @click="mobileOpen = false" to="/rdv-imam" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
             <Calendar :size="18" class="text-gray-400" />
             RDV avec l'Imam
           </router-link>
-          <router-link v-if="isProfesseur" @click="mobileOpen = false" to="/espace-professeur" class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+          <router-link v-if="isProfesseur" @click="mobileOpen = false" to="/espace-professeur" class="flex items-center gap-3 py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">
             <GraduationCap :size="18" class="text-gray-400" />
             Espace Professeur
           </router-link>
         </template>
         <!-- Connecté : section compte -->
         <template v-if="isLoggedIn">
-          <div class="pt-2 mt-2 border-t border-gray-100">
+          <div class="pt-3 mt-1">
             <div class="flex items-center gap-3 px-3 py-2 mb-1">
               <span v-if="avatarUrl" class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                 <img :src="avatarUrl" alt="avatar" class="w-full h-full object-cover" />
               </span>
-              <span v-else class="w-10 h-10 rounded-full bg-accent-100 text-accent-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
+              <span v-else class="w-10 h-10 rounded-full bg-pierre text-ink font-serif text-lg flex items-center justify-center flex-shrink-0">
                 {{ userInitiales || '?' }}
               </span>
               <div>
@@ -202,8 +201,8 @@
 
         <!-- Non connecté -->
         <template v-else>
-          <div class="pt-2 mt-2 border-t border-gray-100">
-            <router-link @click="mobileOpen = false" to="/connexion" class="block text-center px-4 py-2.5 rounded-xl bg-gray-900 text-white hover:bg-gray-700 transition-colors text-sm font-medium">
+          <div class="pt-3 mt-1">
+            <router-link @click="mobileOpen = false" to="/connexion" class="btn btn-primary w-full">
               Connexion
             </router-link>
           </div>
@@ -216,8 +215,9 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Building2, Home, Video, Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
+import { Home, Video, Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
 import { supabase } from '../supabase'
+import Etoile from './Etoile.vue'
 
 const router = useRouter()
 const isLoggedIn = ref(false)

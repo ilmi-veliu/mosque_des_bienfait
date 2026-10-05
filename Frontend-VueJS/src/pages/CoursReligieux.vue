@@ -1,24 +1,24 @@
 <template>
   <div>
     <!-- Hero Section -->
-    <section class="bg-stone-900 text-white py-24 px-4 text-center">
-      <div class="max-w-7xl mx-auto">
+    <section class="border-b border-line">
+      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
         <router-link
           to="/"
-          class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity"
+          class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors"
         >
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold mb-5">Cours Religieux Islamiques à Périgueux</h1>
-        <p class="max-w-3xl mx-auto text-base sm:text-lg leading-relaxed opacity-90">
+        <h1 class="text-4xl md:text-6xl">Cours Religieux Islamiques à Périgueux</h1>
+        <p class="mt-5 max-w-xl text-muted">
           Approfondissez vos connaissances islamiques avec les cours dispensés à la Mosquée des Bienfaisants de Périgueux — Coran, Tajwid, jurisprudence et langue arabe pour tous les niveaux.
         </p>
       </div>
     </section>
 
     <!-- Filters -->
-    <section class="bg-white py-10 px-4 border-b border-gray-200">
+    <section class="bg-card py-10 px-4 border-b border-gray-200">
       <div class="max-w-6xl mx-auto flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-5 items-stretch sm:items-center">
         <div class="flex-1 min-w-0 sm:min-w-[300px] relative">
           <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" :size="20" />
@@ -33,7 +33,7 @@
         <!-- Filtre catégorie -->
         <select
           v-model="selectedCategorie"
-          class="px-5 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:border-gray-900 transition-colors"
+          class="px-5 py-3 border border-gray-300 rounded-xl bg-card focus:outline-none focus:border-gray-900 transition-colors"
         >
           <option value="">Toutes les catégories</option>
           <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
@@ -42,7 +42,7 @@
         <!-- Filtre jour -->
         <select
           v-model="selectedJour"
-          class="px-5 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:border-gray-900 transition-colors"
+          class="px-5 py-3 border border-gray-300 rounded-xl bg-card focus:outline-none focus:border-gray-900 transition-colors"
         >
           <option value="">Tous les jours</option>
           <option v-for="j in jours" :key="j" :value="j">{{ j }}</option>
@@ -71,7 +71,7 @@
           <div
             v-for="c in filteredCours"
             :key="c.id"
-            class="bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all"
+            class="bg-card rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all"
           >
             <!-- Video or Image -->
             <div class="relative">
@@ -110,7 +110,7 @@
                 :alt="c.titre"
                 class="w-full h-44 sm:h-56 object-cover"
               />
-              <span v-if="c.categorie" class="absolute top-4 left-4 bg-stone-900 text-white px-4 py-1.5 rounded-full text-xs font-semibold">
+              <span v-if="c.categorie" class="absolute top-4 left-4 bg-ink text-paper px-4 py-1.5 rounded-full text-xs font-semibold">
                 {{ c.categorie }}
               </span>
             </div>
@@ -159,7 +159,7 @@
                    inutile pour une simple vidéo déjà enregistrée, sans suite -->
               <div v-if="c.jour" class="mt-4 pt-4 border-t border-gray-100">
                 <button v-if="!inscriptionsMap[c.id]" @click="sInscrire(c.id)" :disabled="inscrivant === c.id"
-                  class="w-full bg-accent-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-accent-700 disabled:opacity-50 transition-colors">
+                  class="w-full bg-ink text-paper py-2 rounded-xl text-sm font-medium hover:bg-accent-600 disabled:opacity-50 transition-colors">
                   {{ inscrivant === c.id ? 'Envoi...' : "S'inscrire à ce cours" }}
                 </button>
                 <p v-else class="text-center text-sm py-2 rounded-xl"

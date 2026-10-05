@@ -1,23 +1,23 @@
 <template>
   <div>
-    <section class="bg-stone-900 text-white py-24 px-4 text-center">
-      <div class="max-w-7xl mx-auto">
-        <router-link to="/" class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity">
+    <section class="border-b border-line">
+      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
+        <router-link to="/" class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors">
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold mb-5">Récitation du Coran</h1>
-        <p class="max-w-3xl mx-auto text-base sm:text-lg leading-relaxed opacity-90">
+        <h1 class="text-4xl md:text-6xl">Récitation du Coran</h1>
+        <p class="mt-5 max-w-xl text-muted">
           Envoyez un enregistrement de votre récitation, l'imam vous répond avec ses corrections.
         </p>
       </div>
     </section>
 
-    <section class="bg-stone-50 py-12 px-4">
+    <section class="bg-paper py-12 px-4">
       <div class="max-w-2xl mx-auto space-y-8">
 
         <!-- Nouvel envoi -->
-        <div class="bg-white rounded-2xl shadow-sm border p-6">
+        <div class="bg-card rounded-2xl shadow-sm border p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">Envoyer une récitation</h2>
           <p v-if="errorMsg" class="text-sm text-red-500 mb-3">{{ errorMsg }}</p>
           <div class="space-y-3">
@@ -61,7 +61,7 @@
             </label>
 
             <button @click="submitRecitation" :disabled="sending || !sourate.trim() || !audioFile"
-              class="w-full bg-accent-600 text-white py-2.5 rounded-xl font-medium hover:bg-accent-700 disabled:opacity-50 transition-colors">
+              class="w-full bg-ink text-paper py-2.5 rounded-xl font-medium hover:bg-accent-600 disabled:opacity-50 transition-colors">
               {{ sending ? 'Envoi...' : 'Envoyer à l\'imam' }}
             </button>
           </div>
@@ -74,7 +74,7 @@
           <div v-else-if="recitations.length === 0" class="text-center text-gray-400 py-10">
             Aucune récitation envoyée pour l'instant.
           </div>
-          <div v-for="r in recitations" :key="r.id" class="bg-white rounded-2xl shadow-sm border p-5 mb-3">
+          <div v-for="r in recitations" :key="r.id" class="bg-card rounded-2xl shadow-sm border p-5 mb-3">
             <div class="flex items-center justify-between mb-2">
               <p class="font-medium text-gray-800">{{ r.sourate }}</p>
               <span class="text-xs px-2 py-1 rounded-full"
@@ -83,7 +83,7 @@
               </span>
             </div>
             <audio :src="r.audio_url" controls class="w-full mb-2"></audio>
-            <div v-if="r.statut === 'corrigee'" class="bg-stone-50 rounded-xl p-3 mt-2">
+            <div v-if="r.statut === 'corrigee'" class="bg-paper rounded-xl p-3 mt-2">
               <p class="text-xs font-medium text-gray-500 mb-1">Correction de l'imam :</p>
               <p v-if="r.correction_texte" class="text-sm text-gray-700">{{ r.correction_texte }}</p>
               <audio v-if="r.correction_audio_url" :src="r.correction_audio_url" controls class="w-full mt-2"></audio>

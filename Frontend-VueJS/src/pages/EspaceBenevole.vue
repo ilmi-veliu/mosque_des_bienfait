@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-paper">
     <!-- LOADING -->
     <div v-if="loading" class="min-h-screen flex items-center justify-center">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
@@ -7,7 +7,7 @@
 
     <!-- PAS CONNECTÉ -->
     <div v-else-if="!session" class="min-h-screen flex items-center justify-center px-4">
-      <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
+      <div class="bg-card rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
         <router-link to="/" class="inline-flex items-center gap-2 text-gray-500 mb-6 hover:text-gray-700 transition-colors text-sm">
           <ChevronLeft :size="16" />
           Retour au site
@@ -21,7 +21,7 @@
         </p>
         <div class="space-y-3">
           <router-link to="/connexion"
-            class="block w-full bg-accent-600 text-white py-3 rounded-xl hover:bg-accent-700 transition-colors font-medium">
+            class="block w-full bg-ink text-paper py-3 rounded-xl hover:bg-accent-600 transition-colors font-medium">
             Se connecter
           </router-link>
           <router-link to="/inscription"
@@ -41,7 +41,7 @@
 
     <!-- CONNECTÉ MAIS PAS BÉNÉVOLE ACCEPTÉ -->
     <div v-else-if="!benevole" class="min-h-screen flex items-center justify-center px-4">
-      <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
+      <div class="bg-card rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
         <router-link to="/" class="inline-flex items-center gap-2 text-gray-500 mb-6 hover:text-gray-700 transition-colors text-sm">
           <ChevronLeft :size="16" />
           Retour au site
@@ -55,7 +55,7 @@
         </p>
         <div class="space-y-3">
           <router-link to="/benevole"
-            class="block w-full bg-accent-600 text-white py-3 rounded-xl hover:bg-accent-700 transition-colors font-medium">
+            class="block w-full bg-ink text-paper py-3 rounded-xl hover:bg-accent-600 transition-colors font-medium">
             Faire une demande de bénévolat
           </router-link>
           <button @click="handleLogout"
@@ -69,7 +69,7 @@
     <!-- DASHBOARD BÉNÉVOLE -->
     <div v-else>
       <!-- Header -->
-      <div class="bg-stone-900 text-white px-4 py-4">
+      <div class="bg-ink text-white px-4 py-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
           <div class="flex items-center gap-3">
             <UserCheck :size="24" class="text-accent-400" />
@@ -104,7 +104,7 @@
         </div>
         <h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Nos domaines de bénévolat</h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          <div v-for="d in domaines" :key="d.titre" class="bg-white rounded-xl p-6 shadow-sm border">
+          <div v-for="d in domaines" :key="d.titre" class="bg-card rounded-xl p-6 shadow-sm border">
             <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
               <component :is="d.icon" :size="24" class="text-accent-600" />
             </div>
@@ -152,15 +152,15 @@
             <button @click="openDispoModal()"
               class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
               :class="benevole.disponible !== false
-                ? 'bg-white text-accent-700 border border-accent-300 hover:bg-accent-100'
-                : 'bg-white text-red-700 border border-red-300 hover:bg-red-100'">
+                ? 'bg-card text-accent-700 border border-accent-300 hover:bg-accent-100'
+                : 'bg-card text-red-700 border border-red-300 hover:bg-red-100'">
               Modifier ma disponibilité
             </button>
           </div>
         </div>
 
         <!-- INFOS BÉNÉVOLE -->
-        <div class="bg-white rounded-xl border p-5">
+        <div class="bg-card rounded-xl border p-5">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">Mes informations</h2>
           <div class="grid sm:grid-cols-2 gap-4 text-sm">
             <div>
@@ -197,7 +197,7 @@
       <!-- MODAL DISPONIBILITÉ -->
       <div v-if="showDispoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDispoModal = false">
         <div class="absolute inset-0 bg-black/40" @click="showDispoModal = false"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="relative bg-card rounded-2xl shadow-2xl w-full max-w-md">
           <div class="border-b px-6 py-4 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Ma disponibilité</h3>
             <button @click="showDispoModal = false" class="text-gray-400 hover:text-gray-600 p-1">
@@ -207,7 +207,7 @@
           <div class="px-6 py-5 space-y-5">
             <div class="flex gap-3">
               <button @click="dispoForm.disponible = true"
-                :class="dispoForm.disponible ? 'bg-accent-600 text-white ring-2 ring-accent-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                :class="dispoForm.disponible ? 'bg-ink text-paper ring-2 ring-accent-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
                 class="flex-1 py-3 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2">
                 <CalendarCheck :size="18" />
                 Disponible
@@ -243,7 +243,7 @@
               </div>
             </div>
             <button @click="saveDisponibilite" :disabled="savingDispo"
-              class="w-full bg-accent-600 text-white py-3 rounded-xl font-medium hover:bg-accent-700 transition-colors disabled:opacity-50">
+              class="w-full bg-ink text-paper py-3 rounded-xl font-medium hover:bg-accent-600 transition-colors disabled:opacity-50">
               {{ savingDispo ? 'Enregistrement...' : 'Enregistrer' }}
             </button>
           </div>

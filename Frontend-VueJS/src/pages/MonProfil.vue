@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-12 px-4">
+  <div class="min-h-screen bg-paper py-12 px-4">
     <div class="max-w-2xl mx-auto">
 
       <!-- Retour -->
@@ -18,7 +18,7 @@
       <div v-else class="space-y-6">
 
         <!-- Photo de profil (hommes uniquement) -->
-        <div v-if="userSexe !== 'femme'" class="bg-white rounded-2xl shadow-sm p-6">
+        <div v-if="userSexe !== 'femme'" class="bg-card rounded-2xl shadow-sm p-6">
           <h2 class="text-base font-semibold text-gray-800 mb-4">Photo de profil</h2>
           <div class="flex items-center gap-5">
             <div class="relative">
@@ -35,7 +35,7 @@
                 {{ initiales }}
               </div>
               <label
-                class="absolute -bottom-1 -right-1 w-7 h-7 bg-accent-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-accent-700 transition-colors"
+                class="absolute -bottom-1 -right-1 w-7 h-7 bg-accent-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-accent-600 transition-colors"
                 :class="{ 'opacity-50 cursor-not-allowed': uploadingAvatar }"
               >
                 <Camera :size="14" class="text-white" />
@@ -67,7 +67,7 @@
         </div>
 
         <!-- Informations personnelles -->
-        <div class="bg-white rounded-2xl shadow-sm p-6">
+        <div class="bg-card rounded-2xl shadow-sm p-6">
           <h2 class="text-base font-semibold text-gray-800 mb-4">Informations personnelles</h2>
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
@@ -106,7 +106,7 @@
           <button
             @click="saveProfile"
             :disabled="saving"
-            class="flex-1 sm:flex-none bg-accent-600 text-white px-8 py-3 rounded-xl font-medium text-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="flex-1 sm:flex-none bg-ink text-paper px-8 py-3 rounded-xl font-medium text-sm hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Save :size="16" />
             {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}

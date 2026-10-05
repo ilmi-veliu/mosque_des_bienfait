@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-16 px-4">
+  <div class="min-h-screen bg-paper py-16 px-4">
     <div class="max-w-md mx-auto">
 
       <!-- Header -->
@@ -11,7 +11,7 @@
         <p class="text-gray-500">Choisissez un nouveau mot de passe pour votre compte.</p>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-sm border p-8">
+      <div class="bg-card rounded-2xl shadow-sm border p-8">
 
         <!-- Token invalide ou expiré -->
         <div v-if="tokenError" class="text-center py-6">
@@ -20,7 +20,7 @@
           </div>
           <h2 class="text-lg font-semibold text-gray-900 mb-2">Lien invalide ou expiré</h2>
           <p class="text-sm text-gray-500 mb-5">Ce lien de réinitialisation n'est plus valide. Veuillez en demander un nouveau.</p>
-          <router-link to="/connexion" class="inline-block px-5 py-2.5 bg-accent-600 text-white rounded-xl font-medium hover:bg-accent-700 transition-colors text-sm">
+          <router-link to="/connexion" class="inline-block px-5 py-2.5 bg-ink text-paper rounded-xl font-medium hover:bg-accent-600 transition-colors text-sm">
             Retour à la connexion
           </router-link>
         </div>

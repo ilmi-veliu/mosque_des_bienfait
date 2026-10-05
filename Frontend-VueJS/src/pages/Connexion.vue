@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-16 px-4">
+  <div class="min-h-screen bg-paper py-16 px-4">
     <div class="max-w-md mx-auto">
       <!-- Header -->
       <div class="text-center mb-8">
@@ -13,7 +13,7 @@
       </div>
 
       <!-- Form -->
-      <div class="bg-white rounded-2xl shadow-sm border p-8">
+      <div class="bg-card rounded-2xl shadow-sm border p-8">
         <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
           {{ errorMsg }}
         </div>
@@ -85,7 +85,7 @@
               <button
                 @click="sendResetEmail"
                 :disabled="resetLoading"
-                class="px-4 py-2 bg-accent-600 text-white rounded-lg text-sm font-medium hover:bg-accent-700 transition-colors disabled:opacity-50"
+                class="px-4 py-2 bg-ink text-paper rounded-lg text-sm font-medium hover:bg-accent-600 transition-colors disabled:opacity-50"
               >
                 {{ resetLoading ? '...' : 'Envoyer' }}
               </button>

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-stone-900 flex items-center justify-center px-4">
+  <div class="min-h-screen bg-ink flex items-center justify-center px-4">
     <div class="max-w-md w-full">
       <div class="text-center mb-8">
         <div class="w-16 h-16 bg-accent-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -9,7 +9,7 @@
         <p class="text-gray-400 mt-2">Mosquée des Bienfaisants</p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+      <form @submit.prevent="handleLogin" class="bg-card rounded-2xl shadow-xl p-8 space-y-6">
         <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
           {{ errorMsg }}
         </div>

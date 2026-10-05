@@ -1,13 +1,13 @@
 <template>
   <div>
-    <section class="bg-stone-900 text-white py-16 px-4 text-center">
-      <div class="max-w-7xl mx-auto">
-        <h1 class="text-2xl sm:text-3xl font-semibold mb-2">Espace Professeur</h1>
-        <p class="text-sm opacity-80">Corrigez les récitations envoyées par les élèves.</p>
+    <section class="border-b border-line">
+      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
+        <h1 class="text-4xl md:text-6xl">Espace Professeur</h1>
+        <p class="mt-5 max-w-xl text-muted">Corrigez les récitations envoyées par les élèves.</p>
       </div>
     </section>
 
-    <section class="bg-stone-50 py-10 px-4 min-h-[60vh]">
+    <section class="bg-paper py-10 px-4 min-h-[60vh]">
       <div class="max-w-3xl mx-auto space-y-5">
 
         <div v-if="loading" class="text-center text-gray-400 py-16">Chargement...</div>
@@ -18,12 +18,12 @@
           <div class="flex gap-2 mb-6">
             <button @click="filtre = 'en_attente'"
               class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              :class="filtre === 'en_attente' ? 'bg-accent-600 text-white' : 'bg-white border text-gray-600'">
+              :class="filtre === 'en_attente' ? 'bg-ink text-paper' : 'bg-card border text-gray-600'">
               À corriger ({{ enAttente.length }})
             </button>
             <button @click="filtre = 'corrigee'"
               class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              :class="filtre === 'corrigee' ? 'bg-accent-600 text-white' : 'bg-white border text-gray-600'">
+              :class="filtre === 'corrigee' ? 'bg-ink text-paper' : 'bg-card border text-gray-600'">
               Corrigées
             </button>
           </div>
@@ -32,7 +32,7 @@
             Aucune récitation ici.
           </div>
 
-          <div v-for="r in filtrees" :key="r.id" class="bg-white rounded-2xl shadow-sm border p-5 mb-4">
+          <div v-for="r in filtrees" :key="r.id" class="bg-card rounded-2xl shadow-sm border p-5 mb-4">
             <p class="font-medium text-gray-800 mb-2">{{ r.sourate }}</p>
             <audio :src="r.audio_url" controls class="w-full mb-3"></audio>
 
@@ -41,12 +41,12 @@
                 placeholder="Corrections écrites pour l'élève..."
                 class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-accent-600 resize-none mb-2"></textarea>
               <button @click="envoyerCorrection(r)" :disabled="sendingId === r.id || !corrections[r.id]?.trim()"
-                class="bg-accent-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-accent-700 disabled:opacity-50">
+                class="bg-ink text-paper px-4 py-2 rounded-xl text-sm font-medium hover:bg-accent-600 disabled:opacity-50">
                 {{ sendingId === r.id ? 'Envoi...' : 'Envoyer la correction' }}
               </button>
             </template>
             <template v-else>
-              <div class="bg-stone-50 rounded-xl p-3">
+              <div class="bg-paper rounded-xl p-3">
                 <p class="text-xs font-medium text-gray-500 mb-1">Correction envoyée :</p>
                 <p class="text-sm text-gray-700">{{ r.correction_texte }}</p>
               </div>

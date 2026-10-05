@@ -1,17 +1,17 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="bg-stone-900 text-white py-24 px-4 text-center">
-      <div class="max-w-7xl mx-auto">
+    <section class="border-b border-line">
+      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
         <router-link
           to="/"
-          class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity"
+          class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors"
         >
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-4xl md:text-5xl font-semibold mb-5">Devenir Bénévole à la Mosquée de Périgueux</h1>
-        <p class="max-w-3xl mx-auto text-lg leading-relaxed opacity-90">
+        <h1 class="text-4xl md:text-6xl">Devenir Bénévole à la Mosquée de Périgueux</h1>
+        <p class="mt-5 max-w-xl text-muted">
           Rejoignez l'équipe de bénévoles de la Mosquée des Bienfaisants de Périgueux et contribuez au bien-être de la communauté musulmane de Dordogne. Chaque aide compte.
         </p>
       </div>
@@ -22,49 +22,49 @@
       <div class="max-w-6xl mx-auto">
         <h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Nos domaines de bénévolat</h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-white rounded-xl p-6 shadow-sm border">
+          <div class="bg-card rounded-xl p-6 shadow-sm border">
             <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
               <BookOpen :size="24" class="text-accent-600" />
             </div>
             <h3 class="font-semibold text-gray-800 mb-2">Enseignement</h3>
             <p class="text-sm text-gray-600">Cours de Coran, langue arabe, soutien scolaire pour les enfants et adultes.</p>
           </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border">
+          <div class="bg-card rounded-xl p-6 shadow-sm border">
             <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
               <Heart :size="24" class="text-accent-600" />
             </div>
             <h3 class="font-semibold text-gray-800 mb-2">Social & Entraide</h3>
             <p class="text-sm text-gray-600">Distribution alimentaire, aide aux familles, accompagnement des personnes isolées.</p>
           </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border">
+          <div class="bg-card rounded-xl p-6 shadow-sm border">
             <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
               <Calendar :size="24" class="text-accent-600" />
             </div>
             <h3 class="font-semibold text-gray-800 mb-2">Événements</h3>
             <p class="text-sm text-gray-600">Organisation des événements, accueil des visiteurs, logistique.</p>
           </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border">
+          <div class="bg-card rounded-xl p-6 shadow-sm border">
             <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
               <Wrench :size="24" class="text-accent-600" />
             </div>
             <h3 class="font-semibold text-gray-800 mb-2">Entretien & Travaux</h3>
             <p class="text-sm text-gray-600">Nettoyage, petits travaux, maintenance de la mosquée.</p>
           </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border">
+          <div class="bg-card rounded-xl p-6 shadow-sm border">
             <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
               <Monitor :size="24" class="text-accent-600" />
             </div>
             <h3 class="font-semibold text-gray-800 mb-2">Communication & Informatique</h3>
             <p class="text-sm text-gray-600">Réseaux sociaux, site web, graphisme, photo/vidéo.</p>
           </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border">
+          <div class="bg-card rounded-xl p-6 shadow-sm border">
             <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
               <UtensilsCrossed :size="24" class="text-accent-600" />
             </div>
             <h3 class="font-semibold text-gray-800 mb-2">Cuisine Ramadan</h3>
             <p class="text-sm text-gray-600">Préparation des repas d'iftar, organisation de la cuisine pendant le mois de Ramadan.</p>
           </div>
-          <div class="bg-white rounded-xl p-6 shadow-sm border">
+          <div class="bg-card rounded-xl p-6 shadow-sm border">
             <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
               <HandHelping :size="24" class="text-accent-600" />
             </div>
@@ -94,7 +94,7 @@
             <span v-else-if="existingStatus === 'refusé'">Votre candidature a été refusée. Vous pouvez en envoyer une nouvelle demain.</span>
           </p>
           <router-link v-if="existingStatus === 'accepté'" to="/espace-benevole"
-            class="mt-4 inline-block bg-accent-600 text-white px-6 py-2 rounded-xl hover:bg-accent-700 transition-colors font-medium text-sm">
+            class="mt-4 inline-block bg-ink text-paper px-6 py-2 rounded-xl hover:bg-accent-600 transition-colors font-medium text-sm">
             Accéder à l'espace bénévole
           </router-link>
         </div>
@@ -165,7 +165,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-accent-600 text-white py-3 rounded-xl hover:bg-accent-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+            class="w-full bg-ink text-paper py-3 rounded-xl hover:bg-accent-600 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <Send :size="18" />
             {{ loading ? 'Envoi en cours...' : 'Envoyer ma candidature' }}

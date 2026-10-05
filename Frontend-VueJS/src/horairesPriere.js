@@ -9,11 +9,11 @@ const CLE_CACHE = 'mosque_horaires_v1'
 const CACHE_MS = 12 * 60 * 60 * 1000
 
 export const PRIERES = [
-  { key: 'fajr', label: 'Fajr', index: 0 },
-  { key: 'dhuhr', label: 'Dhuhr', index: 2 },
-  { key: 'asr', label: 'Asr', index: 3 },
-  { key: 'maghrib', label: 'Maghrib', index: 4 },
-  { key: 'isha', label: 'Isha', index: 5 },
+  { key: 'fajr', label: 'Fajr', ar: 'الفجر', index: 0 },
+  { key: 'dhuhr', label: 'Dhuhr', ar: 'الظهر', index: 2 },
+  { key: 'asr', label: 'Asr', ar: 'العصر', index: 3 },
+  { key: 'maghrib', label: 'Maghrib', ar: 'المغرب', index: 4 },
+  { key: 'isha', label: 'Isha', ar: 'العشاء', index: 5 },
 ]
 
 // Date et heure actuelles à Périgueux

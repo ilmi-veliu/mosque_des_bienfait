@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-paper">
     <!-- Header -->
-    <div class="bg-stone-900 text-white px-4 py-4">
+    <div class="bg-ink text-white px-4 py-4">
       <div class="max-w-7xl mx-auto flex justify-between items-center">
         <div class="flex items-center gap-3">
           <Shield :size="24" class="text-accent-400" />
@@ -18,7 +18,7 @@
               </span>
             </button>
             <!-- Panel notifications -->
-            <div v-if="showNotifPanel" class="absolute right-0 top-10 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border z-50 max-h-[70vh] overflow-hidden">
+            <div v-if="showNotifPanel" class="absolute right-0 top-10 w-80 sm:w-96 bg-card rounded-xl shadow-2xl border z-50 max-h-[70vh] overflow-hidden">
               <div class="px-4 py-3 border-b flex items-center justify-between">
                 <h4 class="font-semibold text-gray-800 text-sm">Notifications</h4>
                 <button v-if="notifications.length > 0" @click="markAllRead" class="text-xs text-accent-600 hover:underline">
@@ -68,7 +68,7 @@
 
     <div v-else>
     <!-- Tabs -->
-    <div class="bg-white border-b">
+    <div class="bg-card border-b">
       <div class="max-w-7xl mx-auto flex overflow-x-auto">
         <button
           @click="activeTab = 'evenements'"
@@ -159,7 +159,7 @@
       <div v-if="activeTab === 'evenements'">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Gestion des Événements</h2>
-          <button @click="openEventForm()" class="bg-accent-600 text-white px-4 sm:px-5 py-2.5 rounded-xl hover:bg-accent-700 transition-colors flex items-center gap-2 text-sm sm:text-base">
+          <button @click="openEventForm()" class="bg-ink text-paper px-4 sm:px-5 py-2.5 rounded-xl hover:bg-accent-600 transition-colors flex items-center gap-2 text-sm sm:text-base">
             <Plus :size="18" />
             Ajouter
           </button>
@@ -173,7 +173,7 @@
           Aucun événement. Cliquez sur "Ajouter" pour en créer un.
         </div>
         <div v-else class="space-y-4">
-          <div v-for="event in events" :key="event.id" class="bg-white rounded-xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+          <div v-for="event in events" :key="event.id" class="bg-card rounded-xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
             <img
               :src="event.image_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=200'"
               class="w-full sm:w-20 h-40 sm:h-20 rounded-lg object-cover flex-shrink-0"
@@ -203,7 +203,7 @@
       <div v-if="activeTab === 'cours'">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Gestion des Cours Religieux</h2>
-          <button @click="openCoursForm()" class="bg-accent-600 text-white px-4 sm:px-5 py-2.5 rounded-xl hover:bg-accent-700 transition-colors flex items-center gap-2 text-sm sm:text-base">
+          <button @click="openCoursForm()" class="bg-ink text-paper px-4 sm:px-5 py-2.5 rounded-xl hover:bg-accent-600 transition-colors flex items-center gap-2 text-sm sm:text-base">
             <Plus :size="18" />
             Ajouter
           </button>
@@ -216,7 +216,7 @@
           Aucun cours. Cliquez sur "Ajouter" pour en créer un.
         </div>
         <div v-else class="space-y-4">
-          <div v-for="c in cours" :key="c.id" class="bg-white rounded-xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+          <div v-for="c in cours" :key="c.id" class="bg-card rounded-xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
             <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-accent-50 flex items-center justify-center flex-shrink-0">
               <BookOpen :size="28" class="text-accent-600" />
             </div>
@@ -251,7 +251,7 @@
       <div v-if="activeTab === 'hadiths'">
         <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Hadiths</h2>
 
-        <form @submit.prevent="saveHadith" class="bg-white rounded-xl border p-4 sm:p-5 mb-6 space-y-3">
+        <form @submit.prevent="saveHadith" class="bg-card rounded-xl border p-4 sm:p-5 mb-6 space-y-3">
           <h3 class="font-semibold text-gray-800">{{ editingHadithId ? 'Modifier le hadith' : 'Publier un hadith' }}</h3>
           <textarea v-model="hadithForm.texte_arabe" rows="2" maxlength="3000" dir="rtl" placeholder="Texte arabe (facultatif)"
             class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
@@ -267,7 +267,7 @@
             <button v-if="editingHadithId" type="button" @click="resetHadithForm" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors text-sm">
               Annuler
             </button>
-            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-50 text-sm">
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-50 text-sm">
               {{ saving ? 'Enregistrement...' : (editingHadithId ? 'Modifier' : 'Publier') }}
             </button>
           </div>
@@ -278,7 +278,7 @@
         </div>
         <div v-else-if="hadiths.length === 0" class="text-center py-12 text-gray-500">Aucun hadith publié.</div>
         <div v-else class="space-y-3">
-          <div v-for="h in hadiths" :key="h.id" class="bg-white rounded-xl border p-4 flex gap-4">
+          <div v-for="h in hadiths" :key="h.id" class="bg-card rounded-xl border p-4 flex gap-4">
             <div class="flex-1 min-w-0">
               <p v-if="h.texte_arabe" class="text-right text-gray-800 mb-1" dir="rtl">{{ h.texte_arabe }}</p>
               <p class="text-sm text-gray-700">{{ h.texte_francais }}</p>
@@ -308,14 +308,14 @@
         <template v-else>
           <div v-if="inscriptions.length === 0" class="text-center py-8 text-gray-500 mb-8">Aucune inscription.</div>
           <div v-else class="space-y-3 mb-10">
-            <div v-for="i in inscriptions" :key="i.id" class="bg-white rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div v-for="i in inscriptions" :key="i.id" class="bg-card rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="min-w-0">
                 <p class="font-medium text-gray-800">{{ nomProfil(i.user_id) }}</p>
                 <p class="text-sm text-gray-500">{{ titreCours(i.cours_id) }}</p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <template v-if="i.statut === 'en_attente'">
-                  <button @click="updateInscription(i, 'validee')" class="px-3 py-1.5 bg-accent-600 text-white rounded-lg text-xs font-medium hover:bg-accent-700">Valider</button>
+                  <button @click="updateInscription(i, 'validee')" class="px-3 py-1.5 bg-ink text-paper rounded-lg text-xs font-medium hover:bg-accent-600">Valider</button>
                   <button @click="updateInscription(i, 'refusee')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Refuser</button>
                 </template>
                 <span v-else class="text-xs px-3 py-1.5 rounded-full"
@@ -336,7 +336,7 @@
               class="w-full pl-9 pr-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
           </div>
           <p v-if="roleError" class="text-sm text-red-500 mb-3">{{ roleError }}</p>
-          <div class="bg-white rounded-xl border divide-y">
+          <div class="bg-card rounded-xl border divide-y">
             <div v-for="p in profilsFiltres" :key="p.id" class="px-4 py-3 flex items-center justify-between gap-3">
               <span class="text-sm text-gray-800 truncate">{{ [p.prenom, p.nom].filter(Boolean).join(' ') || 'Sans nom' }}</span>
               <select :value="p.role_eleve" @change="changerRoleEleve(p, $event.target.value)"
@@ -369,7 +369,7 @@
               Aucune demande pour le moment.
             </div>
             <div v-else class="space-y-4">
-              <div v-for="b in demandes" :key="b.id" class="bg-white rounded-xl border p-4 sm:p-5">
+              <div v-for="b in demandes" :key="b.id" class="bg-card rounded-xl border p-4 sm:p-5">
                 <div class="flex flex-col sm:flex-row sm:items-start gap-4">
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap mb-2">
@@ -423,11 +423,11 @@
             <div v-if="benevolesLoading" class="text-center py-12">
               <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
             </div>
-            <div v-else-if="benevolesActuels.length === 0" class="text-center py-12 text-gray-500 bg-white rounded-xl border">
+            <div v-else-if="benevolesActuels.length === 0" class="text-center py-12 text-gray-500 bg-card rounded-xl border">
               Aucun bénévole accepté pour le moment.
             </div>
             <div v-else class="space-y-3">
-              <div v-for="b in benevolesActuels" :key="b.id" class="bg-white rounded-xl border p-4 flex items-center gap-3">
+              <div v-for="b in benevolesActuels" :key="b.id" class="bg-card rounded-xl border p-4 flex items-center gap-3">
                 <div class="w-10 h-10 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <UserCheck :size="18" class="text-accent-600" />
                 </div>
@@ -482,7 +482,7 @@
           <p class="text-gray-500">Aucun signalement pour le moment.</p>
         </div>
         <div v-else class="space-y-3">
-          <div v-for="bug in bugReports" :key="bug.id" class="bg-white rounded-xl border p-4">
+          <div v-for="bug in bugReports" :key="bug.id" class="bg-card rounded-xl border p-4">
             <div class="flex items-start justify-between gap-3">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-2">
@@ -531,7 +531,7 @@
         </div>
         <div v-else class="space-y-3">
           <div v-for="b in filteredRoleBenevoles" :key="b.id"
-            class="bg-white rounded-xl border p-4 space-y-3">
+            class="bg-card rounded-xl border p-4 space-y-3">
             <div class="flex flex-col sm:flex-row sm:items-center gap-3">
               <div class="flex items-center gap-3 flex-1 min-w-0">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
@@ -600,7 +600,7 @@
 
       <div v-else class="flex flex-col md:flex-row gap-4 md:h-[600px]">
         <!-- Liste conversations — cachée sur mobile quand une conv est sélectionnée -->
-        <div class="md:w-64 md:shrink-0 border rounded-2xl bg-white overflow-y-auto flex flex-col md:max-h-full max-h-72"
+        <div class="md:w-64 md:shrink-0 border rounded-2xl bg-card overflow-y-auto flex flex-col md:max-h-full max-h-72"
           :class="selectedImamConv ? 'hidden md:flex' : 'flex'">
           <div class="px-4 py-3 border-b bg-gray-50">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Conversations ({{ imamConversations.length }})</p>
@@ -624,7 +624,7 @@
         </div>
 
         <!-- Messages + réponse — cachée sur mobile quand aucune conv sélectionnée -->
-        <div class="flex-1 border rounded-2xl bg-white flex flex-col overflow-hidden min-h-[500px] md:min-h-0"
+        <div class="flex-1 border rounded-2xl bg-card flex flex-col overflow-hidden min-h-[500px] md:min-h-0"
           :class="!selectedImamConv ? 'hidden md:flex' : 'flex'">
           <div v-if="!selectedImamConv" class="flex-1 flex items-center justify-center text-gray-400">
             <p>Sélectionnez une conversation</p>
@@ -659,7 +659,7 @@
                   <!-- Audio -->
                   <div v-if="msg.type === 'audio'"
                     class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
-                    :class="msg.isImamReply ? 'bg-accent-600 text-white' : 'bg-white border'">
+                    :class="msg.isImamReply ? 'bg-ink text-paper' : 'bg-card border'">
                     <button @click="toggleImamAudio(msg)"
                       class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                       :class="msg.isImamReply ? 'bg-white/20' : 'bg-accent-100 text-accent-700'">
@@ -674,13 +674,13 @@
                   <img v-else-if="msg.type === 'image'" :src="msg.file_url" class="max-w-[200px] rounded-xl" />
                   <!-- Fichier -->
                   <a v-else-if="msg.type === 'file'" :href="msg.file_url" target="_blank"
-                    class="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm text-accent-600 hover:underline bg-white">
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm text-accent-600 hover:underline bg-card">
                     📎 {{ msg.file_name || 'Fichier' }}
                   </a>
                   <!-- Texte -->
                   <div v-else
                     class="px-3 py-2 rounded-xl text-sm leading-relaxed"
-                    :class="msg.isImamReply ? 'bg-accent-600 text-white' : 'bg-white border text-gray-800'">
+                    :class="msg.isImamReply ? 'bg-ink text-paper' : 'bg-card border text-gray-800'">
                     {{ msg.content }}
                   </div>
                 </div>
@@ -688,7 +688,7 @@
             </div>
 
             <!-- Zone de réponse -->
-            <div class="border-t bg-white">
+            <div class="border-t bg-card">
               <!-- Fichiers en attente -->
               <div v-if="imamPendingFiles.length" class="px-4 pt-2 flex gap-2 flex-wrap">
                 <div v-for="(f, i) in imamPendingFiles" :key="i"
@@ -714,7 +714,7 @@
                   @input="e => { e.target.style.height='auto'; e.target.style.height=Math.min(e.target.scrollHeight,90)+'px' }"
                 ></textarea>
                 <button @click="sendImamReply" :disabled="(!imamReply.trim() && !imamPendingFiles.length) || imamSending"
-                  class="p-2 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-40 shrink-0">
+                  class="p-2 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-40 shrink-0">
                   <div v-if="imamSending" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <Send v-else :size="18" />
                 </button>
@@ -730,7 +730,7 @@
       <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Demandes de rendez-vous</h2>
       <div v-if="rdvsLoading" class="text-center text-gray-400 py-16">Chargement...</div>
       <div v-else-if="rdvs.length === 0" class="text-center text-gray-400 py-16">Aucune demande.</div>
-      <div v-for="r in rdvs" :key="r.id" class="bg-white rounded-2xl shadow-sm border p-5 mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div v-for="r in rdvs" :key="r.id" class="bg-card rounded-2xl shadow-sm border p-5 mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="min-w-0">
           <p class="font-medium text-gray-800">
             {{ new Date(r.date_demandee).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) }}
@@ -741,7 +741,7 @@
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <template v-if="r.statut === 'en_attente'">
-            <button @click="updateRdvStatut(r, 'confirme')" class="px-3 py-1.5 bg-accent-600 text-white rounded-lg text-xs font-medium hover:bg-accent-700">Confirmer</button>
+            <button @click="updateRdvStatut(r, 'confirme')" class="px-3 py-1.5 bg-ink text-paper rounded-lg text-xs font-medium hover:bg-accent-600">Confirmer</button>
             <button @click="updateRdvStatut(r, 'refuse')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Refuser</button>
           </template>
           <span v-else class="text-xs px-3 py-1.5 rounded-full"
@@ -754,7 +754,7 @@
 
     <!-- MODAL ÉVÉNEMENT -->
     <div v-if="showEventModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showEventModal = false">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
+      <div class="bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
         <div class="p-6 border-b flex justify-between items-center">
           <h3 class="text-xl font-semibold">{{ editingEvent ? 'Modifier' : 'Ajouter' }} un événement</h3>
           <button @click="showEventModal = false" class="text-gray-400 hover:text-gray-600">
@@ -828,7 +828,7 @@
             <button type="button" @click="showEventModal = false" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors">
               Annuler
             </button>
-            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-50">
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-50">
               {{ saving ? 'Enregistrement...' : (editingEvent ? 'Modifier' : 'Ajouter') }}
             </button>
           </div>
@@ -838,7 +838,7 @@
 
     <!-- MODAL COURS -->
     <div v-if="showCoursModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showCoursModal = false">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
+      <div class="bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
         <div class="p-6 border-b flex justify-between items-center">
           <h3 class="text-xl font-semibold">{{ editingCours ? 'Modifier' : 'Ajouter' }} un cours</h3>
           <button @click="showCoursModal = false" class="text-gray-400 hover:text-gray-600">
@@ -937,7 +937,7 @@
             <button type="button" @click="showCoursModal = false" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors">
               Annuler
             </button>
-            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-50">
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-50">
               {{ saving ? 'Enregistrement...' : (editingCours ? 'Modifier' : 'Ajouter') }}
             </button>
           </div>

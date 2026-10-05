@@ -5,7 +5,7 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#030213",
-  "theme_color": "#1c1917",
+  "theme_color": "#FAF6F1",
   "lang": "fr",
   "orientation": "portrait-primary",
   "categories": ["religion", "education"],

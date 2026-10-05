@@ -1,25 +1,25 @@
 <template>
   <div>
-    <section class="bg-stone-900 text-white py-24 px-4 text-center">
-      <div class="max-w-7xl mx-auto">
-        <router-link to="/" class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity">
+    <section class="border-b border-line">
+      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
+        <router-link to="/" class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors">
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold mb-5">Hadiths</h1>
-        <p class="max-w-3xl mx-auto text-base sm:text-lg leading-relaxed opacity-90">
+        <h1 class="text-4xl md:text-6xl">Hadiths</h1>
+        <p class="mt-5 max-w-xl text-muted">
           Recueil de hadiths partagés par la Mosquée des Bienfaisants.
         </p>
       </div>
     </section>
 
-    <section class="bg-stone-50 py-12 px-4">
+    <section class="bg-paper py-12 px-4">
       <div class="max-w-3xl mx-auto space-y-5">
         <div v-if="loading" class="text-center text-gray-400 py-16">Chargement...</div>
         <div v-else-if="hadiths.length === 0" class="text-center text-gray-400 py-16">
           Aucun hadith publié pour l'instant.
         </div>
-        <div v-for="h in hadiths" :key="h.id" class="bg-white rounded-2xl shadow-sm border p-6">
+        <div v-for="h in hadiths" :key="h.id" class="bg-card rounded-2xl shadow-sm border p-6">
           <p v-if="h.texte_arabe" class="text-right text-lg text-gray-800 mb-3" dir="rtl">{{ h.texte_arabe }}</p>
           <p class="text-gray-700 leading-relaxed">{{ h.texte_francais }}</p>
           <div class="flex items-center justify-between mt-4 text-xs text-gray-400">

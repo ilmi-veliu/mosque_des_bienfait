@@ -5,7 +5,7 @@
         class="fixed bottom-0 left-0 right-0 z-[9999] p-4"
       >
         <div class="max-w-6xl mx-auto">
-          <div class="bg-stone-900 rounded-lg shadow-2xl p-6 text-white">
+          <div class="bg-ink rounded-lg shadow-2xl p-6 text-white">
             <div class="flex flex-col md:flex-row items-center gap-4">
               <!-- Icon -->
               <div class="flex-shrink-0">
@@ -37,7 +37,7 @@
               <div class="flex gap-3 flex-shrink-0">
                 <button
                   @click="acceptCookies"
-                  class="bg-white text-accent-800 px-6 py-2.5 rounded-lg font-semibold hover:bg-accent-50 transition-all flex items-center gap-2 shadow-lg"
+                  class="bg-card text-accent-800 px-6 py-2.5 rounded-lg font-semibold hover:bg-accent-50 transition-all flex items-center gap-2 shadow-lg"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>

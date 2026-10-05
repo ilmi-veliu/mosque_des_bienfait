@@ -1,24 +1,24 @@
 <template>
   <div>
     <!-- Hero Events -->
-    <section class="bg-stone-900 text-white py-24 px-4 text-center">
-      <div class="max-w-7xl mx-auto">
+    <section class="border-b border-line">
+      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
         <router-link 
           to="/"
-          class="inline-flex items-center gap-2 text-white mb-8 hover:opacity-80 transition-opacity"
+          class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors"
         >
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold mb-5">Événements de la Mosquée de Périgueux</h1>
-        <p class="max-w-3xl mx-auto text-base sm:text-lg leading-relaxed opacity-90">
+        <h1 class="text-4xl md:text-6xl">Événements de la Mosquée de Périgueux</h1>
+        <p class="mt-5 max-w-xl text-muted">
           Découvrez tous les événements passés et à venir de la Mosquée des Bienfaisants de Périgueux. La communauté musulmane de Dordogne organise régulièrement des activités spirituelles, éducatives et culturelles.
         </p>
       </div>
     </section>
 
     <!-- Filters -->
-<section class="bg-white py-10 px-4 border-b border-gray-200">
+<section class="bg-card py-10 px-4 border-b border-gray-200">
   <div class="max-w-6xl mx-auto flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-5 items-stretch sm:items-center">
     <!-- Barre de recherche -->
     <div class="flex-1 min-w-0 sm:min-w-[300px] relative">
@@ -35,7 +35,7 @@
     <div class="relative">
       <button 
         @click="dropdownOpen = !dropdownOpen"
-        class="flex items-center gap-3 px-5 py-3 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition-colors"
+        class="flex items-center gap-3 px-5 py-3 border border-gray-300 rounded-xl bg-card hover:bg-gray-50 transition-colors"
       >
         <Filter :size="18" />
         <span class="text-sm font-medium">{{ selectedCategoryLabel }}</span>
@@ -45,7 +45,7 @@
       <!-- Menu dropdown -->
       <div 
         v-show="dropdownOpen"
-        class="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-10"
+        class="absolute right-0 top-full mt-2 w-56 bg-card border border-gray-200 rounded-xl shadow-lg overflow-hidden z-10"
       >
         <button 
           @click="selectCategory(null)"
@@ -113,7 +113,7 @@
           <div 
             v-for="event in filteredEvents" 
             :key="event.id"
-            class="bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all cursor-pointer"
+            class="bg-card rounded-2xl overflow-hidden shadow-md hover:-translate-y-2 hover:shadow-xl transition-all cursor-pointer"
           >
             <div class="relative">
               <img 
@@ -121,7 +121,7 @@
                 :alt="event.titre" 
                 class="w-full h-44 sm:h-56 object-cover"
               >
-              <span class="absolute top-4 left-4 bg-stone-900 text-white px-4 py-1.5 rounded-full text-xs font-semibold">
+              <span class="absolute top-4 left-4 bg-ink text-paper px-4 py-1.5 rounded-full text-xs font-semibold">
                 {{ event.categorie }}
               </span>
             </div>

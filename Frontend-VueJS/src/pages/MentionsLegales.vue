@@ -1,14 +1,14 @@
 <template>
   <div>
     <!-- Hero Section -->
-    <div class="bg-stone-900 text-white py-16 px-4">
-      <div class="max-w-4xl mx-auto text-center">
-        <router-link to="/" class="inline-flex items-center gap-2 text-accent-400 hover:text-accent-300 mb-6 transition-colors">
+    <div class="border-b border-line">
+      <div class="max-w-6xl mx-auto px-5 py-14 md:py-20">
+        <router-link to="/" class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink mb-8 transition-colors">
           <ChevronLeft :size="20" />
           Retour à l'accueil
         </router-link>
-        <h1 class="text-3xl md:text-5xl font-semibold mb-4">Mentions Légales</h1>
-        <p class="text-gray-400">Conformément à la loi n° 2004-575 du 21 juin 2004 (LCEN)</p>
+        <h1 class="text-4xl md:text-6xl">Mentions Légales</h1>
+        <p class="mt-5 max-w-xl text-muted">Conformément à la loi n° 2004-575 du 21 juin 2004 (LCEN)</p>
       </div>
     </div>
 

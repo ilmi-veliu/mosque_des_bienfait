@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-16 px-4">
+  <div class="min-h-screen bg-paper py-16 px-4">
     <div class="max-w-5xl mx-auto">
       <!-- Header -->
       <div class="text-center mb-12">
@@ -60,7 +60,7 @@
 
         <!-- Right: Formulaire -->
         <div class="md:w-1/2">
-          <div class="bg-white rounded-2xl shadow-sm border p-8">
+          <div class="bg-card rounded-2xl shadow-sm border p-8">
             <h2 class="text-xl font-semibold text-gray-900 mb-2">Formulaire d'inscription</h2>
             <p class="text-sm text-gray-500 mb-6">Remplissez vos informations pour rejoindre notre communauté.</p>
 
