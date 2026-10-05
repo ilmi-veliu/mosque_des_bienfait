@@ -1,14 +1,15 @@
 <template>
   <div>
-    <!-- En-tête avec une photo de la salle de prière -->
-    <section class="border-b border-line">
-      <div class="mx-auto grid max-w-6xl items-center gap-6 px-5 py-10 md:grid-cols-[1fr_1.1fr] md:py-12">
-        <div>
-          <p class="eyebrow">Présentation</p>
-          <h1 class="mt-3 text-4xl md:text-6xl">La mosquée</h1>
-          <p class="mt-5 max-w-xl text-muted">Un lieu de prière, d'apprentissage et de rencontre au cœur de Périgueux, ouvert à tous.</p>
+    <!-- En-tête : la salle de prière sur toute la largeur, titre par-dessus -->
+    <section class="relative">
+      <img :src="salleLarge" alt="La salle de prière de la mosquée" class="h-[60vh] min-h-[420px] w-full object-cover" />
+      <div class="absolute inset-0 bg-ink/55"></div>
+      <div class="absolute inset-0">
+        <div class="mx-auto flex h-full max-w-6xl flex-col justify-end px-5 pb-12 text-ink-foreground md:pb-16">
+          <p class="eyebrow !text-ink-foreground/70">Présentation</p>
+          <h1 class="mt-3 text-5xl md:text-7xl">La mosquée</h1>
+          <p class="mt-5 max-w-xl text-lg opacity-85">Un lieu de prière, d'apprentissage et de rencontre au cœur de Périgueux, ouvert à tous.</p>
         </div>
-        <img :src="salleLarge" alt="La salle de prière de la mosquée" class="aspect-[4/3] w-full object-cover md:aspect-[3/2]" />
       </div>
     </section>
 
