@@ -18,6 +18,32 @@
       </div>
     </section>
 
+    <!-- Horaires du jour : bande compacte sous la photo (la page /horaires donne le mois) -->
+    <section class="border-b border-line bg-card">
+      <div class="mx-auto max-w-6xl px-5 py-6">
+        <p v-if="erreur" class="text-sm text-muted">Horaires momentanément indisponibles, réessayez plus tard.</p>
+        <div v-else class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div class="shrink-0">
+            <p class="eyebrow capitalize">{{ dateLabel }}</p>
+            <p v-if="prochaine" class="mt-1 font-serif text-2xl">
+              {{ prochaine.label }}{{ prochaine.demain ? ' demain' : '' }}
+              <span class="text-muted tabular-nums">dans {{ compteARebours }}</span>
+            </p>
+          </div>
+          <div class="grid grid-cols-3 gap-y-3 sm:grid-cols-6 lg:flex-1 lg:max-w-3xl">
+            <div v-for="h in horairesJour" :key="h.label" class="text-center sm:border-l sm:border-line sm:first:border-l-0"
+              :class="h.prochaine ? 'text-accent-600' : h.passee ? 'text-muted' : ''">
+              <p class="text-xs uppercase tracking-wider" :class="h.prochaine ? '' : 'text-muted'">{{ h.label }}</p>
+              <p class="font-serif text-2xl tabular-nums">{{ h.heure }}</p>
+            </div>
+          </div>
+          <router-link to="/horaires" class="inline-flex w-fit shrink-0 items-center gap-2 border-b border-ink pb-0.5 text-sm">
+            Horaires du mois <ArrowRight class="h-4 w-4" />
+          </router-link>
+        </div>
+      </div>
+    </section>
+
     <!-- À la une : dernières actualités, sinon prochains événements -->
     <section v-if="aLaUne.length" class="mx-auto max-w-6xl px-5 py-16 md:py-24">
       <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -60,8 +86,9 @@
       </div>
     </section>
 
-    <!-- Programme de la semaine : prières tous les jours, Joumou'a le vendredi, cours réguliers -->
-    <section class="bg-pierre">
+    <!-- Programme de la semaine : prières tous les jours, Joumou'a le vendredi, cours réguliers.
+         Masqué tant qu'aucun cours n'a de jour fixe (sinon : 7 fois « Les cinq prières ») -->
+    <section v-if="coursPlanifies.length" class="bg-pierre">
       <div class="mx-auto max-w-6xl px-5 py-16 md:py-24">
         <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
@@ -82,48 +109,6 @@
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Horaires de prière (horaires officiels de la mosquée sur Mawaqit, en temps réel) -->
-    <section class="mx-auto max-w-6xl px-5 py-16 md:py-24">
-      <div class="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-        <div>
-          <p class="eyebrow capitalize">{{ dateLabel }}</p>
-          <h2 class="mt-3 text-4xl md:text-5xl">Horaires de prière</h2>
-        </div>
-        <div v-if="prochaine && !erreur" class="flex items-baseline gap-3">
-          <span class="h-2 w-2 rounded-full bg-accent-500"></span>
-          <p class="font-serif text-2xl">
-            {{ prochaine.label }}{{ prochaine.demain ? ' demain' : '' }}
-            <span class="text-muted tabular-nums">dans {{ compteARebours }}</span>
-          </p>
-        </div>
-      </div>
-
-      <p v-if="erreur" class="mt-10 text-muted">Horaires momentanément indisponibles, réessayez plus tard.</p>
-
-      <template v-else>
-        <div class="mt-10 border-t border-line md:grid md:grid-cols-5 md:border-t-0">
-          <div v-for="(p, i) in prieres" :key="p.key"
-            class="flex items-center justify-between border-b border-line px-1 py-4 md:flex-col md:items-start md:gap-6 md:border-b-0 md:px-6 md:py-6"
-            :class="[
-              i > 0 ? 'md:border-l' : '',
-              p.prochaine ? 'bg-card md:border-t-2 md:border-t-accent-500' : 'md:border-t md:border-t-line',
-            ]">
-            <div>
-              <p class="font-serif text-2xl" :class="p.prochaine ? 'text-accent-600' : ''">{{ p.label }}</p>
-              <p class="font-arabic text-sm text-muted" dir="rtl" lang="ar">{{ p.ar }}</p>
-            </div>
-            <p class="font-serif text-3xl tabular-nums md:text-4xl" :class="p.passee && !p.prochaine ? 'text-muted' : ''">{{ p.heure }}</p>
-          </div>
-        </div>
-        <div class="mt-6 flex flex-wrap gap-x-10 gap-y-2 text-sm text-muted">
-          <span v-if="chourouk">Chourouk <strong class="font-medium text-ink">{{ chourouk }}</strong></span>
-          <span v-if="joumoua">Joumou'a <strong class="font-medium text-ink">{{ joumoua }}</strong></span>
-          <span v-if="source === 'aladhan'">Horaires calculés, à confirmer à la mosquée</span>
-          <router-link to="/horaires" class="border-b border-ink pb-0.5 text-ink">Horaires du mois</router-link>
-        </div>
-      </template>
     </section>
 
     <!-- Présentation -->
@@ -245,10 +230,17 @@ const apprendre = [
 // ─── Programme de la semaine (uniquement des activités réelles) ───
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const indexAujourdhui = (new Date().getDay() + 6) % 7 // lundi = 0
+// Cours avec un jour fixe ; en local seulement, de faux exemples s'il n'y en a aucun
+const coursDemo = ref([])
+if (import.meta.env.DEV) import('../programmeDemo').then(m => { coursDemo.value = m.COURS_DEMO })
+const coursPlanifies = computed(() => {
+  const vrais = store.cours.filter(c => c.jour)
+  return vrais.length ? vrais : coursDemo.value
+})
 const semaine = computed(() => JOURS.map((nom, i) => {
   const activites = []
   if (nom === 'Vendredi') activites.push({ titre: "Prière du vendredi (Joumou'a)", heure: joumoua.value, principal: true })
-  store.cours
+  coursPlanifies.value
     .filter(c => c.jour === nom)
     .sort((a, b) => (a.heure || '').localeCompare(b.heure || ''))
     .forEach(c => activites.push({ titre: c.titre, heure: c.heure?.slice(0, 5), principal: true }))
@@ -263,4 +255,10 @@ onMounted(async () => {
 
 // ─── Horaires de prière (Mawaqit de la mosquée, voir src/horairesPriere.js) ───
 const { prieres, prochaine, compteARebours, chourouk, joumoua, source, erreur, dateLabel } = useHorairesPriere()
+
+// Fajr, Chourouk, puis les 4 autres prières (comme le bandeau du haut)
+const horairesJour = computed(() => {
+  const [fajr, ...reste] = prieres.value
+  return [fajr, ...(chourouk.value ? [{ label: 'Chourouk', heure: chourouk.value }] : []), ...reste]
+})
 </script>

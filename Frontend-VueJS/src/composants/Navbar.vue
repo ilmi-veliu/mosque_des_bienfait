@@ -12,16 +12,18 @@
         <!-- Navigation Desktop -->
         <div class="hidden lg:flex items-center gap-8 text-sm">
           <!-- Menus regroupés : s'ouvrent au survol (ou au clavier avec Tab) -->
-          <div v-for="g in groupes" :key="g.titre" class="group relative">
-            <button class="flex items-center gap-1 py-5 text-muted transition-colors group-hover:text-ink group-focus-within:text-ink"
+          <div v-for="g in groupes" :key="g.titre" class="group relative" data-menu>
+            <button @click="menuOuvert = menuOuvert === g.titre ? null : g.titre" :aria-expanded="menuOuvert === g.titre"
+              class="flex items-center gap-1 py-5 text-muted transition-colors group-hover:text-ink group-focus-within:text-ink"
               :class="g.liens.some(l => $route.path.startsWith(l.to)) ? '!text-ink' : ''">
               {{ g.titre }}<ChevronDown :size="14" class="transition-transform group-hover:rotate-180" />
             </button>
             <div class="invisible absolute left-1/2 top-full z-50 w-64 -translate-x-1/2 border border-line bg-card py-2 opacity-0 shadow-lg transition
-              group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+              group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+              :class="menuOuvert === g.titre ? '!visible !opacity-100' : ''">
               <router-link v-for="l in g.liens" :key="l.to" :to="l.to" class="block px-4 py-2.5 hover:bg-paper">
                 <span class="block text-ink">{{ l.label }}</span>
-                <span class="block text-xs text-muted">{{ l.texte }}</span>
+                <span class="block text-xs text-muted">{{ l.texte }}<template v-if="l.compte && !isLoggedIn"> · Compte requis</template></span>
               </router-link>
             </div>
           </div>
@@ -206,13 +208,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import Etoile from './Etoile.vue'
 
 const router = useRouter()
+const route = useRoute()
+
+// Menu groupé ouvert au clic/toucher (en plus du survol)
+const menuOuvert = ref(null)
+watch(() => route.fullPath, () => { menuOuvert.value = null })
 
 const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
 
@@ -221,13 +228,13 @@ const groupes = [
   { titre: 'La mosquée', liens: [
     { to: '/la-mosquee', label: 'Présentation', texte: 'Le lieu, les services, venir' },
     { to: '/evenements', label: 'Événements', texte: 'Conférences, repas, rencontres' },
-    { to: '/rdv-imam', label: "Rendez-vous avec l'imam", texte: "Un temps d'écoute" },
+    { to: '/rdv-imam', label: "Rendez-vous avec l'imam", texte: "Un temps d'écoute", compte: true },
     { to: '/benevole', label: 'Bénévolat', texte: 'Donner de son temps' },
   ] },
   { titre: 'Apprendre', liens: [
     { to: '/cours', label: 'Cours religieux', texte: 'Tajwid, croyance, fiqh, arabe' },
     { to: '/hadith', label: 'Hadiths', texte: 'Choisis par la mosquée' },
-    { to: '/coran', label: 'Récitation du Coran', texte: 'Faire corriger sa récitation' },
+    { to: '/coran', label: 'Récitation du Coran', texte: 'Faire corriger sa récitation', compte: true },
   ] },
 ]
 const isLoggedIn = ref(false)
@@ -303,6 +310,7 @@ const handleLogout = async () => {
 
 // Fermer le dropdown si clic en dehors
 const handleClickOutside = (e) => {
+  if (!e.target.closest('[data-menu]')) menuOuvert.value = null
   if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
     dropdownOpen.value = false
   }

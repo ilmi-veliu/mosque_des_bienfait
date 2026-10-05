@@ -202,7 +202,7 @@
     <!-- Bouton flottant -->
     <button
       @click="open = !open"
-      class="w-14 h-14 bg-ink text-paper rounded-full shadow-xl flex items-center justify-center hover:bg-accent-500 transition-colors relative"
+      class="w-12 h-12 sm:w-14 sm:h-14 bg-ink text-paper rounded-full shadow-xl flex items-center justify-center hover:bg-accent-500 transition-colors relative"
       :title="open ? 'Fermer' : 'Contacter l\'Imam'"
     >
       <Transition name="icon" mode="out-in">

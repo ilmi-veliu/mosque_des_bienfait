@@ -38,7 +38,8 @@
     </div>
 
     <div class="border-t border-ink-foreground/10">
-      <div class="max-w-6xl mx-auto flex flex-wrap justify-between gap-3 px-5 py-5 text-xs opacity-60">
+      <!-- pb-24 : la bulle de chat ne cache pas le bas de page -->
+      <div class="max-w-6xl mx-auto flex flex-wrap justify-between gap-3 px-5 pt-5 pb-24 text-xs opacity-60">
         <span>&copy; {{ annee }} Association des Musulmans de Périgueux</span>
         <span class="flex gap-5">
           <router-link to="/politique-confidentialite" class="hover:opacity-100">Politique de confidentialité</router-link>
