@@ -10,9 +10,7 @@
               <!-- Icon -->
               <div class="flex-shrink-0">
                 <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
+                  <Cookie class="w-6 h-6" aria-hidden="true" />
                 </div>
               </div>
 
@@ -63,6 +61,7 @@
 
   <script setup lang="ts">
   import { ref, onMounted } from 'vue';
+  import { Cookie } from 'lucide-vue-next';
   import { chargerCrisp, crispCharge } from '../crisp';
   import { lireConsentement, enregistrerConsentement } from '../consentement';
 

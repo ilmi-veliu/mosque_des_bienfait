@@ -125,7 +125,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { LogIn, ChevronLeft, Eye, EyeOff } from 'lucide-vue-next'
 import { supabase } from '../supabase'
-import { pageRetour } from '../retour'
+import { pageRetour, RETOUR_MOT_DE_PASSE } from '../retour'
 
 const router = useRouter()
 const email = ref('')
@@ -169,8 +169,11 @@ const sendResetEmail = async () => {
   resetMsg.value = ''
   resetError.value = false
 
+  // Une fois le nouveau mot de passe choisi, retour sur la page où l'on était
+  const retour = pageRetour(route)
+  try { localStorage.setItem(RETOUR_MOT_DE_PASSE, retour) } catch {}
   const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.value.trim(), {
-    redirectTo: `${window.location.origin}/reset-password`
+    redirectTo: `${window.location.origin}/reset-password${retour !== '/' ? '?retour=' + encodeURIComponent(retour) : ''}`
   })
 
   resetLoading.value = false

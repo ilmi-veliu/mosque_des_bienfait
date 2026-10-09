@@ -130,7 +130,7 @@
           <!-- Accès + portabilité -->
           <div>
             <h3 class="text-sm font-semibold text-gray-800">Obtenir une copie de mes données</h3>
-            <p class="mt-1 text-sm text-gray-600">Un fichier avec tout ce que le site garde sur vous (compte, profil, fiche bénévole, progression dans les cours), réutilisable ailleurs.</p>
+            <p class="mt-1 text-sm text-gray-600">Un document PDF avec tout ce que le site garde sur vous (compte, profil, fiche bénévole, progression dans les cours).</p>
             <button @click="telechargerDonnees" :disabled="exportEnCours"
               class="mt-3 flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm hover:bg-gray-50 disabled:opacity-50">
               <Download :size="16" /> {{ exportEnCours ? 'Préparation…' : 'Télécharger mes données' }}
@@ -210,6 +210,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { ChevronLeft, Camera, Save, Check, Trash2, Download } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import { lireConsentement } from '../consentement'
+import { creerPdfDonnees } from '../pdfDonnees'
 import BoutonNotifications from '../composants/BoutonNotifications.vue'
 
 const loading = ref(true)
@@ -279,7 +280,7 @@ const removeAvatar = async () => {
   await effacerFichiersAvatar() // la photo ne reste pas stockée inutilement
 }
 
-// --- Accès et portabilité : toutes mes données dans un fichier ---
+// --- Accès et portabilité : toutes mes données dans un PDF ---
 const exportEnCours = ref(false)
 const telechargerDonnees = async () => {
   exportEnCours.value = true
@@ -291,22 +292,18 @@ const telechargerDonnees = async () => {
       supabase.from('user_progress').select('cours_id, audio_position, video_position, updated_at').eq('user_id', user.id),
       supabase.from('cours_vues').select('cours_id, derniere_vue').eq('user_id', user.id),
     ])
-    const donnees = {
-      exporte_le: new Date().toISOString(),
-      site: window.location.origin,
+    // Titres des cours pour que le PDF dise « tel cours » et pas un identifiant
+    const ids = [...new Set([...(progression.data || []), ...(vues.data || [])].map(c => c.cours_id))]
+    const { data: cours } = ids.length ? await supabase.from('cours_religieux').select('id, titre').in('id', ids) : { data: [] }
+    await creerPdfDonnees({
       compte: { email: user.email, cree_le: user.created_at, derniere_connexion: user.last_sign_in_at },
       profil: profil.data,
-      fiche_benevole: fiche.data || [],
-      progression_cours: progression.data || [],
-      cours_vus: vues.data || [],
-      sur_cet_appareil: { choix_cookies: lireConsentement() },
-    }
-    const blob = new Blob([JSON.stringify(donnees, null, 2)], { type: 'application/json' })
-    const lien = document.createElement('a')
-    lien.href = URL.createObjectURL(blob)
-    lien.download = `mes-donnees-mosquee-${new Date().toISOString().slice(0, 10)}.json`
-    lien.click()
-    URL.revokeObjectURL(lien.href)
+      fiches: fiche.data || [],
+      progression: progression.data || [],
+      vues: vues.data || [],
+      titresCours: Object.fromEntries((cours || []).map(c => [c.id, c.titre])),
+      choixCookies: lireConsentement(),
+    })
   } finally {
     exportEnCours.value = false
   }

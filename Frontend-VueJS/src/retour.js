@@ -5,3 +5,7 @@ export const pageRetour = (route) => {
   const r = route.query.retour
   return typeof r === 'string' && r.startsWith('/') && !r.startsWith('//') && !r.includes('\\') ? r : '/'
 }
+
+// Page où l'on était au moment de demander « mot de passe oublié » : gardée aussi sur l'appareil,
+// au cas où le lien de l'email arriverait sans elle
+export const RETOUR_MOT_DE_PASSE = 'retour_mot_de_passe'

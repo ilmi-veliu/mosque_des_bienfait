@@ -25,15 +25,6 @@
           </router-link>
         </div>
 
-        <!-- Succès -->
-        <div v-else-if="success" class="text-center py-6">
-          <div class="w-14 h-14 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check :size="28" class="text-accent-600" />
-          </div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-2">Mot de passe modifié !</h2>
-          <p class="text-sm text-gray-500 mb-5">Vous allez être redirigé vers la page de connexion...</p>
-        </div>
-
         <!-- Chargement token -->
         <div v-else-if="loading && !ready" class="text-center py-10">
           <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-accent-600 mb-4"></div>
@@ -103,19 +94,20 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import { KeyRound, Eye, EyeOff, ChevronLeft, Check, X } from 'lucide-vue-next'
+import { useRouter, useRoute } from 'vue-router'
+import { KeyRound, Eye, EyeOff, ChevronLeft, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import { problemeMotDePasse, REGLES_MOT_DE_PASSE } from '../motDePasse'
+import { pageRetour, RETOUR_MOT_DE_PASSE } from '../retour'
 
 const router = useRouter()
+const route = useRoute()
 const password = ref('')
 const confirmPassword = ref('')
 const showPassword = ref(false)
 const loading = ref(true)
 const saving = ref(false)
 const ready = ref(false)
-const success = ref(false)
 const tokenError = ref(false)
 const errorMsg = ref('')
 const probleme = computed(() => problemeMotDePasse(password.value))
@@ -172,11 +164,13 @@ const handleReset = async () => {
     return
   }
 
-  success.value = true
-  await supabase.auth.signOut()
-
-  setTimeout(() => {
-    router.push('/connexion')
-  }, 2000)
+  // Mot de passe changé : la personne reste connectée et revient aussitôt là où elle était
+  // (adresse passée dans le lien de l'email, sinon celle notée au moment de la demande)
+  let retour = pageRetour(route)
+  try {
+    if (retour === '/') retour = pageRetour({ query: { retour: localStorage.getItem(RETOUR_MOT_DE_PASSE) } })
+    localStorage.removeItem(RETOUR_MOT_DE_PASSE)
+  } catch {}
+  router.replace(retour)
 }
 </script>
