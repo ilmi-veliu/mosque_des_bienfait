@@ -10,7 +10,7 @@
           <p class="mt-2 text-sm text-muted">{{ libelleSemaine }}</p>
         </div>
         <div class="flex items-center gap-2">
-          <button @click="changerSemaine(-7)" class="border border-line p-2 hover:border-ink" aria-label="Semaine précédente"><ChevronLeft class="h-4 w-4" /></button>
+          <button @click="changerSemaine(-7)" :disabled="lundi <= lundiMin" class="border border-line p-2 hover:border-ink disabled:opacity-40 disabled:hover:border-line" aria-label="Semaine précédente"><ChevronLeft class="h-4 w-4" /></button>
           <button @click="lundi = lundiActuel" :disabled="lundi === lundiActuel"
             class="border border-line px-3 py-1.5 text-sm hover:border-ink disabled:opacity-40">Cette semaine</button>
           <button @click="changerSemaine(7)" class="border border-line p-2 hover:border-ink" aria-label="Semaine suivante"><ChevronRight class="h-4 w-4" /></button>
@@ -59,7 +59,12 @@ const charger = async () => {
   chargement.value = false
 }
 watch(lundi, charger, { immediate: true })
-const changerSemaine = (n) => { lundi.value = ajouterJours(lundi.value, n) }
+// En arrière, une semaine au plus : le passé plus ancien n'intéresse plus personne
+const lundiMin = ajouterJours(lundiActuel, -7)
+const changerSemaine = (n) => {
+  const cible = ajouterJours(lundi.value, n)
+  if (cible >= lundiMin) lundi.value = cible
+}
 
 // Cette semaine : on ne montre plus les jours déjà passés
 const liste = computed(() => {
