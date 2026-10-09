@@ -33,7 +33,7 @@
           <router-link to="/horaires" class="text-muted hover:text-ink transition-colors" active-class="!text-ink">Horaires</router-link>
           <button v-if="TRADUCTION_ACTIVE" @click="changerLangue(langue === 'ar' ? 'fr' : 'ar')" translate="no" class="text-muted hover:text-ink transition-colors"
             :aria-label="langue === 'ar' ? 'Afficher le site en français' : 'عرض الموقع بالعربية'">{{ langue === 'ar' ? 'Français' : 'عربي' }}</button>
-          <a :href="DON_URL" target="_blank" rel="noopener noreferrer" class="btn bg-accent-600 text-paper hover:bg-accent-700 !py-2">Faire un don</a>
+          <a v-if="DONS_ACTIFS" :href="DON_URL" target="_blank" rel="noopener noreferrer" class="btn bg-accent-600 text-paper hover:bg-accent-700 !py-2">Faire un don</a>
           <!-- Connecté : avatar dropdown -->
           <template v-if="isLoggedIn">
             <div class="relative" ref="dropdownRef">
@@ -149,7 +149,7 @@
         <router-link @click="mobileOpen = false" to="/horaires" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Horaires de prière</router-link>
         <button v-if="TRADUCTION_ACTIVE" @click="changerLangue(langue === 'ar' ? 'fr' : 'ar')" translate="no" class="btn btn-outline mt-4 w-full"
             :aria-label="langue === 'ar' ? 'Afficher le site en français' : 'عرض الموقع بالعربية'">{{ langue === 'ar' ? 'Français' : 'عربي' }}</button>
-        <a :href="DON_URL" target="_blank" rel="noopener noreferrer" class="btn bg-accent-600 text-paper hover:bg-accent-700 mt-4 w-full">Faire un don</a>
+        <a v-if="DONS_ACTIFS" :href="DON_URL" target="_blank" rel="noopener noreferrer" class="btn bg-accent-600 text-paper hover:bg-accent-700 mt-4 w-full">Faire un don</a>
         <!-- Connecté : section compte -->
         <template v-if="isLoggedIn">
           <div class="pt-3 mt-1">
@@ -214,7 +214,7 @@ const menuOuvert = ref(null)
 const groupeMobile = ref(null)
 watch(() => route.fullPath, () => { menuOuvert.value = null; groupeMobile.value = null })
 
-const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
+import { DONS_ACTIFS, DON_URL } from '../projets'
 
 // Menus regroupés (même contenu sur ordinateur et sur mobile)
 const groupes = [

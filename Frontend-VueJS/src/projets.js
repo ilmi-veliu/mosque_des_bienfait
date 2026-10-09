@@ -2,6 +2,10 @@
 // Le projet « mis en avant » (et en cours) s'affiche sur l'accueil ; s'il n'y en a aucun, la section disparaît.
 import { supabase } from './supabase'
 
+// ⏸ Dons en ligne désactivés (2026-10-10, HelloAsso pas encore opérationnel) :
+// bouton « Faire un don » et « Participer » masqués partout. Remettre true pour les réactiver.
+export const DONS_ACTIFS = false
+
 // Page de dons HelloAsso de l'association (lien proposé par défaut pour un nouveau projet)
 export const DON_URL = 'https://www.helloasso.com/associations/association-des-musulmans-de-perigueux'
 

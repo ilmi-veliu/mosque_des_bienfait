@@ -135,7 +135,7 @@
             <div class="mt-3 h-1 bg-card"><div class="h-1 bg-accent-500" :style="{ width: pourcentage(projet) + '%' }"></div></div>
             <p class="mt-2 text-xs text-muted">{{ pourcentage(projet) }} %</p>
           </div>
-          <a :href="projet.url_don" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-8">Participer</a>
+          <a v-if="DONS_ACTIFS" :href="projet.url_don" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-8">Participer</a>
         </div>
       </div>
     </section>
@@ -147,7 +147,7 @@
 import { ref, onMounted } from 'vue'
 import { ArrowRight } from 'lucide-vue-next'
 import { chargerNouveautes } from '../nouveautes'
-import { chargerProjetEnAvant, pourcentage, euros } from '../projets'
+import { chargerProjetEnAvant, pourcentage, euros, DONS_ACTIFS } from '../projets'
 import CarteNouveaute from '../composants/CarteNouveaute.vue'
 import BoutonNotifications from '../composants/BoutonNotifications.vue'
 import ProchainsCours from '../composants/ProchainsCours.vue'
