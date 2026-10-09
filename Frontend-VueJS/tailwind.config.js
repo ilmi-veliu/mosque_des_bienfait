@@ -8,6 +8,8 @@ export default {
   ],
   theme: {
     extend: {
+      // Largeur du contenu : plus large que max-w-6xl pour moins de vide sur les grands écrans
+      maxWidth: { site: '88rem' },
       // Design "Lovable" : fond crème, encre anthracite, un seul accent laiton
       colors: {
         // Gris chauds partout (au lieu des gris bleutés par défaut)

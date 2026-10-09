@@ -14,8 +14,17 @@
 
       <!-- Form -->
       <div class="bg-card rounded-2xl shadow-sm border p-8">
+        <!-- Retour du lien de confirmation reçu par email -->
+        <div v-if="emailConfirme" class="bg-accent-50 border border-accent-200 text-accent-800 px-4 py-3 rounded-xl text-sm mb-6">
+          Votre adresse email est confirmée. Vous pouvez vous connecter.
+        </div>
         <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
           {{ errorMsg }}
+          <!-- Compte pas encore confirmé : renvoyer le lien -->
+          <button v-if="nonConfirme" type="button" @click="renvoyerConfirmation" :disabled="renvoiEnvoye"
+            class="mt-2 block font-medium underline disabled:no-underline disabled:opacity-70">
+            {{ renvoiEnvoye ? 'Email de confirmation renvoyé.' : "Renvoyer l'email de confirmation" }}
+          </button>
         </div>
 
         <form @submit.prevent="handleLogin" class="space-y-5">
@@ -95,7 +104,7 @@
 
           <p class="text-sm text-gray-500">
             Pas encore de compte ?
-            <router-link to="/inscription" class="text-gray-900 font-medium hover:underline">S'inscrire</router-link>
+            <router-link :to="{ path: '/inscription', query: route.query.retour ? { retour: route.query.retour } : {} }" class="text-gray-900 font-medium hover:underline">S'inscrire</router-link>
           </p>
           <router-link to="/" class="text-sm text-gray-400 hover:text-gray-600 inline-flex items-center gap-1">
             <ChevronLeft :size="14" />
@@ -109,9 +118,10 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { LogIn, ChevronLeft, Eye, EyeOff } from 'lucide-vue-next'
 import { supabase } from '../supabase'
+import { pageRetour } from '../retour'
 
 const router = useRouter()
 const email = ref('')
@@ -120,6 +130,18 @@ const loading = ref(false)
 const errorMsg = ref('')
 const emailError = ref('')
 const showPassword = ref(false)
+
+// Arrivée depuis le lien de confirmation de l'inscription (?confirme=1)
+const route = useRoute()
+const emailConfirme = ref(route.query.confirme === '1')
+
+// Compte non confirmé : renvoi du lien
+const nonConfirme = ref(false)
+const renvoiEnvoye = ref(false)
+const renvoyerConfirmation = async () => {
+  await supabase.auth.resend({ type: 'signup', email: email.value.trim(), options: { emailRedirectTo: `${window.location.origin}/connexion?confirme=1${route.query.retour ? '&retour=' + encodeURIComponent(pageRetour(route)) : ''}` } })
+  renvoiEnvoye.value = true
+}
 
 // Réinitialisation mot de passe
 const showReset = ref(false)
@@ -166,11 +188,21 @@ const handleLogin = async () => {
     return
   }
 
+  nonConfirme.value = false
   try {
     const { error } = await supabase.auth.signInWithPassword({
       email: email.value.trim(),
       password: password.value
     })
+
+    // Inscription pas encore validée par le lien reçu par email
+    if (error && (error.code === 'email_not_confirmed' || /not confirmed/i.test(error.message))) {
+      nonConfirme.value = true
+      renvoiEnvoye.value = false
+      errorMsg.value = "Votre adresse email n'est pas encore confirmée : cliquez sur le lien reçu par email lors de l'inscription (pensez aux spams)."
+      loading.value = false
+      return
+    }
 
     if (error) {
       const isNetwork = !navigator.onLine || error.message?.toLowerCase().includes('fetch') || error.message?.toLowerCase().includes('network') || error.message?.toLowerCase().includes('failed')
@@ -187,6 +219,6 @@ const handleLogin = async () => {
   }
 
   loading.value = false
-  router.push('/')
+  router.push(pageRetour(route))
 }
 </script>

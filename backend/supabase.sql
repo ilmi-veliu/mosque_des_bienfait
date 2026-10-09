@@ -1,56 +1,33 @@
 -- ============================================================
 -- SCHÉMA COMPLET — Mosquée des Bienfaisants
 -- À exécuter dans Supabase Dashboard > SQL Editor.
--- Restauré depuis l'historique git (branche main) + nouveau
--- schéma de chat corrigé (branche final, voir section CHAT).
+-- Restauré depuis l'historique git (branche main).
+-- Chat : outil externe Crisp (voir section CHAT, ancien chat supprimé).
 -- Écrit avec IF NOT EXISTS / DROP IF EXISTS partout : peut être
 -- relancé plusieurs fois sans casser les données existantes.
 -- ============================================================
 
 
 -- ============================================================
--- STORAGE - BUCKET IMAGES
+-- STORAGE - BUCKET IMAGES (images, audios et vidéos de l'admin : cours, projets, actualités)
+-- Les audios des cours sont rangés ici depuis le début : sans les types audio,
+-- l'envoi d'un cours audio ou d'une explication de projet serait refusé.
+-- 50 Mo = limite d'envoi de Supabase (offre gratuite) ; un cours audio d'une
+-- heure en .ogg/.webm fait en général 20 à 40 Mo.
 -- ============================================================
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES ('images', 'images', true, 5242880, ARRAY['image/jpeg','image/png','image/webp','image/gif'])
+VALUES ('images', 'images', true, 52428800, ARRAY[
+  'image/jpeg','image/png','image/webp','image/gif',
+  'audio/mpeg','audio/mp4','audio/ogg','audio/wav','audio/webm','audio/x-m4a',
+    'video/mp4','video/quicktime','video/webm'
+])
 ON CONFLICT (id) DO UPDATE SET
-  allowed_mime_types = ARRAY['image/jpeg','image/png','image/webp','image/gif'],
-  file_size_limit = 5242880;
-
-
--- ============================================================
--- TABLE EVENEMENTS
--- ============================================================
-CREATE TABLE IF NOT EXISTS evenements (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  titre TEXT NOT NULL,
-  description TEXT,
-  categorie TEXT CHECK (categorie IN ('Religieux', 'Éducation', 'Social', 'Culturel')),
-  date DATE,
-  heure TIME,
-  lieu TEXT NOT NULL,
-  participants_max INTEGER,
-  image_url TEXT,
-  video_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE evenements DROP CONSTRAINT IF EXISTS evt_titre_max;
-ALTER TABLE evenements ADD CONSTRAINT evt_titre_max CHECK (length(titre) <= 300);
-ALTER TABLE evenements DROP CONSTRAINT IF EXISTS evt_description_max;
-ALTER TABLE evenements ADD CONSTRAINT evt_description_max CHECK (length(description) <= 5000);
-ALTER TABLE evenements DROP CONSTRAINT IF EXISTS evt_lieu_max;
-ALTER TABLE evenements ADD CONSTRAINT evt_lieu_max CHECK (length(lieu) <= 300);
-
-ALTER TABLE evenements ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "evt_select" ON evenements;
-DROP POLICY IF EXISTS "evt_insert" ON evenements;
-DROP POLICY IF EXISTS "evt_update" ON evenements;
-DROP POLICY IF EXISTS "evt_delete" ON evenements;
-CREATE POLICY "evt_select" ON evenements FOR SELECT TO anon, authenticated USING (true);
-CREATE POLICY "evt_insert" ON evenements FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
-CREATE POLICY "evt_update" ON evenements FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
-CREATE POLICY "evt_delete" ON evenements FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+  allowed_mime_types = ARRAY[
+    'image/jpeg','image/png','image/webp','image/gif',
+    'audio/mpeg','audio/mp4','audio/ogg','audio/wav','audio/webm','audio/x-m4a',
+    'video/mp4','video/quicktime','video/webm'
+  ],
+  file_size_limit = 52428800;
 
 
 -- ============================================================
@@ -86,7 +63,10 @@ DROP POLICY IF EXISTS "cours_select" ON cours_religieux;
 DROP POLICY IF EXISTS "cours_insert" ON cours_religieux;
 DROP POLICY IF EXISTS "cours_update" ON cours_religieux;
 DROP POLICY IF EXISTS "cours_delete" ON cours_religieux;
-CREATE POLICY "cours_select" ON cours_religieux FOR SELECT TO anon, authenticated USING (true);
+-- Le public ne voit que les cours actifs ; l'admin voit tout
+CREATE POLICY "cours_select" ON cours_religieux FOR SELECT TO anon, authenticated USING (
+  actif IS TRUE OR is_admin_or_superadmin()
+);
 CREATE POLICY "cours_insert" ON cours_religieux FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
 CREATE POLICY "cours_update" ON cours_religieux FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
 CREATE POLICY "cours_delete" ON cours_religieux FOR DELETE TO authenticated USING (is_admin_or_superadmin());
@@ -112,6 +92,8 @@ DROP POLICY IF EXISTS "prog_update" ON user_progress;
 CREATE POLICY "prog_select" ON user_progress FOR SELECT TO authenticated USING (auth.uid() = user_id);
 CREATE POLICY "prog_insert" ON user_progress FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "prog_update" ON user_progress FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "prog_delete" ON user_progress;
+CREATE POLICY "prog_delete" ON user_progress FOR DELETE TO authenticated USING (auth.uid() = user_id);
 
 
 -- ============================================================
@@ -128,9 +110,11 @@ ALTER TABLE cours_vues ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "cv_select" ON cours_vues;
 DROP POLICY IF EXISTS "cv_insert" ON cours_vues;
 DROP POLICY IF EXISTS "cv_update" ON cours_vues;
-CREATE POLICY "cv_select" ON cours_vues FOR SELECT TO authenticated USING (is_admin_or_superadmin());
+CREATE POLICY "cv_select" ON cours_vues FOR SELECT TO authenticated USING (auth.uid() = user_id OR is_admin_or_superadmin());
 CREATE POLICY "cv_insert" ON cours_vues FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "cv_update" ON cours_vues FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "cv_delete" ON cours_vues;
+CREATE POLICY "cv_delete" ON cours_vues FOR DELETE TO authenticated USING (auth.uid() = user_id);
 
 
 -- ============================================================
@@ -141,7 +125,6 @@ CREATE TABLE IF NOT EXISTS benevoles (
   prenom TEXT NOT NULL,
   nom TEXT NOT NULL,
   email TEXT NOT NULL,
-  telephone TEXT NOT NULL,
   domaine TEXT NOT NULL,
   message TEXT,
   statut TEXT DEFAULT 'nouveau' CHECK (statut IN ('nouveau', 'contacté', 'accepté', 'refusé')),
@@ -162,10 +145,15 @@ ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_email_max;
 ALTER TABLE benevoles ADD CONSTRAINT ben_email_max CHECK (length(email) <= 255);
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_email_format;
 ALTER TABLE benevoles ADD CONSTRAINT ben_email_format CHECK (email ~* '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_telephone_max;
-ALTER TABLE benevoles ADD CONSTRAINT ben_telephone_max CHECK (length(telephone) <= 20);
+-- Formulaire bénévole simplifié (2026-10-10) : la personne écrit ce qu'elle aimerait faire
+-- et laisse son email OU son téléphone (au moins l'un des deux). Plus de « domaine » à choisir.
+ALTER TABLE benevoles ADD COLUMN IF NOT EXISTS telephone TEXT;
+ALTER TABLE benevoles ALTER COLUMN email DROP NOT NULL;
+ALTER TABLE benevoles ALTER COLUMN domaine DROP NOT NULL;
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_telephone_format;
-ALTER TABLE benevoles ADD CONSTRAINT ben_telephone_format CHECK (telephone ~ '^\+?[0-9\s\-\.()]{6,20}$');
+ALTER TABLE benevoles ADD CONSTRAINT ben_telephone_format CHECK (telephone IS NULL OR telephone ~ '^\+?[0-9 .()-]{6,20}$');
+ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_un_contact;
+ALTER TABLE benevoles ADD CONSTRAINT ben_un_contact CHECK (email IS NOT NULL OR telephone IS NOT NULL);
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_message_max;
 ALTER TABLE benevoles ADD CONSTRAINT ben_message_max CHECK (length(message) <= 2000);
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_dispo_motif_max;
@@ -234,13 +222,10 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 CREATE OR REPLACE FUNCTION protect_benevole_fields() RETURNS TRIGGER AS $$
 BEGIN
-  IF NOT is_admin_or_superadmin() THEN
+  IF session_user = 'authenticator' AND NOT is_admin_or_superadmin() THEN
     NEW.role := OLD.role;
     NEW.statut := OLD.statut;
     NEW.email := OLD.email;
-    NEW.prenom := OLD.prenom;
-    NEW.nom := OLD.nom;
-    NEW.telephone := OLD.telephone;
     NEW.domaine := OLD.domaine;
   END IF;
   RETURN NEW;
@@ -264,81 +249,27 @@ CREATE POLICY "ben_select_auth" ON benevoles FOR SELECT TO authenticated USING (
   OR is_admin_or_superadmin()
   OR (statut = 'accepté' AND is_accepted_benevole())
 );
-CREATE POLICY "ben_insert" ON benevoles FOR INSERT TO anon, authenticated WITH CHECK (
+-- Proposition d'aide (formulaire de la page Bénévolat) : il faut être connecté à un compte.
+-- Toujours « nouveau » et simple bénévole (jamais admin) ; une par jour pour un même email ou
+-- téléphone ; au plus 20 par heure au total, contre les envois en masse.
+-- (« benevoles.xxx » = la ligne envoyée ; « b.xxx » = les lignes déjà enregistrées.)
+CREATE POLICY "ben_insert" ON benevoles FOR INSERT TO authenticated WITH CHECK (
   (statut IS NULL OR statut = 'nouveau')
   AND (role IS NULL OR role = 'benevole')
   AND NOT EXISTS (
     SELECT 1 FROM benevoles b
-    WHERE lower(b.email) = lower(email)
-    AND b.created_at > NOW() - INTERVAL '1 day'
+    WHERE b.created_at > NOW() - INTERVAL '1 day'
+    AND (lower(b.email) = lower(benevoles.email) OR b.telephone = benevoles.telephone)
   )
+  AND (SELECT count(*) FROM benevoles b WHERE b.created_at > NOW() - INTERVAL '1 hour') < 20
 );
 CREATE POLICY "ben_update_admin" ON benevoles FOR UPDATE TO authenticated
   USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
 CREATE POLICY "ben_update_self" ON benevoles FOR UPDATE TO authenticated
-  USING (lower(email) = lower(auth.jwt()->>'email') AND statut = 'accepté')
+  -- Chacun peut corriger SA fiche, même en attente (droit de rectification)
+  USING (lower(email) = lower(auth.jwt()->>'email'))
   WITH CHECK (lower(email) = lower(auth.jwt()->>'email'));
 CREATE POLICY "ben_delete" ON benevoles FOR DELETE TO authenticated USING (is_superadmin());
-
-
--- ============================================================
--- TABLE NOTIFICATIONS ADMIN
--- ============================================================
-CREATE TABLE IF NOT EXISTS notifications (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  type TEXT NOT NULL,
-  message TEXT NOT NULL,
-  benevole_id UUID REFERENCES benevoles(id) ON DELETE CASCADE,
-  lu BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notif_message_max;
-ALTER TABLE notifications ADD CONSTRAINT notif_message_max CHECK (length(message) <= 2000);
-
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "notif_select" ON notifications;
-DROP POLICY IF EXISTS "notif_insert" ON notifications;
-DROP POLICY IF EXISTS "notif_update" ON notifications;
-DROP POLICY IF EXISTS "notif_delete" ON notifications;
-CREATE POLICY "notif_select" ON notifications FOR SELECT TO authenticated USING (is_admin_or_superadmin());
-CREATE POLICY "notif_insert" ON notifications FOR INSERT TO authenticated WITH CHECK (is_accepted_benevole());
-CREATE POLICY "notif_update" ON notifications FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
-CREATE POLICY "notif_delete" ON notifications FOR DELETE TO authenticated USING (is_admin_or_superadmin());
-
-
--- ============================================================
--- TABLE BUG_REPORTS (signalements utilisateurs)
--- ============================================================
-CREATE TABLE IF NOT EXISTS bug_reports (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  type TEXT NOT NULL DEFAULT 'bug',
-  message TEXT NOT NULL,
-  email TEXT,
-  page TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_message_max;
-ALTER TABLE bug_reports ADD CONSTRAINT br_message_max CHECK (length(message) <= 2000);
-ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_email_max;
-ALTER TABLE bug_reports ADD CONSTRAINT br_email_max CHECK (length(email) <= 255);
-ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_email_format;
-ALTER TABLE bug_reports ADD CONSTRAINT br_email_format CHECK (email IS NULL OR email ~* '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_type_allowed;
-ALTER TABLE bug_reports ADD CONSTRAINT br_type_allowed CHECK (type IN ('bug', 'affichage', 'fonctionnalite', 'suggestion', 'autre'));
-ALTER TABLE bug_reports DROP CONSTRAINT IF EXISTS br_page_max;
-ALTER TABLE bug_reports ADD CONSTRAINT br_page_max CHECK (length(page) <= 500);
-
-ALTER TABLE bug_reports ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "br_insert" ON bug_reports;
-DROP POLICY IF EXISTS "br_select" ON bug_reports;
-DROP POLICY IF EXISTS "br_delete" ON bug_reports;
-CREATE POLICY "br_insert" ON bug_reports FOR INSERT TO anon, authenticated WITH CHECK (
-  (SELECT count(*) FROM bug_reports WHERE created_at > NOW() - INTERVAL '1 hour') < 50
-);
-CREATE POLICY "br_select" ON bug_reports FOR SELECT TO authenticated USING (is_admin_or_superadmin());
-CREATE POLICY "br_delete" ON bug_reports FOR DELETE TO authenticated USING (is_superadmin());
 
 
 -- ============================================================
@@ -366,15 +297,20 @@ ALTER TABLE profiles ADD CONSTRAINT prof_avatar_url_max CHECK (length(avatar_url
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "profiles_select" ON profiles;
 DROP POLICY IF EXISTS "profiles_all" ON profiles;
-CREATE POLICY "profiles_select" ON profiles FOR SELECT TO authenticated USING (true);
+-- Chacun ne lit que son profil (nom, présentation, genre…) ; l'admin voit tout
+CREATE POLICY "profiles_select" ON profiles FOR SELECT TO authenticated USING (auth.uid() = id OR is_admin_or_superadmin());
 CREATE POLICY "profiles_all" ON profiles FOR ALL TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
 
 -- ============================================================
 -- STORAGE - BUCKETS IMAGES / AVATARS
 -- ============================================================
-INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true)
-ON CONFLICT (id) DO NOTHING;
+-- Photos de profil : images seulement, 2 Mo maximum (pas de fichiers piégés)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('avatars', 'avatars', true, 2097152, ARRAY['image/jpeg','image/png','image/webp','image/gif'])
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = 2097152,
+  allowed_mime_types = ARRAY['image/jpeg','image/png','image/webp','image/gif'];
 
 DROP POLICY IF EXISTS "img_select" ON storage.objects;
 DROP POLICY IF EXISTS "img_insert" ON storage.objects;
@@ -386,7 +322,11 @@ CREATE POLICY "img_delete" ON storage.objects FOR DELETE TO authenticated USING 
 DROP POLICY IF EXISTS "avatars_select" ON storage.objects;
 DROP POLICY IF EXISTS "avatars_insert" ON storage.objects;
 DROP POLICY IF EXISTS "avatars_update" ON storage.objects;
-CREATE POLICY "avatars_select" ON storage.objects FOR SELECT TO public USING (bucket_id = 'avatars');
+-- Le bucket est public : les photos s'affichent par leur lien sans cette règle.
+-- On ne permet donc de LISTER que son propre dossier (sinon : liste des identifiants de comptes).
+CREATE POLICY "avatars_select" ON storage.objects FOR SELECT TO authenticated USING (
+  bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]
+);
 CREATE POLICY "avatars_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (
   bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]
 );
@@ -396,459 +336,39 @@ CREATE POLICY "avatars_update" ON storage.objects FOR UPDATE TO authenticated US
 
 
 -- ============================================================
--- CHAT — nouveau schéma simplifié et sécurisé (branche "final")
--- ⚠️ Diffère de l'ancien schéma (chat_rooms/chat_messages) : plus de
--- salons multiples, une seule conversation par personne avec l'imam.
--- Corrige la faille trouvée dans l'ancien schéma : là-bas, n'importe
--- quel compte connecté pouvait lire TOUT le salon imam (voir policy
--- "msgs_select_auth" de l'ancien fichier). Ici, chacun ne lit que ses
--- propres messages (chat_select_own : user_id = auth.uid()).
+-- CHAT — remplacé par Crisp (crisp.chat) le 2026-10-06
+-- Suppression de l'ancien chat maison : tâche de nettoyage, table, fonctions,
+-- règles du stockage. Relançable sans erreur (IF EXISTS partout).
+-- Le bucket « chat-media » et ses fichiers se suppriment à la main dans
+-- Supabase → Storage (Supabase interdit d'effacer des fichiers en SQL).
 -- ============================================================
-
--- Supprime l'ANCIEN chat_messages (celui avec room_id) uniquement s'il est encore
--- là. Avant, on faisait un DROP TABLE à chaque exécution : relancer ce fichier
--- effaçait toutes les conversations en cours.
 DO $$ BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'chat_messages' AND column_name = 'room_id'
-  ) THEN
-    DROP TABLE chat_messages CASCADE;
+  IF to_regclass('cron.job') IS NOT NULL THEN
+    PERFORM cron.unschedule(jobid) FROM cron.job WHERE jobname = 'cleanup-chat-messages';
   END IF;
 END $$;
+
+DROP FUNCTION IF EXISTS get_my_anon_messages(uuid);
+DROP TABLE IF EXISTS chat_messages CASCADE;
 DROP TABLE IF EXISTS chat_mutes, chat_reactions, chat_rooms CASCADE;
-DROP FUNCTION IF EXISTS get_imam_messages, get_imam_sessions, get_session_messages CASCADE;
-DROP FUNCTION IF EXISTS protect_chat_message_fields CASCADE;
-
-CREATE TABLE IF NOT EXISTS chat_messages (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id),
-  session_id uuid,
-  sender_role text not null default 'user' check (sender_role in ('user', 'imam')),
-  sender_name text,
-  content text,
-  type text not null default 'text' check (type in ('text', 'image', 'audio', 'file')),
-  file_url text,
-  file_name text,
-  file_size bigint,
-  duration text,
-  deleted_at timestamptz,
-  created_at timestamptz not null default now(),
-  constraint chat_author_check check (
-    (user_id is not null and session_id is null) or
-    (user_id is null and session_id is not null)
-  )
-);
-
-ALTER TABLE chat_messages DROP CONSTRAINT IF EXISTS msg_content_max;
-ALTER TABLE chat_messages ADD CONSTRAINT msg_content_max CHECK (length(content) <= 5000);
-ALTER TABLE chat_messages DROP CONSTRAINT IF EXISTS msg_sender_name_max;
-ALTER TABLE chat_messages ADD CONSTRAINT msg_sender_name_max CHECK (length(sender_name) <= 200);
-ALTER TABLE chat_messages DROP CONSTRAINT IF EXISTS msg_file_name_max;
-ALTER TABLE chat_messages ADD CONSTRAINT msg_file_name_max CHECK (length(file_name) <= 500);
-
-CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON chat_messages(user_id);
-CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
-ALTER TABLE chat_messages REPLICA IDENTITY FULL; -- nécessaire pour que postgres_changes envoie les lignes complètes
-
--- Sans ça, AUCUN événement temps réel n'est émis pour cette table : les messages
--- n'arrivaient qu'après un rechargement de la page. Une table recréée sort de la
--- publication, d'où la vérification à chaque exécution.
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_publication_tables
-    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'chat_messages'
-  ) THEN
-    ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
-  END IF;
-END $$;
-
-ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS chat_insert_auth ON chat_messages;
-DROP POLICY IF EXISTS chat_insert_anon ON chat_messages;
-DROP POLICY IF EXISTS chat_insert_admin ON chat_messages;
-DROP POLICY IF EXISTS chat_select_own ON chat_messages;
-DROP POLICY IF EXISTS chat_update_own ON chat_messages;
-DROP POLICY IF EXISTS chat_update_admin ON chat_messages;
-DROP POLICY IF EXISTS chat_delete_admin ON chat_messages;
-
-CREATE POLICY chat_insert_auth ON chat_messages
-  FOR INSERT TO authenticated
-  WITH CHECK (auth.uid() = user_id AND sender_role = 'user');
-
-CREATE POLICY chat_insert_anon ON chat_messages
-  FOR INSERT TO anon
-  WITH CHECK (user_id IS NULL AND session_id IS NOT NULL AND sender_role = 'user');
-
-CREATE POLICY chat_insert_admin ON chat_messages
-  FOR INSERT TO authenticated
-  WITH CHECK (is_admin_or_superadmin());
-
--- Lecture : uniquement ses propres messages (corrige la faille de l'ancien système)
-CREATE POLICY chat_select_own ON chat_messages
-  FOR SELECT TO authenticated
-  USING (deleted_at IS NULL AND (user_id = auth.uid() OR is_admin_or_superadmin()));
-
--- Pas de policy SELECT pour anon : passe par la fonction RPC get_my_anon_messages ci-dessous.
-
-CREATE POLICY chat_update_own ON chat_messages
-  FOR UPDATE TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-
-CREATE POLICY chat_update_admin ON chat_messages
-  FOR UPDATE TO authenticated
-  USING (is_admin_or_superadmin())
-  WITH CHECK (is_admin_or_superadmin());
-
-CREATE POLICY chat_delete_admin ON chat_messages
-  FOR DELETE TO authenticated
-  USING (is_admin_or_superadmin());
-
--- Empêche un non-admin de se faire passer pour l'imam (sender_role = 'imam')
-CREATE OR REPLACE FUNCTION prevent_imam_impersonation() RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.sender_role = 'imam' AND NOT is_admin_or_superadmin() THEN
-    RAISE EXCEPTION 'Unauthorized: sender_role ''imam'' réservé aux administrateurs';
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS check_imam_sender ON chat_messages;
-CREATE TRIGGER check_imam_sender
-  BEFORE INSERT OR UPDATE ON chat_messages
-  FOR EACH ROW EXECUTE FUNCTION prevent_imam_impersonation();
-
--- Rate limit anonymes : max 10 messages/minute par session
-CREATE OR REPLACE FUNCTION check_anon_imam_rate() RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.user_id IS NULL AND (
-    SELECT COUNT(*) FROM chat_messages
-    WHERE session_id = NEW.session_id
-      AND created_at > NOW() - INTERVAL '1 minute'
-      AND deleted_at IS NULL
-  ) >= 10 THEN
-    RAISE EXCEPTION 'rate_limit: trop de messages, attendez 1 minute';
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS anon_imam_rate_limit ON chat_messages;
-CREATE TRIGGER anon_imam_rate_limit
-  BEFORE INSERT ON chat_messages
-  FOR EACH ROW WHEN (NEW.user_id IS NULL AND NEW.session_id IS NOT NULL)
-  EXECUTE FUNCTION check_anon_imam_rate();
-
--- RPC : un visiteur anonyme récupère SES messages via son session_id.
--- SECURITY DEFINER = la fonction a le droit de lire toute la table même si
--- l'appelant (anon) n'a pas de policy SELECT directe — mais elle ne renvoie
--- que les lignes filtrées par le session_id passé en paramètre.
-CREATE OR REPLACE FUNCTION get_my_anon_messages(p_session_id uuid)
-RETURNS SETOF chat_messages
-LANGUAGE sql SECURITY DEFINER STABLE AS $$
-  SELECT * FROM chat_messages
-  WHERE session_id = p_session_id
-    AND deleted_at IS NULL
-  ORDER BY created_at ASC;
-$$;
-
--- Storage bucket chat-media (photos/audio/fichiers envoyés dans le chat)
-INSERT INTO storage.buckets (id, name, public) VALUES ('chat-media', 'chat-media', true)
-ON CONFLICT (id) DO NOTHING;
+DROP FUNCTION IF EXISTS prevent_imam_impersonation() CASCADE;
+DROP FUNCTION IF EXISTS check_anon_imam_rate() CASCADE;
+DROP FUNCTION IF EXISTS get_imam_messages, get_imam_sessions, get_session_messages, protect_chat_message_fields CASCADE;
 
 DROP POLICY IF EXISTS "chat_media_select" ON storage.objects;
 DROP POLICY IF EXISTS "chat_media_insert" ON storage.objects;
 DROP POLICY IF EXISTS "chat_media_insert_anon" ON storage.objects;
 DROP POLICY IF EXISTS "chat_media_delete" ON storage.objects;
-CREATE POLICY "chat_media_select" ON storage.objects FOR SELECT USING (bucket_id = 'chat-media');
-CREATE POLICY "chat_media_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (
-  bucket_id = 'chat-media' AND auth.uid()::text = (storage.foldername(name))[1]
-);
--- Le chemin d'un visiteur anonyme est "anon-<session_id>/fichier.ext" — un seul
--- dossier avant le nom de fichier. (storage.foldername(name))[2] n'existe pas
--- (il n'y a qu'un seul niveau de dossier), donc comparer [1] à 'anon-' || [2]
--- donnait toujours NULL = jamais vrai : bloquait silencieusement TOUT envoi de
--- fichier par un visiteur anonyme. Corrigé en vérifiant juste le préfixe.
-CREATE POLICY "chat_media_insert_anon" ON storage.objects FOR INSERT TO anon WITH CHECK (
-  bucket_id = 'chat-media' AND (storage.foldername(name))[1] LIKE 'anon-%'
-);
-CREATE POLICY "chat_media_delete" ON storage.objects FOR DELETE TO authenticated USING (
-  bucket_id = 'chat-media' AND auth.uid()::text = (storage.foldername(name))[1]
-);
-
--- Suppression automatique des messages de plus de 7 jours (RGPD, cf. politique de confidentialité)
-SELECT cron.unschedule('cleanup-chat-messages') WHERE EXISTS (
-  SELECT 1 FROM cron.job WHERE jobname = 'cleanup-chat-messages'
-);
-SELECT cron.schedule(
-  'cleanup-chat-messages',
-  '0 3 * * *',
-  $$ DELETE FROM chat_messages WHERE created_at < NOW() - INTERVAL '7 days'; $$
-);
 
 
 -- ============================================================
 -- COMPTE ADMIN (à adapter avec le vrai email de l'imam/admin)
 -- ============================================================
-INSERT INTO benevoles (prenom, nom, email, telephone, domaine, statut, role)
-SELECT 'Admin', 'Admin', 'elmernissi.fr@gmail.com', '0000000000', 'Administration', 'accepté', 'admin'
+INSERT INTO benevoles (prenom, nom, email, domaine, statut, role)
+SELECT 'Admin', 'Admin', 'elmernissi.fr@gmail.com', 'Administration', 'accepté', 'admin'
 WHERE NOT EXISTS (SELECT 1 FROM benevoles WHERE lower(email) = 'elmernissi.fr@gmail.com');
 
 UPDATE benevoles SET role = 'admin', statut = 'accepté' WHERE lower(email) = 'elmernissi.fr@gmail.com';
-
-
--- ============================================================
--- RÔLES ÉLÈVES (étudiant, étudiant privé, professeur)
--- ============================================================
--- Distinct du rôle admin/superadmin/benevole (table benevoles, réservée au
--- staff/bénévoles) : ceci concerne N'IMPORTE QUEL compte utilisateur normal,
--- stocké directement sur son profil.
---   standard        = visiteur inscrit classique (par défaut)
---   etudiant        = suit les cours normaux + peut être inscrit à des cours
---   etudiant_prive  = élève privé de l'imam, accès en plus aux cours réservés
---   professeur      = peut corriger les récitations/devoirs des étudiants
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS role_eleve TEXT NOT NULL DEFAULT 'standard'
-  CHECK (role_eleve IN ('standard', 'etudiant', 'etudiant_prive', 'professeur'));
-
-CREATE OR REPLACE FUNCTION is_professeur() RETURNS BOOLEAN AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM profiles WHERE id = auth.uid() AND role_eleve = 'professeur'
-  ) OR is_admin_or_superadmin();
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
-
-CREATE OR REPLACE FUNCTION is_etudiant_prive() RETURNS BOOLEAN AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM profiles WHERE id = auth.uid() AND role_eleve = 'etudiant_prive'
-  );
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
-
--- Seul un admin peut changer le rôle élève de quelqu'un (empêche un utilisateur
--- de se donner lui-même le rôle "professeur" en modifiant son propre profil).
--- Vérifié aussi à l'INSERT : la policy "profiles_all" (FOR ALL) permet à chacun
--- de supprimer puis recréer son propre profil, avec le rôle de son choix.
-CREATE OR REPLACE FUNCTION protect_role_eleve() RETURNS TRIGGER AS $$
-BEGIN
-  IF NOT is_admin_or_superadmin() THEN
-    IF TG_OP = 'INSERT' THEN
-      NEW.role_eleve := 'standard';
-    ELSE
-      NEW.role_eleve := OLD.role_eleve;
-    END IF;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS protect_role_eleve_trigger ON profiles;
-CREATE TRIGGER protect_role_eleve_trigger
-  BEFORE INSERT OR UPDATE ON profiles
-  FOR EACH ROW EXECUTE FUNCTION protect_role_eleve();
-
--- Utilisée par le dashboard admin (onglet Élèves) : la policy "profiles_all"
--- n'autorise à modifier que SON propre profil, donc l'admin passe par ici.
-CREATE OR REPLACE FUNCTION set_role_eleve(p_user_id uuid, p_role text) RETURNS void
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-BEGIN
-  IF NOT is_admin_or_superadmin() THEN
-    RAISE EXCEPTION 'Unauthorized: réservé aux administrateurs';
-  END IF;
-  UPDATE profiles SET role_eleve = p_role WHERE id = p_user_id;
-END;
-$$;
-
-
--- ============================================================
--- COURS PRIVÉS + INSCRIPTIONS
--- ============================================================
-
--- Un cours peut être marqué "privé" : réservé aux étudiants privés de l'imam
-ALTER TABLE cours_religieux ADD COLUMN IF NOT EXISTS prive BOOLEAN NOT NULL DEFAULT FALSE;
-
--- On remplace la policy de lecture d'origine (qui était 100% publique) pour
--- cacher les cours privés à qui n'a pas le bon rôle.
-DROP POLICY IF EXISTS "cours_select" ON cours_religieux;
-CREATE POLICY "cours_select" ON cours_religieux FOR SELECT TO anon, authenticated USING (
-  prive IS FALSE OR is_etudiant_prive() OR is_professeur()
-);
-
--- Une demande d'inscription à un cours (validée ensuite par un admin/professeur)
-CREATE TABLE IF NOT EXISTS inscriptions_cours (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  cours_id UUID REFERENCES cours_religieux(id) ON DELETE CASCADE NOT NULL,
-  statut TEXT NOT NULL DEFAULT 'en_attente' CHECK (statut IN ('en_attente', 'validee', 'refusee')),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (user_id, cours_id)
-);
-
-ALTER TABLE inscriptions_cours ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "inscr_select" ON inscriptions_cours;
-DROP POLICY IF EXISTS "inscr_insert" ON inscriptions_cours;
-DROP POLICY IF EXISTS "inscr_update" ON inscriptions_cours;
-DROP POLICY IF EXISTS "inscr_delete" ON inscriptions_cours;
-
--- Un utilisateur voit ses propres inscriptions ; l'admin/professeur voit tout
-CREATE POLICY "inscr_select" ON inscriptions_cours FOR SELECT TO authenticated USING (
-  auth.uid() = user_id OR is_admin_or_superadmin() OR is_professeur()
-);
--- On ne peut s'inscrire que soi-même, et seulement "en attente" (jamais se valider soi-même)
-CREATE POLICY "inscr_insert" ON inscriptions_cours FOR INSERT TO authenticated WITH CHECK (
-  auth.uid() = user_id AND statut = 'en_attente'
-);
--- Seul un admin/professeur peut valider ou refuser une inscription
-CREATE POLICY "inscr_update" ON inscriptions_cours FOR UPDATE TO authenticated
-  USING (is_admin_or_superadmin() OR is_professeur())
-  WITH CHECK (is_admin_or_superadmin() OR is_professeur());
-CREATE POLICY "inscr_delete" ON inscriptions_cours FOR DELETE TO authenticated USING (
-  auth.uid() = user_id OR is_admin_or_superadmin()
-);
-
-
--- ============================================================
--- SECTION HADITH
--- ============================================================
-CREATE TABLE IF NOT EXISTS hadiths (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  texte_arabe TEXT,
-  texte_francais TEXT NOT NULL,
-  source TEXT,
-  theme TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE hadiths DROP CONSTRAINT IF EXISTS hadith_texte_max;
-ALTER TABLE hadiths ADD CONSTRAINT hadith_texte_max CHECK (length(texte_francais) <= 3000);
-ALTER TABLE hadiths DROP CONSTRAINT IF EXISTS hadith_source_max;
-ALTER TABLE hadiths ADD CONSTRAINT hadith_source_max CHECK (length(source) <= 300);
-
-ALTER TABLE hadiths ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "hadith_select" ON hadiths;
-DROP POLICY IF EXISTS "hadith_insert" ON hadiths;
-DROP POLICY IF EXISTS "hadith_update" ON hadiths;
-DROP POLICY IF EXISTS "hadith_delete" ON hadiths;
-CREATE POLICY "hadith_select" ON hadiths FOR SELECT TO anon, authenticated USING (true);
-CREATE POLICY "hadith_insert" ON hadiths FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
-CREATE POLICY "hadith_update" ON hadiths FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
-CREATE POLICY "hadith_delete" ON hadiths FOR DELETE TO authenticated USING (is_admin_or_superadmin());
-
-
--- ============================================================
--- SECTION CORAN — récitations envoyées pour correction
--- ============================================================
-CREATE TABLE IF NOT EXISTS recitations_coran (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  sourate TEXT NOT NULL,
-  audio_url TEXT NOT NULL,
-  statut TEXT NOT NULL DEFAULT 'en_attente' CHECK (statut IN ('en_attente', 'corrigee')),
-  correction_texte TEXT,
-  correction_audio_url TEXT,
-  corrige_par UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  corrige_at TIMESTAMPTZ
-);
-
-ALTER TABLE recitations_coran DROP CONSTRAINT IF EXISTS recit_sourate_max;
-ALTER TABLE recitations_coran ADD CONSTRAINT recit_sourate_max CHECK (length(sourate) <= 200);
-ALTER TABLE recitations_coran DROP CONSTRAINT IF EXISTS recit_correction_max;
-ALTER TABLE recitations_coran ADD CONSTRAINT recit_correction_max CHECK (length(correction_texte) <= 3000);
-
-ALTER TABLE recitations_coran ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "recit_select" ON recitations_coran;
-DROP POLICY IF EXISTS "recit_insert" ON recitations_coran;
-DROP POLICY IF EXISTS "recit_update" ON recitations_coran;
-DROP POLICY IF EXISTS "recit_delete" ON recitations_coran;
-CREATE POLICY "recit_select" ON recitations_coran FOR SELECT TO authenticated USING (
-  auth.uid() = user_id OR is_admin_or_superadmin() OR is_professeur()
-);
-CREATE POLICY "recit_insert" ON recitations_coran FOR INSERT TO authenticated WITH CHECK (
-  auth.uid() = user_id AND statut = 'en_attente'
-);
--- L'élève ne peut pas se corriger lui-même : seule une modification par
--- l'imam/admin/professeur est acceptée (le trigger ci-dessous verrouille
--- en plus les champs que l'élève pourrait essayer de modifier).
-CREATE POLICY "recit_update" ON recitations_coran FOR UPDATE TO authenticated
-  USING (is_admin_or_superadmin() OR is_professeur())
-  WITH CHECK (is_admin_or_superadmin() OR is_professeur());
-
--- Défense en profondeur : la policy ci-dessus autorise un professeur à modifier
--- N'IMPORTE QUELLE colonne de la ligne (RLS ne restreint pas par colonne). Ce
--- trigger verrouille les champs qui ne devraient jamais changer lors d'une
--- correction (l'audio original de l'élève, à qui il appartient...), même par
--- un professeur — seuls admin/superadmin peuvent tout modifier.
-CREATE OR REPLACE FUNCTION protect_recitation_fields() RETURNS TRIGGER AS $$
-BEGIN
-  IF NOT is_admin_or_superadmin() THEN
-    NEW.user_id := OLD.user_id;
-    NEW.sourate := OLD.sourate;
-    NEW.audio_url := OLD.audio_url;
-    NEW.created_at := OLD.created_at;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS protect_recitation_fields_trigger ON recitations_coran;
-CREATE TRIGGER protect_recitation_fields_trigger
-  BEFORE UPDATE ON recitations_coran
-  FOR EACH ROW EXECUTE FUNCTION protect_recitation_fields();
-CREATE POLICY "recit_delete" ON recitations_coran FOR DELETE TO authenticated USING (
-  auth.uid() = user_id OR is_admin_or_superadmin()
-);
-
--- Stockage des enregistrements de récitation (bucket dédié, séparé du chat)
-INSERT INTO storage.buckets (id, name, public) VALUES ('recitations', 'recitations', true)
-ON CONFLICT (id) DO NOTHING;
-
-DROP POLICY IF EXISTS "recitations_select" ON storage.objects;
-DROP POLICY IF EXISTS "recitations_insert" ON storage.objects;
-DROP POLICY IF EXISTS "recitations_delete" ON storage.objects;
-CREATE POLICY "recitations_select" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'recitations');
-CREATE POLICY "recitations_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (
-  bucket_id = 'recitations' AND auth.uid()::text = (storage.foldername(name))[1]
-);
-CREATE POLICY "recitations_delete" ON storage.objects FOR DELETE TO authenticated USING (
-  bucket_id = 'recitations' AND (auth.uid()::text = (storage.foldername(name))[1] OR is_admin_or_superadmin())
-);
-
-
--- ============================================================
--- PRISE DE RENDEZ-VOUS AVEC L'IMAM
--- ============================================================
-CREATE TABLE IF NOT EXISTS rdv_imam (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  date_demandee DATE NOT NULL,
-  heure_demandee TIME NOT NULL,
-  motif TEXT,
-  statut TEXT NOT NULL DEFAULT 'en_attente' CHECK (statut IN ('en_attente', 'confirme', 'refuse')),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE rdv_imam DROP CONSTRAINT IF EXISTS rdv_motif_max;
-ALTER TABLE rdv_imam ADD CONSTRAINT rdv_motif_max CHECK (length(motif) <= 1000);
-
-ALTER TABLE rdv_imam ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "rdv_select" ON rdv_imam;
-DROP POLICY IF EXISTS "rdv_insert" ON rdv_imam;
-DROP POLICY IF EXISTS "rdv_update" ON rdv_imam;
-DROP POLICY IF EXISTS "rdv_delete" ON rdv_imam;
-CREATE POLICY "rdv_select" ON rdv_imam FOR SELECT TO authenticated USING (
-  auth.uid() = user_id OR is_admin_or_superadmin()
-);
-CREATE POLICY "rdv_insert" ON rdv_imam FOR INSERT TO authenticated WITH CHECK (
-  auth.uid() = user_id AND statut = 'en_attente'
-);
--- Seul l'admin (l'imam) confirme ou refuse
-CREATE POLICY "rdv_update" ON rdv_imam FOR UPDATE TO authenticated
-  USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
-CREATE POLICY "rdv_delete" ON rdv_imam FOR DELETE TO authenticated USING (
-  auth.uid() = user_id OR is_admin_or_superadmin()
-);
 
 
 -- ============================================================
@@ -876,6 +396,11 @@ ALTER TABLE actualites ADD CONSTRAINT actu_extrait_max CHECK (length(extrait) <=
 ALTER TABLE actualites DROP CONSTRAINT IF EXISTS actu_contenu_max;
 ALTER TABLE actualites ADD CONSTRAINT actu_contenu_max CHECK (length(contenu) <= 20000);
 
+-- Vidéo de l'article : fichier envoyé depuis le téléphone (stockage « images ») ou lien YouTube
+ALTER TABLE actualites ADD COLUMN IF NOT EXISTS video_url TEXT;
+ALTER TABLE actualites DROP CONSTRAINT IF EXISTS actu_video_url;
+ALTER TABLE actualites ADD CONSTRAINT actu_video_url CHECK (video_url IS NULL OR (video_url LIKE 'https://%' AND length(video_url) <= 1000));
+
 CREATE INDEX IF NOT EXISTS idx_actualites_date ON actualites(date_publication DESC);
 
 ALTER TABLE actualites ENABLE ROW LEVEL SECURITY;
@@ -890,3 +415,336 @@ CREATE POLICY "actu_select" ON actualites FOR SELECT TO anon, authenticated USIN
 CREATE POLICY "actu_insert" ON actualites FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
 CREATE POLICY "actu_update" ON actualites FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
 CREATE POLICY "actu_delete" ON actualites FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+
+-- ============================================================
+-- NOTIFICATIONS PUSH (« Être prévenu des nouvelles actualités »)
+-- ============================================================
+-- Date d'envoi de la notification : empêche d'envoyer deux fois le même article
+ALTER TABLE actualites ADD COLUMN IF NOT EXISTS notifie_le TIMESTAMPTZ;
+
+-- Un téléphone/navigateur abonné = une ligne. Aucune donnée personnelle :
+-- juste l'adresse technique fournie par Google / Apple / Mozilla.
+CREATE TABLE IF NOT EXISTS abonnements_push (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE abonnements_push DROP CONSTRAINT IF EXISTS push_endpoint_valide;
+ALTER TABLE abonnements_push ADD CONSTRAINT push_endpoint_valide CHECK (endpoint LIKE 'https://%' AND length(endpoint) <= 1000);
+ALTER TABLE abonnements_push DROP CONSTRAINT IF EXISTS push_cles_max;
+ALTER TABLE abonnements_push ADD CONSTRAINT push_cles_max CHECK (length(p256dh) <= 200 AND length(auth) <= 100);
+
+-- Lecture et suppression réservées à l'admin (l'envoi se fait avec sa session).
+-- Les visiteurs ne lisent jamais la table : ils passent par les deux fonctions ci-dessous.
+ALTER TABLE abonnements_push ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "push_select" ON abonnements_push;
+DROP POLICY IF EXISTS "push_delete" ON abonnements_push;
+CREATE POLICY "push_select" ON abonnements_push FOR SELECT TO authenticated USING (is_admin_or_superadmin());
+CREATE POLICY "push_delete" ON abonnements_push FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+-- S'abonner (visiteur connecté ou non). Si le téléphone est déjà inscrit, on met ses clés à jour.
+CREATE OR REPLACE FUNCTION abonner_push(p_endpoint TEXT, p_p256dh TEXT, p_auth TEXT) RETURNS VOID AS $$
+  INSERT INTO abonnements_push (endpoint, p256dh, auth) VALUES (p_endpoint, p_p256dh, p_auth)
+  ON CONFLICT (endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth;
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+
+-- Se désabonner : seul le téléphone qui connaît son adresse peut la retirer
+CREATE OR REPLACE FUNCTION desabonner_push(p_endpoint TEXT) RETURNS VOID AS $$
+  DELETE FROM abonnements_push WHERE endpoint = p_endpoint;
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+
+GRANT EXECUTE ON FUNCTION abonner_push(TEXT, TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION desabonner_push(TEXT) TO anon, authenticated;
+
+
+-- ============================================================
+-- PROJETS AVEC COLLECTE (ex. « Entrée pour les sœurs ») — onglet « Projets » de l'admin
+-- Le projet « mis en avant » s'affiche sur l'accueil avec sa barre de progression.
+-- Le montant collecté est saisi à la main par l'admin (lecture HelloAsso automatique plus tard).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS projets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  titre TEXT NOT NULL,
+  description TEXT NOT NULL,
+  image_url TEXT,
+  audio_url TEXT,                                   -- explication audio de l'imam (facultatif)
+  objectif NUMERIC(10,2) NOT NULL,
+  montant_collecte NUMERIC(10,2) NOT NULL DEFAULT 0,
+  url_don TEXT NOT NULL,                            -- page de collecte (HelloAsso)
+  statut TEXT NOT NULL DEFAULT 'en_cours',          -- en_cours | termine
+  en_avant BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE projets DROP CONSTRAINT IF EXISTS projet_titre_max;
+ALTER TABLE projets ADD CONSTRAINT projet_titre_max CHECK (length(titre) <= 200);
+ALTER TABLE projets DROP CONSTRAINT IF EXISTS projet_description_max;
+ALTER TABLE projets ADD CONSTRAINT projet_description_max CHECK (length(description) <= 3000);
+ALTER TABLE projets DROP CONSTRAINT IF EXISTS projet_montants;
+ALTER TABLE projets ADD CONSTRAINT projet_montants CHECK (objectif > 0 AND montant_collecte >= 0);
+ALTER TABLE projets DROP CONSTRAINT IF EXISTS projet_url_don;
+ALTER TABLE projets ADD CONSTRAINT projet_url_don CHECK (url_don LIKE 'https://%' AND length(url_don) <= 500);
+ALTER TABLE projets DROP CONSTRAINT IF EXISTS projet_statut;
+ALTER TABLE projets ADD CONSTRAINT projet_statut CHECK (statut IN ('en_cours', 'termine'));
+
+-- Un seul projet mis en avant à la fois
+CREATE UNIQUE INDEX IF NOT EXISTS idx_projets_un_seul_en_avant ON projets (en_avant) WHERE en_avant;
+
+ALTER TABLE projets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "projet_select" ON projets;
+DROP POLICY IF EXISTS "projet_insert" ON projets;
+DROP POLICY IF EXISTS "projet_update" ON projets;
+DROP POLICY IF EXISTS "projet_delete" ON projets;
+-- Les projets sont publics (affichés sur le site) ; seul l'admin les gère
+CREATE POLICY "projet_select" ON projets FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "projet_insert" ON projets FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "projet_update" ON projets FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "projet_delete" ON projets FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+
+-- ============================================================
+-- EMPLOI DU TEMPS DES COURS (séances datées, page /cours et accueil)
+-- Une séance = un cours à une date. L'horaire est soit une heure fixe, soit
+-- « après une prière » : l'heure affichée suit alors les horaires Mawaqit du jour.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS seances (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  matiere TEXT NOT NULL,                       -- ex. Jurisprudence, Tajwid, Langue arabe
+  sujet TEXT,                                  -- ex. « Les ablutions » (facultatif)
+  date DATE NOT NULL,
+  moment TEXT NOT NULL DEFAULT 'heure',        -- heure | apres_fajr | apres_dhuhr | apres_asr | apres_maghrib | apres_isha
+  heure TIME,                                  -- obligatoire si moment = 'heure'
+  duree_minutes INTEGER NOT NULL DEFAULT 60,
+  enseignant TEXT,
+  public TEXT NOT NULL DEFAULT 'tous',         -- tous | hommes | femmes | enfants
+  lieu TEXT,
+  note TEXT,
+  annulee BOOLEAN NOT NULL DEFAULT FALSE,
+  serie_id UUID,                               -- séances créées ensemble (« chaque semaine »)
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE seances DROP CONSTRAINT IF EXISTS seance_moment;
+ALTER TABLE seances ADD CONSTRAINT seance_moment CHECK (moment IN ('heure', 'apres_fajr', 'apres_dhuhr', 'apres_asr', 'apres_maghrib', 'apres_isha'));
+ALTER TABLE seances DROP CONSTRAINT IF EXISTS seance_heure;
+ALTER TABLE seances ADD CONSTRAINT seance_heure CHECK (moment <> 'heure' OR heure IS NOT NULL);
+ALTER TABLE seances DROP CONSTRAINT IF EXISTS seance_public;
+ALTER TABLE seances ADD CONSTRAINT seance_public CHECK (public IN ('tous', 'hommes', 'femmes', 'enfants'));
+ALTER TABLE seances DROP CONSTRAINT IF EXISTS seance_duree;
+ALTER TABLE seances ADD CONSTRAINT seance_duree CHECK (duree_minutes BETWEEN 5 AND 600);
+ALTER TABLE seances DROP CONSTRAINT IF EXISTS seance_textes_max;
+ALTER TABLE seances ADD CONSTRAINT seance_textes_max CHECK (
+  length(matiere) <= 100 AND length(coalesce(sujet, '')) <= 300 AND length(coalesce(enseignant, '')) <= 200
+  AND length(coalesce(lieu, '')) <= 200 AND length(coalesce(note, '')) <= 1000
+);
+
+CREATE INDEX IF NOT EXISTS idx_seances_date ON seances(date);
+
+ALTER TABLE seances ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "seance_select" ON seances;
+DROP POLICY IF EXISTS "seance_insert" ON seances;
+DROP POLICY IF EXISTS "seance_update" ON seances;
+DROP POLICY IF EXISTS "seance_delete" ON seances;
+CREATE POLICY "seance_select" ON seances FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "seance_insert" ON seances FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "seance_update" ON seances FOR UPDATE TO authenticated USING (is_admin_or_superadmin()) WITH CHECK (is_admin_or_superadmin());
+CREATE POLICY "seance_delete" ON seances FOR DELETE TO authenticated USING (is_admin_or_superadmin());
+
+
+-- ============================================================
+-- NOTIFICATIONS POUR TOUS LES CONTENUS (cours en ligne, séances, projets)
+-- Même principe que pour les actualités : date d'envoi = pas de double envoi.
+-- ============================================================
+ALTER TABLE cours_religieux ADD COLUMN IF NOT EXISTS notifie_le TIMESTAMPTZ;
+ALTER TABLE seances ADD COLUMN IF NOT EXISTS notifie_le TIMESTAMPTZ;
+ALTER TABLE projets ADD COLUMN IF NOT EXISTS notifie_le TIMESTAMPTZ;
+
+
+-- ============================================================
+-- RUBRIQUES SUPPRIMÉES (2026-10-07) : tout ce qui leur était lié est effacé
+-- Événements, hadiths, rendez-vous imam, récitation du Coran + espace professeur,
+-- élèves (inscriptions aux cours, rôles étudiant / professeur, cours privés),
+-- signalements, notifications « bénévole disponible » de l'admin.
+-- Les fichiers audio du bucket « recitations » se suppriment à la main dans
+-- Supabase → Storage (Supabase interdit d'effacer des fichiers en SQL).
+-- ============================================================
+
+-- Cours privés : ceux qui l'étaient sont désactivés (donc invisibles du public)
+-- AVANT de retirer la colonne, pour qu'ils ne deviennent pas publics.
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'cours_religieux' AND column_name = 'prive') THEN
+    UPDATE cours_religieux SET actif = FALSE WHERE prive IS TRUE;
+  END IF;
+END $$;
+DROP POLICY IF EXISTS "cours_select" ON cours_religieux;
+CREATE POLICY "cours_select" ON cours_religieux FOR SELECT TO anon, authenticated USING (
+  actif IS TRUE OR is_admin_or_superadmin()
+);
+ALTER TABLE cours_religieux DROP COLUMN IF EXISTS prive;
+
+DROP TABLE IF EXISTS inscriptions_cours, recitations_coran, hadiths, rdv_imam, evenements, bug_reports, notifications CASCADE;
+
+-- Rôles élèves (étudiant, étudiant privé, professeur)
+DROP TRIGGER IF EXISTS protect_role_eleve_trigger ON profiles;
+DROP FUNCTION IF EXISTS set_role_eleve(uuid, text);
+DROP FUNCTION IF EXISTS protect_role_eleve() CASCADE;
+DROP FUNCTION IF EXISTS protect_recitation_fields() CASCADE;
+DROP FUNCTION IF EXISTS is_professeur() CASCADE;
+DROP FUNCTION IF EXISTS is_etudiant_prive() CASCADE;
+ALTER TABLE profiles DROP COLUMN IF EXISTS role_eleve;
+
+-- Stockage des récitations
+DROP POLICY IF EXISTS "recitations_select" ON storage.objects;
+DROP POLICY IF EXISTS "recitations_insert" ON storage.objects;
+DROP POLICY IF EXISTS "recitations_delete" ON storage.objects;
+
+
+-- ============================================================
+-- SUPPRESSION DE COMPTE (RGPD, droit à l'effacement) — bouton dans « Mon profil »
+-- La personne connectée efface son compte et TOUT ce qui la concerne :
+-- fiche bénévole (reliée par l'email), progression et vues des cours, profil,
+-- puis le compte lui-même. La photo de profil est effacée par le site juste
+-- avant (Supabase interdit d'effacer des fichiers en SQL), d'où la règle
+-- « avatars_delete » ci-dessous.
+-- Un compte administrateur ne peut pas se supprimer ici : sinon la mosquée
+-- pourrait perdre son seul accès à l'administration.
+-- ============================================================
+DROP POLICY IF EXISTS "avatars_delete" ON storage.objects;
+CREATE POLICY "avatars_delete" ON storage.objects FOR DELETE TO authenticated USING (
+  bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+CREATE OR REPLACE FUNCTION supprimer_mon_compte() RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_id UUID := auth.uid();
+  v_email TEXT;
+BEGIN
+  IF v_id IS NULL THEN
+    RAISE EXCEPTION 'Connexion requise';
+  END IF;
+  IF is_admin_or_superadmin() THEN
+    RAISE EXCEPTION 'Un compte administrateur ne peut pas être supprimé depuis le site';
+  END IF;
+  SELECT email INTO v_email FROM auth.users WHERE id = v_id;
+
+  DELETE FROM public.benevoles WHERE lower(email) = lower(v_email);
+  DELETE FROM public.user_progress WHERE user_id = v_id;
+  DELETE FROM public.cours_vues WHERE user_id = v_id;
+  DELETE FROM public.profiles WHERE id = v_id;
+  DELETE FROM auth.users WHERE id = v_id;   -- efface aussi ses sessions et identités
+END;
+$$;
+
+REVOKE ALL ON FUNCTION supprimer_mon_compte() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION supprimer_mon_compte() TO authenticated;
+
+
+-- ============================================================
+-- DROITS RGPD DEPUIS « MON PROFIL »
+-- Accès / portabilité : téléchargement de toutes ses données (lecture de ses propres lignes).
+-- Rectification : nom, prénom, présentation, email. Opposition : suivi des cours désactivable.
+-- Retrait du consentement : cookies, notifications, suivi des cours.
+-- Effacement : supprimer_mon_compte() (section plus haut).
+-- ============================================================
+
+-- Opposition : la personne peut refuser l'enregistrement de sa progression et de ses vues
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS suivi_cours BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- Rectification de l'email : quand le compte change d'adresse (après confirmation par
+-- email), la fiche bénévole suit, sinon elle ne serait plus reliée à la personne.
+CREATE OR REPLACE FUNCTION suivre_changement_email() RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NEW.email IS DISTINCT FROM OLD.email AND OLD.email IS NOT NULL THEN
+    UPDATE public.benevoles SET email = NEW.email WHERE lower(email) = lower(OLD.email);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS suivre_changement_email ON auth.users;
+CREATE TRIGGER suivre_changement_email
+  AFTER UPDATE OF email ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION suivre_changement_email();
+
+
+-- ============================================================
+-- PROFIL CRÉÉ AUTOMATIQUEMENT À L'INSCRIPTION
+-- Avec la vérification d'email activée (Supabase → Authentication → Email →
+-- « Confirm email »), la personne n'est pas connectée juste après l'inscription :
+-- le site ne peut donc pas écrire son profil. La base le crée elle-même à partir
+-- du prénom, du nom et du genre saisis dans le formulaire.
+-- ============================================================
+CREATE OR REPLACE FUNCTION creer_profil_inscription() RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.profiles (id, prenom, nom, sexe)
+  VALUES (
+    NEW.id,
+    left(NEW.raw_user_meta_data->>'prenom', 100),
+    left(NEW.raw_user_meta_data->>'nom', 100),
+    CASE WHEN NEW.raw_user_meta_data->>'sexe' IN ('homme', 'femme') THEN NEW.raw_user_meta_data->>'sexe' END
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS creer_profil_inscription ON auth.users;
+CREATE TRIGGER creer_profil_inscription
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION creer_profil_inscription();
+
+
+-- ============================================================
+-- NETTOYAGE DU STOCKAGE : dossiers plus utilisés
+-- « chat-media » (ancien chat) et « recitations » (récitations du Coran) :
+-- leurs fichiers puis les dossiers eux-mêmes sont supprimés.
+-- Si Supabase refuse l'effacement en SQL (protection récente du stockage), le reste
+-- du script continue quand même : il faudra alors les supprimer à la main dans Storage.
+-- ============================================================
+DO $$
+BEGIN
+  DELETE FROM storage.objects WHERE bucket_id IN ('chat-media', 'recitations');
+  DELETE FROM storage.buckets WHERE id IN ('chat-media', 'recitations');
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Stockage : suppression en SQL refusée (%). Supprimez « chat-media » et « recitations » à la main dans Storage.', SQLERRM;
+END $$;
+
+
+-- ============================================================
+-- TRADUCTION EN ARABE (bouton « عربي » du site)
+-- Chaque texte français n'est traduit qu'une fois (par l'IA Claude, via la fonction
+-- serveur /api/traduire), puis gardé ici. Seule la fonction serveur lit et écrit ces
+-- tables (avec la clé « service_role », jamais envoyée au navigateur) : aucune règle
+-- d'accès n'est ouverte, donc personne ne peut y glisser une fausse traduction.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS traductions (
+  empreinte TEXT PRIMARY KEY,          -- SHA-256 du texte français
+  fr TEXT NOT NULL,
+  ar TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE traductions ENABLE ROW LEVEL SECURITY;
+
+-- Plafond de dépense : nombre de caractères envoyés à l'IA par jour
+CREATE TABLE IF NOT EXISTS traductions_usage (
+  jour DATE PRIMARY KEY,
+  caracteres INTEGER NOT NULL DEFAULT 0
+);
+ALTER TABLE traductions_usage ENABLE ROW LEVEL SECURITY;
+
+-- Ajoute des caractères au compteur du jour et renvoie le total (appelée par le serveur)
+CREATE OR REPLACE FUNCTION compter_traduction(p_caracteres INTEGER) RETURNS INTEGER
+LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+  INSERT INTO traductions_usage (jour, caracteres) VALUES (CURRENT_DATE, p_caracteres)
+  ON CONFLICT (jour) DO UPDATE SET caracteres = traductions_usage.caracteres + EXCLUDED.caracteres
+  RETURNING caracteres;
+$$;
+REVOKE ALL ON FUNCTION compter_traduction(INTEGER) FROM PUBLIC, anon, authenticated;

@@ -7,6 +7,9 @@
 @import '@fontsource/source-sans-3/latin-500.css';
 @import '@fontsource/source-sans-3/latin-600.css';
 @import '@fontsource/amiri/arabic-400.css';
+/* Texte arabe (bouton « عربي ») : téléchargée seulement si la page contient de l'arabe */
+@import '@fontsource/noto-sans-arabic/arabic-400.css';
+@import '@fontsource/noto-sans-arabic/arabic-600.css';
 
 @tailwind base;
 @tailwind components;
@@ -21,6 +24,14 @@
     @apply font-serif font-medium;
     letter-spacing: -0.01em;
   }
+
+  /* Site en arabe : polices arabes, et jamais d'espacement entre les lettres
+     (il casse les liaisons des lettres arabes et rend le texte illisible) */
+  html[lang="ar"] body { font-family: "Noto Sans Arabic", "Source Sans 3", system-ui, sans-serif; }
+  html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3, html[lang="ar"] h4,
+  html[lang="ar"] .font-serif { font-family: Amiri, "Cormorant Garamond", Georgia, serif; }
+  html[lang="ar"] * { letter-spacing: 0 !important; }
+  html[lang="ar"] .eyebrow, html[lang="ar"] .uppercase { text-transform: none; }
 }
 
 @layer components {

@@ -1,7 +1,7 @@
 <template>
   <!-- Bandeau fin au-dessus du menu : date du jour + horaires de prière en direct -->
   <div class="bg-ink text-ink-foreground text-xs">
-    <div class="mx-auto flex h-9 max-w-6xl items-center justify-between gap-4 px-5">
+    <div class="mx-auto flex h-9 max-w-site items-center justify-between gap-4 px-5 lg:px-10">
       <span class="capitalize opacity-70">{{ dateLabel }}</span>
 
       <!-- Ordinateur : les 6 horaires -->

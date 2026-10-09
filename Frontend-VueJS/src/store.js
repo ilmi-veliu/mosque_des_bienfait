@@ -26,7 +26,3 @@ export const preloadCours = async (force = false) => {
     // silencieux
   }
 }
-
-export const preloadAll = () => {
-  preloadCours()
-}

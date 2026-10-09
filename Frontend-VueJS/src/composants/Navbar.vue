@@ -1,11 +1,12 @@
 <template>
   <nav class="bg-paper border-b border-line sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-5">
+    <div class="max-w-site mx-auto px-5 lg:px-10">
       <div class="flex justify-between items-center h-16">
 
         <!-- Logo -->
         <router-link to="/" class="flex items-center gap-3 flex-shrink-0">
-          <Etoile class="w-7 h-7 text-accent-500" />
+          <!-- multiply : le fond blanc du logo se fond dans le fond crème -->
+          <img :src="logo" alt="" class="h-12 w-12 object-contain mix-blend-multiply" />
           <span class="font-serif text-xl leading-none">Mosquée des Bienfaisants</span>
         </router-link>
 
@@ -27,8 +28,11 @@
               </router-link>
             </div>
           </div>
+          <router-link to="/cours" class="text-muted hover:text-ink transition-colors" active-class="!text-ink">Cours</router-link>
           <router-link to="/actualites" class="text-muted hover:text-ink transition-colors" active-class="!text-ink">Actualités</router-link>
           <router-link to="/horaires" class="text-muted hover:text-ink transition-colors" active-class="!text-ink">Horaires</router-link>
+          <button v-if="TRADUCTION_ACTIVE" @click="changerLangue(langue === 'ar' ? 'fr' : 'ar')" translate="no" class="text-muted hover:text-ink transition-colors"
+            :aria-label="langue === 'ar' ? 'Afficher le site en français' : 'عرض الموقع بالعربية'">{{ langue === 'ar' ? 'Français' : 'عربي' }}</button>
           <a :href="DON_URL" target="_blank" rel="noopener noreferrer" class="btn bg-accent-600 text-paper hover:bg-accent-700 !py-2">Faire un don</a>
           <!-- Connecté : avatar dropdown -->
           <template v-if="isLoggedIn">
@@ -61,23 +65,6 @@
                   >
                     <UserCircle :size="16" class="text-gray-400" />
                     Mon Profil
-                  </router-link>
-                  <router-link
-                    to="/coran"
-                    @click="dropdownOpen = false"
-                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <BookOpen :size="16" class="text-gray-400" />
-                    Récitation du Coran
-                  </router-link>
-                  <router-link
-                    v-if="isProfesseur"
-                    to="/espace-professeur"
-                    @click="dropdownOpen = false"
-                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <GraduationCap :size="16" class="text-gray-400" />
-                    Espace Professeur
                   </router-link>
                   <router-link
                     v-if="isBenevole"
@@ -157,9 +144,11 @@
             </router-link>
           </div>
         </div>
+        <router-link @click="mobileOpen = false" to="/cours" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Cours</router-link>
         <router-link @click="mobileOpen = false" to="/actualites" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Actualités</router-link>
         <router-link @click="mobileOpen = false" to="/horaires" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Horaires de prière</router-link>
-        <router-link v-if="isLoggedIn && isProfesseur" @click="mobileOpen = false" to="/espace-professeur" class="block py-3 border-b border-line font-serif text-lg hover:text-accent-600 transition-colors">Espace Professeur</router-link>
+        <button v-if="TRADUCTION_ACTIVE" @click="changerLangue(langue === 'ar' ? 'fr' : 'ar')" translate="no" class="btn btn-outline mt-4 w-full"
+            :aria-label="langue === 'ar' ? 'Afficher le site en français' : 'عرض الموقع بالعربية'">{{ langue === 'ar' ? 'Français' : 'عربي' }}</button>
         <a :href="DON_URL" target="_blank" rel="noopener noreferrer" class="btn bg-accent-600 text-paper hover:bg-accent-700 mt-4 w-full">Faire un don</a>
         <!-- Connecté : section compte -->
         <template v-if="isLoggedIn">
@@ -211,9 +200,10 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Calendar, HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X, BookOpen, GraduationCap } from 'lucide-vue-next'
+import { HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
-import Etoile from './Etoile.vue'
+import { langue, changerLangue, TRADUCTION_ACTIVE } from '../traduction'
+import logo from '../assets/logo-mosquee.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -232,10 +222,6 @@ const groupes = [
     { to: '/la-mosquee', label: 'Présentation', texte: 'Le lieu, les services, venir' },
     { to: '/benevole', label: 'Bénévolat', texte: 'Donner de son temps' },
   ] },
-  { titre: 'Apprendre', liens: [
-    { to: '/cours', label: 'Cours religieux', texte: 'Tajwid, croyance, fiqh, arabe' },
-    { to: '/coran', label: 'Récitation du Coran', texte: 'Faire corriger sa récitation', compte: true },
-  ] },
 ]
 const isLoggedIn = ref(false)
 const isAdmin = ref(false)
@@ -245,7 +231,6 @@ const dropdownOpen = ref(false)
 const dropdownRef = ref(null)
 const avatarUrl = ref('')
 const userInitiales = ref('')
-const isProfesseur = ref(false)
 
 const checkBenevole = async (email) => {
   if (!email) {
@@ -272,11 +257,10 @@ const checkBenevole = async (email) => {
 }
 
 const loadProfile = async (userId) => {
-  const { data } = await supabase.from('profiles').select('avatar_url, prenom, nom, role_eleve').eq('id', userId).single()
+  const { data } = await supabase.from('profiles').select('avatar_url, prenom, nom').eq('id', userId).single()
   if (data) {
     avatarUrl.value = data.avatar_url || ''
     userInitiales.value = ((data.prenom?.[0] || '') + (data.nom?.[0] || '')).toUpperCase()
-    isProfesseur.value = data.role_eleve === 'professeur'
   }
 }
 
@@ -288,7 +272,6 @@ const updateAuthState = async (session) => {
   } else {
     isAdmin.value = false
     isBenevole.value = false
-    isProfesseur.value = false
     avatarUrl.value = ''
     userInitiales.value = ''
     lastCheckedEmail = null

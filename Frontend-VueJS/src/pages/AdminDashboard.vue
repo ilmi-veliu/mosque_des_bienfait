@@ -8,48 +8,6 @@
           <h1 class="text-lg sm:text-xl font-semibold">Administration</h1>
         </div>
         <div class="flex items-center gap-3 sm:gap-4">
-          <!-- Notifications -->
-          <div class="relative">
-            <button @click="showNotifPanel = !showNotifPanel" class="text-gray-400 hover:text-white transition-colors relative p-1">
-              <Bell :size="18" />
-              <span v-if="unreadNotifCount > 0"
-                class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                {{ unreadNotifCount > 9 ? '9+' : unreadNotifCount }}
-              </span>
-            </button>
-            <!-- Panel notifications -->
-            <div v-if="showNotifPanel" class="absolute right-0 top-10 w-80 sm:w-96 bg-card rounded-xl shadow-2xl border z-50 max-h-[70vh] overflow-hidden">
-              <div class="px-4 py-3 border-b flex items-center justify-between">
-                <h4 class="font-semibold text-gray-800 text-sm">Notifications</h4>
-                <button v-if="notifications.length > 0" @click="markAllRead" class="text-xs text-accent-600 hover:underline">
-                  Tout marquer lu
-                </button>
-              </div>
-              <div class="overflow-y-auto max-h-[50vh]">
-                <div v-if="notifications.length === 0" class="px-4 py-8 text-center text-gray-400 text-sm">
-                  Aucune notification.
-                </div>
-                <div v-for="n in notifications" :key="n.id"
-                  class="px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
-                  :class="!n.lu ? 'bg-accent-50/40' : ''">
-                  <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                      :class="n.type === 'disponibilite' ? 'bg-amber-100' : 'bg-blue-100'">
-                      <CalendarX v-if="n.message?.includes('indisponible')" :size="14" class="text-red-600" />
-                      <CalendarCheck v-else :size="14" class="text-accent-600" />
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm text-gray-800">{{ n.message }}</p>
-                      <p class="text-[11px] text-gray-400 mt-1">{{ formatNotifDate(n.created_at) }}</p>
-                    </div>
-                    <button v-if="!n.lu" @click.stop="markRead(n)" class="text-[10px] text-accent-600 hover:underline flex-shrink-0 mt-1">
-                      Lu
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
           <router-link to="/" class="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm">
             Voir le site
           </router-link>
@@ -79,23 +37,28 @@
           Actualités
         </button>
         <button
+          @click="activeTab = 'projets'; fetchProjets()"
+          :class="activeTab === 'projets' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+        >
+          <HandCoins :size="18" />
+          Projets
+        </button>
+        <button
+          @click="activeTab = 'edt'; fetchSeances()"
+          :class="activeTab === 'edt' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+        >
+          <CalendarDays :size="18" />
+          Emploi du temps
+        </button>
+        <button
           @click="activeTab = 'cours'"
           :class="activeTab === 'cours' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <BookOpen :size="18" />
           Cours
-        </button>
-        <button
-          @click="activeTab = 'eleves'; fetchEleves()"
-          :class="activeTab === 'eleves' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
-        >
-          <GraduationCap :size="18" />
-          Élèves
-          <span v-if="inscriptionsEnAttente.length > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-            {{ inscriptionsEnAttente.length > 9 ? '9+' : inscriptionsEnAttente.length }}
-          </span>
         </button>
         <button v-if="isSuperAdmin"
           @click="activeTab = 'benevoles'"
@@ -106,34 +69,12 @@
           Bénévoles
         </button>
         <button v-if="isSuperAdmin"
-          @click="activeTab = 'signalements'; fetchBugReports()"
-          :class="activeTab === 'signalements' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
-        >
-          <AlertTriangle :size="18" />
-          Signalements
-          <span v-if="bugReports.length > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-            {{ bugReports.length > 9 ? '9+' : bugReports.length }}
-          </span>
-        </button>
-        <button v-if="isSuperAdmin"
           @click="activeTab = 'gestion'; fetchAllBenevoles()"
           :class="activeTab === 'gestion' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <Crown :size="18" />
           Gestion
-        </button>
-        <button v-if="canSeeImamChat"
-          @click="activeTab = 'imam'; loadImamConversations()"
-          :class="activeTab === 'imam' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap relative"
-        >
-          <MessageSquare :size="18" />
-          Chat Imam
-          <span v-if="imamUnreadCount > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-            {{ imamUnreadCount > 9 ? '9+' : imamUnreadCount }}
-          </span>
         </button>
       </div>
     </div>
@@ -169,7 +110,6 @@
                 <span :class="c.actif ? 'bg-accent-100 text-accent-700' : 'bg-red-100 text-red-700'" class="text-xs px-2 py-0.5 rounded">
                   {{ c.actif ? 'Actif' : 'Inactif' }}
                 </span>
-                <span v-if="c.prive" class="text-xs px-2 py-0.5 rounded bg-violet-100 text-violet-700">Privé</span>
               </div>
               <p class="text-sm text-gray-500 truncate">{{ c.description }}</p>
               <div class="flex flex-wrap gap-2 sm:gap-4 mt-1 text-xs text-gray-400">
@@ -204,7 +144,7 @@
                 <option v-for="c in categoriesActu" :key="c" :value="c" />
               </datalist>
             </div>
-            <input v-model="actuForm.date_publication" type="date" required class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+            <ChoixDate v-model="actuForm.date_publication" placeholder="Date de publication" />
           </div>
           <div class="flex flex-col sm:flex-row gap-3">
             <label class="flex-1 cursor-pointer">
@@ -214,14 +154,44 @@
               </div>
               <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleActuImageUpload" :disabled="uploading" />
             </label>
+            <button type="button" @click="collerImage('actu')" :disabled="uploading"
+              class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-paper text-sm text-gray-500 disabled:opacity-50"
+              title="Coller une image copiée (ou Cmd+V / Ctrl+V)">
+              <ClipboardPaste :size="18" class="text-gray-400" /> Coller
+            </button>
             <input v-model="actuForm.image_url" type="text" placeholder="ou coller une URL d'image..." class="flex-1 w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
           </div>
           <img v-if="actuForm.image_url" :src="actuForm.image_url" class="w-full h-40 object-cover rounded-xl border" @error="actuForm.image_url = ''" />
+
+          <!-- Vidéo : depuis la galerie du téléphone, ou lien YouTube -->
+          <div class="rounded-xl border border-dashed border-gray-300 bg-paper p-3 space-y-3">
+            <p class="text-sm font-medium text-gray-700">Vidéo <span class="font-normal text-gray-500">(facultatif)</span></p>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <label class="flex-1 cursor-pointer">
+                <div class="flex items-center justify-center gap-2 px-4 py-3 border rounded-xl bg-white hover:border-accent-500 transition-colors">
+                  <Film :size="18" class="text-gray-400" />
+                  <span class="text-sm text-gray-600">{{ uploading ? (uploadProgress || 'Envoi…') : (actuForm.video_url ? 'Changer la vidéo' : 'Ajouter une vidéo') }}</span>
+                </div>
+                <input type="file" accept="video/*" class="hidden" @change="handleActuVideoUpload" :disabled="uploading" />
+              </label>
+              <input v-model="actuForm.video_url" type="url" placeholder="ou coller un lien YouTube" class="flex-1 w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm bg-white" />
+            </div>
+            <p class="text-xs text-gray-500">Vidéo du téléphone : 50 Mo maximum (environ 30 s à 1 min). Plus longue : mettez-la sur YouTube et collez le lien.</p>
+            <div v-if="actuForm.video_url" class="space-y-2">
+              <iframe v-if="lecteurYoutube(actuForm.video_url)" :src="lecteurYoutube(actuForm.video_url)" class="aspect-video w-full rounded-xl border" frameborder="0" allowfullscreen></iframe>
+              <video v-else :src="actuForm.video_url" controls playsinline preload="metadata" class="mx-auto block h-auto max-h-80 w-auto max-w-full rounded-xl border"></video>
+              <button type="button" @click="actuForm.video_url = ''" class="text-sm text-red-600 hover:underline">Retirer la vidéo</button>
+            </div>
+          </div>
           <textarea v-model="actuForm.extrait" rows="2" maxlength="500" placeholder="Extrait (résumé affiché sur la carte)" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
           <textarea v-model="actuForm.contenu" rows="8" required maxlength="20000" placeholder="Texte de l'article * (laissez une ligne vide entre les paragraphes)" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
           <label class="flex items-center gap-3 text-sm text-gray-700">
             <input v-model="actuForm.publie" type="checkbox" class="w-4 h-4 accent-accent-600" />
             Publié (décocher pour garder en brouillon)
+          </label>
+          <label v-if="actuForm.publie && !actuDejaNotifiee" class="flex items-center gap-3 text-sm text-gray-700">
+            <input v-model="actuForm.notifier" type="checkbox" class="w-4 h-4 accent-accent-600" />
+            Envoyer une notification aux abonnés
           </label>
           <div class="flex justify-end gap-3">
             <button v-if="editingActuId" type="button" @click="resetActuForm" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors text-sm">Annuler</button>
@@ -243,9 +213,11 @@
               <p class="text-xs text-gray-400 mt-1">
                 {{ a.date_publication }} · {{ a.categorie }}
                 <span v-if="!a.publie" class="ml-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Brouillon</span>
+                <span v-else-if="a.notifie_le" class="ml-1 bg-accent-50 text-accent-700 px-1.5 py-0.5 rounded">Notifiée</span>
               </p>
             </div>
             <div class="flex gap-1 flex-shrink-0">
+              <button v-if="a.publie && !a.notifie_le" @click="notifierActu(a)" title="Envoyer la notification aux abonnés" class="p-2 text-gray-400 hover:text-accent-600 transition-colors"><Bell :size="16" /></button>
               <button @click="editActu(a)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors"><Pencil :size="16" /></button>
               <button @click="deleteActu(a.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors"><Trash2 :size="16" /></button>
             </div>
@@ -253,57 +225,200 @@
         </div>
       </div>
 
-      <!-- ÉLÈVES : inscriptions aux cours + rôles -->
-      <div v-if="activeTab === 'eleves'">
-        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Inscriptions aux cours</h2>
-        <div v-if="elevesLoading" class="text-center py-12">
+      <!-- PROJETS AVEC COLLECTE (le projet « mis en avant » s'affiche sur l'accueil) -->
+      <div v-if="activeTab === 'projets'">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Projets avec collecte</h2>
+        <p class="text-sm text-gray-500 mb-6">Le projet « mis en avant » s'affiche sur la page d'accueil avec sa barre de progression. Pensez à mettre à jour le montant collecté.</p>
+
+        <form @submit.prevent="saveProjet" class="bg-card rounded-xl border p-4 sm:p-5 mb-6 space-y-3">
+          <h3 class="font-semibold text-gray-800">{{ editingProjetId ? 'Modifier le projet' : 'Nouveau projet' }}</h3>
+          <input v-model="projetForm.titre" required maxlength="200" placeholder="Titre * (ex. Entrée pour les sœurs)" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+          <textarea v-model="projetForm.description" rows="4" required maxlength="3000" placeholder="Explication du projet *" class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm"></textarea>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="text-sm text-gray-600">Objectif (€) *
+              <input v-model.number="projetForm.objectif" type="number" min="1" step="1" required class="mt-1 w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+            </label>
+            <label class="text-sm text-gray-600">Déjà collecté (€)
+              <input v-model.number="projetForm.montant_collecte" type="number" min="0" step="1" class="mt-1 w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+            </label>
+          </div>
+          <label class="block text-sm text-gray-600">Lien de la collecte (HelloAsso) *
+            <input v-model="projetForm.url_don" type="url" required pattern="https://.*" maxlength="500" class="mt-1 w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
+          </label>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <label class="flex-1 cursor-pointer">
+              <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-paper">
+                <Upload :size="18" class="text-gray-400" />
+                <span class="text-sm text-gray-500">{{ uploading ? (uploadProgress || 'Upload...') : (projetForm.image_url ? "Changer l'image" : 'Choisir une image') }}</span>
+              </div>
+              <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleProjetUpload($event, 'image_url')" :disabled="uploading" />
+            </label>
+            <button type="button" @click="collerImage('projet')" :disabled="uploading"
+              class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-paper text-sm text-gray-500 disabled:opacity-50"
+              title="Coller une image copiée (ou Cmd+V / Ctrl+V)">
+              <ClipboardPaste :size="18" class="text-gray-400" /> Coller
+            </button>
+            <label class="flex-1 cursor-pointer">
+              <div class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-paper">
+                <Music :size="18" class="text-gray-400" />
+                <span class="text-sm text-gray-500">{{ projetForm.audio_url ? "Changer l'explication audio" : 'Explication audio (facultatif)' }}</span>
+              </div>
+              <input type="file" accept="audio/*" class="hidden" @change="handleProjetUpload($event, 'audio_url')" :disabled="uploading" />
+            </label>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Ou enregistrez l'explication audio directement :</p>
+            <EnregistreurAudio :desactive="uploading" @enregistre="utiliserEnregistrementProjet" />
+          </div>
+          <img v-if="projetForm.image_url" :src="projetForm.image_url" class="w-full h-40 object-cover rounded-xl border" />
+          <div v-if="projetForm.audio_url" class="flex items-center gap-3">
+            <audio :src="projetForm.audio_url" controls class="flex-1"></audio>
+            <button type="button" @click="projetForm.audio_url = ''" class="text-sm text-red-600 hover:underline">Retirer</button>
+          </div>
+          <label class="flex items-center gap-3 text-sm text-gray-700">
+            <input v-model="projetForm.en_avant" type="checkbox" class="w-4 h-4 accent-accent-600" />
+            Mettre en avant sur la page d'accueil (remplace le projet actuellement affiché)
+          </label>
+          <label class="flex items-center gap-3 text-sm text-gray-700">
+            <input v-model="projetForm.termine" type="checkbox" class="w-4 h-4 accent-accent-600" />
+            Projet terminé (n'apparaît plus sur l'accueil)
+          </label>
+          <label v-if="!projetDejaNotifie && !projetForm.termine" class="flex items-center gap-3 text-sm text-gray-700">
+            <input v-model="projetForm.notifier" type="checkbox" class="w-4 h-4 accent-accent-600" />
+            Envoyer une notification aux abonnés
+          </label>
+          <div class="flex justify-end gap-3">
+            <button v-if="editingProjetId" type="button" @click="resetProjetForm" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors text-sm">Annuler</button>
+            <button type="submit" :disabled="saving || uploading" class="px-5 py-2.5 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-50 text-sm">
+              {{ saving ? 'Enregistrement...' : (editingProjetId ? 'Modifier' : 'Créer le projet') }}
+            </button>
+          </div>
+        </form>
+
+        <div v-if="projetsLoading" class="text-center py-12">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
         </div>
-        <template v-else>
-          <div v-if="inscriptions.length === 0" class="text-center py-8 text-gray-500 mb-8">Aucune inscription.</div>
-          <div v-else class="space-y-3 mb-10">
-            <div v-for="i in inscriptions" :key="i.id" class="bg-card rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="min-w-0">
-                <p class="font-medium text-gray-800">{{ nomProfil(i.user_id) }}</p>
-                <p class="text-sm text-gray-500">{{ titreCours(i.cours_id) }}</p>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <template v-if="i.statut === 'en_attente'">
-                  <button @click="updateInscription(i, 'validee')" class="px-3 py-1.5 bg-ink text-paper rounded-lg text-xs font-medium hover:bg-accent-600">Valider</button>
-                  <button @click="updateInscription(i, 'refusee')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Refuser</button>
-                </template>
-                <span v-else class="text-xs px-3 py-1.5 rounded-full"
-                  :class="i.statut === 'validee' ? 'bg-accent-50 text-accent-700' : 'bg-red-50 text-red-700'">
-                  {{ i.statut === 'validee' ? 'Validée' : 'Refusée' }}
-                </span>
-              </div>
+        <div v-else-if="projets.length === 0" class="text-center py-12 text-gray-500">Aucun projet. Tant qu'aucun projet n'est mis en avant, la section n'apparaît pas sur l'accueil.</div>
+        <div v-else class="space-y-3">
+          <div v-for="p in projets" :key="p.id" class="bg-card rounded-xl border p-4 flex gap-4 items-center">
+            <img v-if="p.image_url" :src="p.image_url" class="w-20 h-16 object-cover rounded-lg flex-shrink-0" />
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-gray-800 truncate">{{ p.titre }}</p>
+              <p class="text-xs text-gray-500 mt-1">
+                {{ euros(p.montant_collecte) }} / {{ euros(p.objectif) }} ({{ pourcentage(p) }} %)
+                <span v-if="p.en_avant && p.statut === 'en_cours'" class="ml-1 bg-accent-50 text-accent-700 px-1.5 py-0.5 rounded">Sur l'accueil</span>
+                <span v-if="p.statut === 'termine'" class="ml-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Terminé</span>
+              </p>
+            </div>
+            <div class="flex gap-1 flex-shrink-0">
+              <button @click="editProjet(p)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors"><Pencil :size="16" /></button>
+              <button @click="deleteProjet(p.id)" class="p-2 text-gray-400 hover:text-red-600 transition-colors"><Trash2 :size="16" /></button>
             </div>
           </div>
+        </div>
+      </div>
 
-          <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Rôles des comptes</h2>
-          <p class="text-sm text-gray-500 mb-4">
-            Étudiant privé : accès aux cours privés. Professeur : accès à l'Espace professeur pour corriger les récitations.
-          </p>
-          <div class="relative mb-4 max-w-sm">
-            <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input v-model="eleveSearch" placeholder="Rechercher un nom..."
-              class="w-full pl-9 pr-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
-          </div>
-          <p v-if="roleError" class="text-sm text-red-500 mb-3">{{ roleError }}</p>
-          <div class="bg-card rounded-xl border divide-y">
-            <div v-for="p in profilsFiltres" :key="p.id" class="px-4 py-3 flex items-center justify-between gap-3">
-              <span class="text-sm text-gray-800 truncate">{{ [p.prenom, p.nom].filter(Boolean).join(' ') || 'Sans nom' }}</span>
-              <select :value="p.role_eleve" @change="changerRoleEleve(p, $event.target.value)"
-                class="text-sm border rounded-lg px-2 py-1.5 focus:outline-none focus:border-accent-600">
-                <option value="standard">Standard</option>
-                <option value="etudiant">Étudiant</option>
-                <option value="etudiant_prive">Étudiant privé</option>
-                <option value="professeur">Professeur</option>
-              </select>
+      <!-- EMPLOI DU TEMPS : séances datées affichées sur /cours et sur l'accueil -->
+      <div v-if="activeTab === 'edt'">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Emploi du temps</h2>
+        <p class="text-sm text-gray-500 mb-6">Les séances apparaissent sur la page Cours et sur l'accueil. « Après une prière » : l'heure affichée suit automatiquement les horaires de prière du jour.</p>
+
+        <form @submit.prevent="saveSeance" class="bg-card rounded-xl border p-4 sm:p-5 mb-6 space-y-3">
+          <h3 class="font-semibold text-gray-800">{{ editingSeanceId ? 'Modifier la séance' : 'Ajouter une séance' }}</h3>
+          <!-- Champs en 16px sur téléphone (sinon l'iPhone zoome) ; horaire et public en gros boutons à toucher -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <fieldset class="sm:col-span-2">
+              <legend class="text-sm text-gray-600">Matière *</legend>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button v-for="m in MATIERES" :key="m" type="button" @click="seanceForm.matiere = m"
+                  class="px-4 py-2.5 rounded-full border text-sm transition-colors" :class="seanceForm.matiere === m ? 'bg-ink text-paper border-ink' : 'bg-white text-gray-700 hover:border-accent-500'">{{ m }}</button>
+              </div>
+              <input v-model="seanceForm.matiere" required maxlength="100" placeholder="ou écrivez une autre matière" class="mt-2 w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm bg-white" />
+            </fieldset>
+            <label class="text-sm text-gray-600">Sujet
+              <input v-model="seanceForm.sujet" maxlength="300" placeholder="ex. Les ablutions" class="mt-1 w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm bg-white" />
+            </label>
+            <div class="text-sm text-gray-600">Date *
+              <ChoixDate v-model="seanceForm.date" class="mt-1" />
             </div>
-            <div v-if="profilsFiltres.length === 0" class="px-4 py-6 text-center text-sm text-gray-400">Aucun compte trouvé.</div>
+            <label v-if="seanceForm.moment === 'heure'" class="text-sm text-gray-600">Heure *
+              <input v-model="seanceForm.heure" type="time" required class="mt-1 w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm bg-white" />
+            </label>
+            <label v-else class="text-sm text-gray-600">Durée (minutes)
+              <input v-model.number="seanceForm.duree_minutes" type="number" min="5" max="600" class="mt-1 w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm bg-white" />
+            </label>
+            <fieldset class="sm:col-span-2">
+              <legend class="text-sm text-gray-600">Horaire *</legend>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button v-for="m in MOMENTS" :key="m.valeur" type="button" @click="seanceForm.moment = m.valeur" class="px-4 py-2.5 rounded-full border text-sm transition-colors" :class="seanceForm.moment === m.valeur ? 'bg-ink text-paper border-ink' : 'bg-white text-gray-700 hover:border-accent-500'">{{ m.libelle }}</button>
+              </div>
+            </fieldset>
+            <fieldset class="sm:col-span-2">
+              <legend class="text-sm text-gray-600">Public</legend>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button v-for="(libelle, cle) in PUBLICS" :key="cle" type="button" @click="seanceForm.public = cle" class="px-4 py-2.5 rounded-full border text-sm transition-colors" :class="seanceForm.public === cle ? 'bg-ink text-paper border-ink' : 'bg-white text-gray-700 hover:border-accent-500'">{{ libelle }}</button>
+              </div>
+            </fieldset>
+            <label class="text-sm text-gray-600">Enseignant
+              <input v-model="seanceForm.enseignant" maxlength="200" placeholder="ex. L'imam" class="mt-1 w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm bg-white" />
+            </label>
+            <label class="text-sm text-gray-600">Lieu
+              <input v-model="seanceForm.lieu" maxlength="200" placeholder="ex. Salle de prière" class="mt-1 w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm bg-white" />
+            </label>
+            <label class="text-sm text-gray-600 sm:col-span-2">Note
+              <input v-model="seanceForm.note" maxlength="1000" placeholder="ex. Apporter un cahier" class="mt-1 w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm bg-white" />
+            </label>
           </div>
-        </template>
+          <div v-if="!editingSeanceId" class="flex flex-wrap items-center gap-3 text-sm text-gray-700">
+            <label class="flex items-center gap-3">
+              <input v-model="seanceForm.repeter" type="checkbox" class="w-4 h-4 accent-accent-600" />
+              Répéter chaque semaine jusqu'au
+            </label>
+            <span v-if="seanceForm.repeter && nbRepetitions > 1" class="text-gray-500">({{ nbRepetitions }} séances)</span>
+            <ChoixDate v-if="seanceForm.repeter" v-model="seanceForm.jusquau" :min="seanceForm.date" placeholder="Choisir la dernière date" class="w-full" />
+          </div>
+          <label v-if="!editingSeanceId" class="flex items-center gap-3 text-sm text-gray-700">
+            <input v-model="seanceForm.notifier" type="checkbox" class="w-4 h-4 accent-accent-600" />
+            Envoyer une notification aux abonnés
+          </label>
+          <p v-if="seanceErreur" class="text-sm text-red-600">{{ seanceErreur }}</p>
+          <div class="flex justify-end gap-3">
+            <button v-if="editingSeanceId" type="button" @click="resetSeanceForm" class="px-5 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors text-sm">Annuler</button>
+            <button type="submit" :disabled="saving" class="px-5 py-2.5 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-50 text-sm">
+              {{ saving ? 'Enregistrement...' : (editingSeanceId ? 'Modifier' : 'Ajouter') }}
+            </button>
+          </div>
+        </form>
+
+        <div v-if="seancesLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
+        </div>
+        <div v-else-if="seancesAdmin.length === 0" class="text-center py-12 text-gray-500">Aucune séance à venir.</div>
+        <div v-else class="space-y-5">
+          <div v-for="jour in seancesParJour" :key="jour.date">
+            <p class="text-sm font-semibold text-gray-700 mb-2 capitalize">{{ jour.libelle }}</p>
+            <div class="space-y-2">
+              <div v-for="se in jour.seances" :key="se.id" class="bg-card rounded-xl border p-3 sm:p-4 flex gap-3 items-center" :class="se.annulee ? 'opacity-60' : ''">
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-gray-800 truncate" :class="se.annulee ? 'line-through' : ''">
+                    {{ se.matiere }}<span v-if="se.sujet" class="font-normal text-gray-600"> · {{ se.sujet }}</span>
+                  </p>
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{ se.moment === 'heure' ? se.heure?.slice(0, 5) : MOMENTS.find(m => m.valeur === se.moment)?.libelle }}
+                    <template v-if="se.enseignant"> · {{ se.enseignant }}</template> · {{ PUBLICS[se.public] }}
+                    <span v-if="se.annulee" class="ml-1 bg-red-50 text-red-700 px-1.5 py-0.5 rounded">Annulée</span>
+                    <span v-if="se.serie_id" class="ml-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Chaque semaine</span>
+                  </p>
+                </div>
+                <div class="flex gap-1 flex-shrink-0 items-center">
+                  <button @click="basculerAnnulation(se)" class="px-2 py-1 text-xs border rounded-lg hover:bg-gray-50">{{ se.annulee ? 'Rétablir' : 'Annuler' }}</button>
+                  <button @click="editSeance(se)" class="p-2 text-gray-400 hover:text-accent-600 transition-colors"><Pencil :size="16" /></button>
+                  <button @click="deleteSeance(se)" class="p-2 text-gray-400 hover:text-red-600 transition-colors"><Trash2 :size="16" /></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- BÉNÉVOLES -->
@@ -340,10 +455,9 @@
                       </span>
                     </div>
                     <div class="space-y-1 text-sm text-gray-600">
-                      <p><strong>Email :</strong> <a :href="'mailto:' + b.email" class="text-accent-600 hover:underline">{{ b.email }}</a></p>
-                      <p><strong>Téléphone :</strong> <a :href="'tel:' + b.telephone" class="text-accent-600 hover:underline">{{ b.telephone }}</a></p>
-                      <p><strong>Domaine :</strong> <span class="bg-gray-100 px-2 py-0.5 rounded">{{ b.domaine }}</span></p>
-                      <p v-if="b.message" class="mt-2 text-gray-500 italic">"{{ b.message }}"</p>
+                      <p v-if="b.email"><strong>Email :</strong> <a :href="'mailto:' + b.email" class="text-accent-600 hover:underline">{{ b.email }}</a></p>
+                      <p v-if="b.telephone"><strong>Téléphone :</strong> <a :href="'tel:' + b.telephone.replace(/[^0-9+]/g, '')" class="text-accent-600 hover:underline">{{ b.telephone }}</a></p>
+                      <p v-if="b.message" class="mt-2 whitespace-pre-line text-gray-700"><strong>Ce qu'il/elle aimerait faire :</strong> {{ b.message }}</p>
                       <p class="text-xs text-gray-400 mt-2">Reçu le {{ new Date(b.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) }}</p>
                     </div>
                   </div>
@@ -387,8 +501,8 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <h3 class="font-semibold text-gray-800 text-sm">{{ b.prenom }} {{ b.nom }}</h3>
-                  <p class="text-xs text-accent-600">{{ b.domaine }}</p>
-                  <p class="text-xs text-gray-400">{{ b.email }}</p>
+                  <p v-if="b.domaine" class="text-xs text-accent-600">{{ b.domaine }}</p>
+                  <p class="text-xs text-gray-400">{{ b.email || b.telephone }}</p>
                 </div>
                 <div class="flex gap-1 flex-shrink-0">
                   <select
@@ -414,58 +528,6 @@
     </div>
 
       <!-- GESTION DES BÉNÉVOLES (Super Admin only) -->
-      <!-- SIGNALEMENTS -->
-      <div v-if="activeTab === 'signalements' && isSuperAdmin">
-        <div class="flex justify-between items-center mb-6">
-          <div>
-            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Signalements</h2>
-            <p class="text-sm text-gray-500 mt-1">{{ bugReports.length }} signalement{{ bugReports.length > 1 ? 's' : '' }}</p>
-          </div>
-          <button v-if="bugReports.length > 0" @click="deleteAllBugReports"
-            class="text-sm text-red-500 hover:text-red-700 transition-colors flex items-center gap-1">
-            <Trash2 :size="14" />
-            Tout supprimer
-          </button>
-        </div>
-
-        <div v-if="bugReportsLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
-        </div>
-        <div v-else-if="bugReports.length === 0" class="text-center py-16">
-          <AlertTriangle :size="48" class="mx-auto text-gray-300 mb-4" />
-          <p class="text-gray-500">Aucun signalement pour le moment.</p>
-        </div>
-        <div v-else class="space-y-3">
-          <div v-for="bug in bugReports" :key="bug.id" class="bg-card rounded-xl border p-4">
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-xs px-2 py-0.5 rounded-lg font-medium"
-                    :class="{
-                      'bg-red-100 text-red-700': bug.type === 'bug',
-                      'bg-amber-100 text-amber-700': bug.type === 'affichage',
-                      'bg-blue-100 text-blue-700': bug.type === 'fonctionnalite',
-                      'bg-accent-100 text-accent-700': bug.type === 'suggestion',
-                      'bg-gray-100 text-gray-600': bug.type === 'autre'
-                    }">
-                    {{ bug.type === 'bug' ? 'Bug' : bug.type === 'affichage' ? 'Affichage' : bug.type === 'fonctionnalite' ? 'Fonctionnalité' : bug.type === 'suggestion' ? 'Suggestion' : 'Autre' }}
-                  </span>
-                  <span class="text-xs text-gray-400">{{ formatNotifDate(bug.created_at) }}</span>
-                  <span v-if="bug.page" class="text-xs text-gray-400">- {{ bug.page }}</span>
-                </div>
-                <p class="text-sm text-gray-800 whitespace-pre-line">{{ bug.message }}</p>
-                <p v-if="bug.email" class="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                  Contact : {{ bug.email }}
-                </p>
-              </div>
-              <button @click="deleteBugReport(bug.id)" class="p-1.5 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0">
-                <Trash2 :size="16" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div v-if="activeTab === 'gestion' && isSuperAdmin">
         <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion des bénévoles</h2>
         <p class="text-sm text-gray-500 mb-6">Gérez les rôles, la disponibilité et supprimez des bénévoles.</p>
@@ -494,7 +556,7 @@
                 </div>
                 <div class="min-w-0">
                   <p class="font-semibold text-gray-800">{{ b.prenom }} {{ b.nom }}</p>
-                  <p class="text-xs text-gray-400">{{ b.email }}</p>
+                  <p class="text-xs text-gray-400">{{ b.email || b.telephone }}</p>
                 </div>
               </div>
               <div class="flex items-center gap-3 self-end sm:self-center">
@@ -528,13 +590,13 @@
                 </span>
               </label>
               <template v-if="b.disponible === false">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-gray-500">Du</span>
-                  <input type="date" :value="b.dispo_debut || ''" @change="updateDispoDates(b, 'dispo_debut', $event.target.value)"
-                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-accent-600" />
-                  <span class="text-xs text-gray-500">au</span>
-                  <input type="date" :value="b.dispo_fin || ''" @change="updateDispoDates(b, 'dispo_fin', $event.target.value)"
-                    class="text-xs border rounded-lg px-2 py-1 focus:outline-none focus:border-accent-600" />
+                <div class="grid w-full gap-2 sm:grid-cols-2">
+                  <div class="text-xs text-gray-500">Du
+                    <ChoixDate :model-value="b.dispo_debut || ''" @update:model-value="updateDispoDates(b, 'dispo_debut', $event)" effacable placeholder="Non précisé" class="mt-1" />
+                  </div>
+                  <div class="text-xs text-gray-500">Au
+                    <ChoixDate :model-value="b.dispo_fin || ''" @update:model-value="updateDispoDates(b, 'dispo_fin', $event)" :min="b.dispo_debut || ''" effacable placeholder="Non précisé" class="mt-1" />
+                  </div>
                 </div>
               </template>
             </div>
@@ -543,140 +605,12 @@
       </div>
     </div>
 
-    <!-- CHAT IMAM -->
-    <div v-if="activeTab === 'imam' && canSeeImamChat">
-      <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Chat Imam</h2>
-      <p class="text-sm text-gray-500 mb-6">Répondez aux messages des fidèles en tant qu'Imam.</p>
-
-      <div v-if="imamLoading" class="flex items-center justify-center py-20">
-        <div class="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
-      </div>
-
-      <div v-else class="flex flex-col md:flex-row gap-4 md:h-[600px]">
-        <!-- Liste conversations — cachée sur mobile quand une conv est sélectionnée -->
-        <div class="md:w-64 md:shrink-0 border rounded-2xl bg-card overflow-y-auto flex flex-col md:max-h-full max-h-72"
-          :class="selectedImamConv ? 'hidden md:flex' : 'flex'">
-          <div class="px-4 py-3 border-b bg-gray-50">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Conversations ({{ imamConversations.length }})</p>
-          </div>
-          <div v-if="imamConversations.length === 0" class="flex-1 flex items-center justify-center text-gray-400 text-sm p-4 text-center">
-            Aucun message reçu.
-          </div>
-          <button
-            v-for="conv in imamConversations" :key="conv.key"
-            @click="selectImamConversation(conv)"
-            class="w-full px-4 py-3 text-left border-b last:border-0 hover:bg-gray-50 transition-colors relative"
-            :class="selectedImamConv?.key === conv.key ? 'bg-accent-50 border-r-2 border-accent-500' : ''"
-          >
-            <div class="flex items-center justify-between gap-2">
-              <p class="text-sm font-medium text-gray-800 truncate">{{ conv.label }}</p>
-              <span v-if="unreadConvKeys.has(conv.key)" class="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0"></span>
-            </div>
-            <p class="text-xs text-gray-400 truncate mt-0.5">{{ conv.lastMsg }}</p>
-            <p class="text-[10px] text-gray-300 mt-0.5">{{ conv.time }}</p>
-          </button>
-        </div>
-
-        <!-- Messages + réponse — cachée sur mobile quand aucune conv sélectionnée -->
-        <div class="flex-1 border rounded-2xl bg-card flex flex-col overflow-hidden min-h-[500px] md:min-h-0"
-          :class="!selectedImamConv ? 'hidden md:flex' : 'flex'">
-          <div v-if="!selectedImamConv" class="flex-1 flex items-center justify-center text-gray-400">
-            <p>Sélectionnez une conversation</p>
-          </div>
-          <template v-else>
-            <!-- Entête -->
-            <div class="px-4 py-3 border-b bg-gray-50 flex items-center gap-3">
-              <!-- Bouton retour sur mobile -->
-              <button @click="selectedImamConv = null" class="md:hidden p-1 text-gray-500 hover:text-gray-700 shrink-0">
-                <ChevronLeft :size="20" />
-              </button>
-              <div class="w-9 h-9 rounded-full bg-accent-100 text-accent-700 font-bold text-sm flex items-center justify-center shrink-0">
-                {{ (selectedImamConv.label[0] || '?').toUpperCase() }}
-              </div>
-              <div class="min-w-0">
-                <p class="text-sm font-semibold text-gray-800 truncate">{{ selectedImamConv.label }}</p>
-                <p class="text-xs text-gray-400">{{ selectedImamConv.msgCount }} messages</p>
-              </div>
-            </div>
-
-            <!-- Messages -->
-            <div ref="imamMsgsEl" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-              <div v-for="msg in selectedImamMessages" :key="msg.id"
-                class="flex gap-2"
-                :class="msg.isImamReply ? 'flex-row-reverse' : ''">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1"
-                  :style="{ background: msg.isImamReply ? '#96784b' : '#6b7280' }">
-                  {{ msg.isImamReply ? 'I' : (msg.sender_name?.[0] || '?').toUpperCase() }}
-                </div>
-                <div class="max-w-[70%]" :class="msg.isImamReply ? 'items-end flex flex-col' : ''">
-                  <p class="text-xs text-gray-400 mb-1">{{ msg.isImamReply ? 'Imam' : (msg.sender_name || 'Anonyme') }} · {{ formatImamTime(msg.created_at) }}</p>
-                  <!-- Audio -->
-                  <div v-if="msg.type === 'audio'"
-                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
-                    :class="msg.isImamReply ? 'bg-ink text-paper' : 'bg-card border'">
-                    <button @click="toggleImamAudio(msg)"
-                      class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                      :class="msg.isImamReply ? 'bg-white/20' : 'bg-accent-100 text-accent-700'">
-                      <Play v-if="!msg.playing" :size="12" />
-                      <Pause v-else :size="12" />
-                    </button>
-                    <span class="text-xs opacity-70">{{ msg.duration || '—' }}</span>
-                    <audio :ref="el => { if (el) imamAudioEls[msg.id] = el }" :src="msg.file_url"
-                      @ended="msg.playing = false"></audio>
-                  </div>
-                  <!-- Image -->
-                  <img v-else-if="msg.type === 'image'" :src="msg.file_url" class="max-w-[200px] rounded-xl" />
-                  <!-- Fichier -->
-                  <a v-else-if="msg.type === 'file'" :href="msg.file_url" target="_blank"
-                    class="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm text-accent-600 hover:underline bg-card">
-                    📎 {{ msg.file_name || 'Fichier' }}
-                  </a>
-                  <!-- Texte -->
-                  <div v-else
-                    class="px-3 py-2 rounded-xl text-sm leading-relaxed"
-                    :class="msg.isImamReply ? 'bg-ink text-paper' : 'bg-card border text-gray-800'">
-                    {{ msg.content }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Zone de réponse -->
-            <div class="border-t bg-card">
-              <!-- Fichiers en attente -->
-              <div v-if="imamPendingFiles.length" class="px-4 pt-2 flex gap-2 flex-wrap">
-                <div v-for="(f, i) in imamPendingFiles" :key="i"
-                  class="flex items-center gap-1.5 bg-accent-50 border border-accent-200 rounded-lg px-2 py-1 text-xs text-gray-700">
-                  <span>📎</span>
-                  <span class="truncate max-w-[120px]">{{ f.name }}</span>
-                  <button @click="imamPendingFiles = imamPendingFiles.filter((_, idx) => idx !== i)" class="text-gray-400 hover:text-red-500 ml-1">✕</button>
-                </div>
-              </div>
-              <p v-if="imamFileError" class="px-4 pt-1 text-xs text-red-500">{{ imamFileError }}</p>
-              <div class="px-4 py-3 flex items-end gap-2">
-                <input ref="imamFileInput" type="file" multiple class="hidden" @change="onImamFileChange" />
-                <button @click="imamFileInput.click()" class="p-2 text-gray-400 hover:text-accent-600 transition-colors shrink-0" title="Joindre un fichier">
-                  <Paperclip :size="18" />
-                </button>
-                <textarea
-                  v-model="imamReply"
-                  @keydown.enter.exact.prevent="sendImamReply"
-                  placeholder="Répondre en tant qu'Imam... (Entrée pour envoyer)"
-                  rows="1"
-                  class="flex-1 px-3 py-2 border rounded-xl text-sm resize-none focus:outline-none focus:border-accent-500 transition-colors"
-                  style="min-height:38px; max-height:90px; overflow-y:auto;"
-                  @input="e => { e.target.style.height='auto'; e.target.style.height=Math.min(e.target.scrollHeight,90)+'px' }"
-                ></textarea>
-                <button @click="sendImamReply" :disabled="(!imamReply.trim() && !imamPendingFiles.length) || imamSending"
-                  class="p-2 bg-ink text-paper rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-40 shrink-0">
-                  <div v-if="imamSending" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <Send v-else :size="18" />
-                </button>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
+    <!-- Résultat d'un envoi de notification (tous les onglets) -->
+    <div v-if="notifMessage" class="fixed bottom-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-start gap-3 rounded-xl px-4 py-3 text-sm shadow-xl"
+      :class="notifErreur ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-ink text-paper'">
+      <Bell :size="16" class="mt-0.5 shrink-0" />
+      <span class="flex-1">{{ notifMessage }}</span>
+      <button @click="notifMessage = ''" class="opacity-70 hover:opacity-100" aria-label="Fermer"><X :size="16" /></button>
     </div>
 
     <!-- MODAL COURS -->
@@ -744,6 +678,11 @@
                 </div>
                 <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleCoursImageUpload" :disabled="uploading" />
               </label>
+              <button type="button" @click="collerImage('cours')" :disabled="uploading"
+                class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-accent-500 transition-colors bg-paper text-sm text-gray-500 disabled:opacity-50"
+                title="Coller une image copiée (ou Cmd+V / Ctrl+V)">
+                <ClipboardPaste :size="18" class="text-gray-400" /> Coller
+              </button>
               <span class="hidden sm:flex items-center text-xs text-gray-400">ou</span>
               <input v-model="coursForm.image_url" type="text" placeholder="Coller une URL..." class="flex-1 px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-sm" />
             </div>
@@ -771,9 +710,10 @@
             <input v-model="coursForm.actif" type="checkbox" id="actif" class="w-4 h-4 accent-accent-600" />
             <label for="actif" class="text-sm font-medium text-gray-700">Cours actif (visible sur le site)</label>
           </div>
-          <div class="flex items-center gap-3">
-            <input v-model="coursForm.prive" type="checkbox" id="prive" class="w-4 h-4 accent-accent-600" />
-            <label for="prive" class="text-sm font-medium text-gray-700">Cours privé (réservé aux étudiants privés, voir onglet Élèves)</label>
+
+          <div v-if="!editingCours && coursForm.actif" class="flex items-center gap-3">
+            <input v-model="notifierCours" type="checkbox" id="notifier-cours" class="w-4 h-4 accent-accent-600" />
+            <label for="notifier-cours" class="text-sm font-medium text-gray-700">Envoyer une notification aux abonnés</label>
           </div>
 
           <div class="flex justify-end gap-3 pt-2">
@@ -791,10 +731,15 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, Calendar, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, CalendarCheck, CalendarX, AlertTriangle, MessageSquare, Send, Play, Pause, ChevronLeft, Paperclip, ScrollText, GraduationCap, Newspaper } from 'lucide-vue-next'
+import { Shield, LogOut, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, Newspaper, HandCoins, CalendarDays, ClipboardPaste, Film } from 'lucide-vue-next'
 import { supabase } from '../supabase'
+import EnregistreurAudio from '../composants/EnregistreurAudio.vue'
+import ChoixDate from '../composants/ChoixDate.vue'
+import { lecteurYoutube } from '../video'
+import { pourcentage, euros, DON_URL } from '../projets'
+import { MATIERES, MOMENTS, PUBLICS, aujourdhuiISO, ajouterJours, depuisISO } from '../seances'
 
 const router = useRouter()
 const activeTab = ref('actualites')
@@ -803,10 +748,12 @@ const activeTab = ref('actualites')
 const actus = ref([])
 const actusLoading = ref(false)
 const categoriesActu = ['Actualités', 'Événements', 'Conférences', 'Solidarité', 'Annonces']
-const aujourdhuiISO = () => new Date().toISOString().slice(0, 10)
-const emptyActu = () => ({ titre: '', categorie: 'Actualités', date_publication: aujourdhuiISO(), image_url: '', extrait: '', contenu: '', publie: true })
+const emptyActu = () => ({ titre: '', categorie: 'Actualités', date_publication: aujourdhuiISO(), image_url: '', video_url: '', extrait: '', contenu: '', publie: true, notifier: true })
 const actuForm = ref(emptyActu())
 const editingActuId = ref(null)
+const actuDejaNotifiee = ref(false)
+const notifMessage = ref('')
+const notifErreur = ref(false)
 
 const fetchActus = async () => {
   actusLoading.value = true
@@ -818,15 +765,67 @@ const fetchActus = async () => {
 const resetActuForm = () => {
   actuForm.value = emptyActu()
   editingActuId.value = null
+  actuDejaNotifiee.value = false
 }
 
 const editActu = (a) => {
   actuForm.value = {
     titre: a.titre, categorie: a.categorie, date_publication: a.date_publication,
-    image_url: a.image_url || '', extrait: a.extrait || '', contenu: a.contenu, publie: a.publie,
+    image_url: a.image_url || '', video_url: a.video_url || '', extrait: a.extrait || '', contenu: a.contenu, publie: a.publie, notifier: true,
   }
   editingActuId.value = a.id
+  actuDejaNotifiee.value = !!a.notifie_le
+  notifMessage.value = ''
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// --- COPIER-COLLER D'IMAGE (actualités, projets, cours) ---
+// Formulaire qui reçoit l'image collée : la fenêtre « cours » si elle est ouverte, sinon l'onglet affiché
+const formulaireImageActif = () => {
+  if (showCoursModal.value) return coursForm
+  if (activeTab.value === 'actualites') return actuForm
+  if (activeTab.value === 'projets') return projetForm
+  return null
+}
+
+const envoyerImageCollee = async (blob, formulaire) => {
+  const type = blob.type || 'image/png'
+  const url = await uploadFile(new File([blob], `image-collee.${type.split('/')[1] || 'png'}`, { type }))
+  if (url) formulaire.value.image_url = url
+}
+
+// Cmd+V / Ctrl+V : seulement si le presse-papiers contient une image (le texte se colle normalement)
+const surCollage = (e) => {
+  const formulaire = formulaireImageActif()
+  const item = [...(e.clipboardData?.items || [])].find(i => i.kind === 'file' && i.type.startsWith('image/'))
+  if (!formulaire || !item || uploading.value) return
+  e.preventDefault()
+  envoyerImageCollee(item.getAsFile(), formulaire)
+}
+
+// Bouton « Coller » (utile sur téléphone, où Cmd+V n'existe pas) ; nom = actu | projet | cours
+const collerImage = async (nom) => {
+  const formulaire = { actu: actuForm, projet: projetForm, cours: coursForm }[nom]
+  try {
+    for (const element of await navigator.clipboard.read()) {
+      const type = element.types.find(t => t.startsWith('image/'))
+      if (type) return envoyerImageCollee(await element.getType(type), formulaire)
+    }
+    alert("Aucune image dans le presse-papiers.\n\nCopiez d'abord une image : clic droit → « Copier l'image », ou appui long sur l'image → « Copier ».")
+  } catch {
+    alert("Le navigateur n'a pas donné accès au presse-papiers. Autorisez-le, ou utilisez « Choisir une image ».")
+  }
+}
+
+onMounted(() => document.addEventListener('paste', surCollage))
+onBeforeUnmount(() => document.removeEventListener('paste', surCollage))
+
+const handleActuVideoUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  const url = await uploadFile(file, 'video')
+  if (url) actuForm.value.video_url = url
+  event.target.value = ''
 }
 
 const handleActuImageUpload = async (event) => {
@@ -841,15 +840,48 @@ const saveActu = async () => {
   const f = actuForm.value
   const payload = {
     titre: f.titre.trim(), categorie: f.categorie.trim(), date_publication: f.date_publication,
-    image_url: f.image_url.trim() || null, extrait: f.extrait.trim() || null, contenu: f.contenu.trim(),
+    image_url: f.image_url.trim() || null, video_url: f.video_url.trim() || null, extrait: f.extrait.trim() || null, contenu: f.contenu.trim(),
     publie: f.publie, updated_at: new Date().toISOString(),
   }
-  const { error } = editingActuId.value
-    ? await supabase.from('actualites').update(payload).eq('id', editingActuId.value)
-    : await supabase.from('actualites').insert(payload)
+  const { data, error } = editingActuId.value
+    ? await supabase.from('actualites').update(payload).eq('id', editingActuId.value).select('id').single()
+    : await supabase.from('actualites').insert(payload).select('id').single()
   saving.value = false
   if (error) { alert("Erreur lors de l'enregistrement. Réessayez."); return }
+  const envoyer = f.publie && f.notifier && !actuDejaNotifiee.value
   resetActuForm()
+  notifMessage.value = ''
+  if (envoyer) await envoyerNotification('actualite', data.id)
+  fetchActus()
+}
+
+// Notification sur les téléphones abonnés (voir api/notifier.js)
+// type : actualite | cours | seance | projet
+const envoyerNotification = async (type, id) => {
+  notifErreur.value = false
+  notifMessage.value = 'Envoi de la notification…'
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const r = await fetch('/api/notifier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ type, id }),
+    })
+    const rep = await r.json()
+    if (!r.ok) throw new Error(rep.erreur)
+    notifMessage.value = rep.total
+      ? `Notification envoyée à ${rep.envoyees} téléphone${rep.envoyees > 1 ? 's' : ''}.`
+      : 'Aucun téléphone abonné pour le moment.'
+  } catch (e) {
+    notifErreur.value = true
+    notifMessage.value = `La notification n'a pas pu partir : ${e.message || 'erreur réseau'}.`
+  }
+}
+
+const notifierActu = async (a) => {
+  if (!confirm(`Envoyer « ${a.titre} » en notification à tous les abonnés ?`)) return
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  await envoyerNotification('actualite', a.id)
   fetchActus()
 }
 
@@ -859,89 +891,224 @@ const deleteActu = async (id) => {
   fetchActus()
 }
 
-// --- ÉLÈVES (inscriptions aux cours + rôles) ---
-const inscriptions = ref([])
-const profils = ref([])
-const elevesLoading = ref(false)
-const eleveSearch = ref('')
-const roleError = ref('')
+// --- PROJETS AVEC COLLECTE ---
+const projets = ref([])
+const projetsLoading = ref(false)
+const emptyProjet = () => ({ titre: '', description: '', objectif: null, montant_collecte: 0, url_don: DON_URL, image_url: '', audio_url: '', en_avant: true, termine: false, notifier: true })
+const projetForm = ref(emptyProjet())
+const editingProjetId = ref(null)
+const projetDejaNotifie = ref(false)
 
-const inscriptionsEnAttente = computed(() => inscriptions.value.filter(i => i.statut === 'en_attente'))
+const fetchProjets = async () => {
+  projetsLoading.value = true
+  const { data } = await supabase.from('projets').select('*').order('created_at', { ascending: false })
+  projets.value = data || []
+  projetsLoading.value = false
+}
 
-const profilsFiltres = computed(() => {
-  const q = eleveSearch.value.trim().toLowerCase()
-  if (!q) return profils.value
-  return profils.value.filter(p => `${p.prenom || ''} ${p.nom || ''}`.toLowerCase().includes(q))
+const resetProjetForm = () => {
+  projetForm.value = emptyProjet()
+  editingProjetId.value = null
+  projetDejaNotifie.value = false
+}
+
+const editProjet = (p) => {
+  projetForm.value = {
+    titre: p.titre, description: p.description, objectif: Number(p.objectif), montant_collecte: Number(p.montant_collecte),
+    url_don: p.url_don, image_url: p.image_url || '', audio_url: p.audio_url || '', en_avant: p.en_avant, termine: p.statut === 'termine', notifier: false,
+  }
+  editingProjetId.value = p.id
+  projetDejaNotifie.value = !!p.notifie_le
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const handleProjetUpload = async (event, champ) => {
+  const file = event.target.files[0]
+  if (!file) return
+  const url = await uploadFile(file, champ === 'audio_url')
+  if (url) projetForm.value[champ] = url
+  event.target.value = ''
+}
+
+// Enregistrement fait en direct avec le micro : envoyé comme un fichier audio choisi
+const utiliserEnregistrementProjet = async (fichier) => {
+  const url = await uploadFile(fichier, true)
+  if (url) projetForm.value.audio_url = url
+}
+
+const saveProjet = async () => {
+  saving.value = true
+  const f = projetForm.value
+  const payload = {
+    titre: f.titre.trim(), description: f.description.trim(), objectif: f.objectif, montant_collecte: f.montant_collecte || 0,
+    url_don: f.url_don.trim(), image_url: f.image_url || null, audio_url: f.audio_url || null,
+    statut: f.termine ? 'termine' : 'en_cours', en_avant: f.en_avant && !f.termine, updated_at: new Date().toISOString(),
+  }
+  // Un seul projet sur l'accueil : on retire d'abord la mise en avant des autres
+  if (payload.en_avant) {
+    let req = supabase.from('projets').update({ en_avant: false }).eq('en_avant', true)
+    if (editingProjetId.value) req = req.neq('id', editingProjetId.value)
+    await req
+  }
+  const { data, error } = editingProjetId.value
+    ? await supabase.from('projets').update(payload).eq('id', editingProjetId.value).select('id').single()
+    : await supabase.from('projets').insert(payload).select('id').single()
+  saving.value = false
+  if (error) { alert("Erreur lors de l'enregistrement. Réessayez."); return }
+  const envoyer = f.notifier && !f.termine && !projetDejaNotifie.value
+  resetProjetForm()
+  if (envoyer) await envoyerNotification('projet', data.id)
+  fetchProjets()
+}
+
+const deleteProjet = async (id) => {
+  if (!confirm('Supprimer ce projet ?')) return
+  await supabase.from('projets').delete().eq('id', id)
+  fetchProjets()
+}
+
+// --- EMPLOI DU TEMPS (séances datées) ---
+const seancesAdmin = ref([])
+const seancesLoading = ref(false)
+const seanceErreur = ref('')
+const emptySeance = () => ({ matiere: '', sujet: '', date: aujourdhuiISO(), moment: 'apres_maghrib', heure: '', duree_minutes: 60, enseignant: '', public: 'tous', lieu: '', note: '', repeter: false, jusquau: '', notifier: true })
+const seanceForm = ref(emptySeance())
+const editingSeanceId = ref(null)
+
+const fetchSeances = async () => {
+  seancesLoading.value = true
+  const { data } = await supabase.from('seances').select('*').gte('date', aujourdhuiISO()).order('date').order('heure')
+  seancesAdmin.value = data || []
+  seancesLoading.value = false
+}
+
+const seancesParJour = computed(() => {
+  const jours = {}
+  for (const se of seancesAdmin.value) (jours[se.date] ||= []).push(se)
+  return Object.entries(jours).map(([date, seances]) => ({
+    date, seances, libelle: depuisISO(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }),
+  }))
 })
 
-const nomProfil = (userId) => {
-  const p = profils.value.find(p => p.id === userId)
-  return p ? ([p.prenom, p.nom].filter(Boolean).join(' ') || 'Sans nom') : 'Compte inconnu'
+// Dates de la répétition hebdomadaire (au plus 1 an)
+const datesRepetition = computed(() => {
+  const f = seanceForm.value
+  if (!f.repeter || !f.jusquau || f.jusquau < f.date) return [f.date]
+  const dates = []
+  for (let d = f.date; d <= f.jusquau && dates.length < 53; d = ajouterJours(d, 7)) dates.push(d)
+  return dates
+})
+const nbRepetitions = computed(() => datesRepetition.value.length)
+
+const resetSeanceForm = () => {
+  seanceForm.value = emptySeance()
+  editingSeanceId.value = null
+  seanceErreur.value = ''
 }
 
-const titreCours = (coursId) => cours.value.find(c => c.id === coursId)?.titre || 'Cours supprimé'
-
-const fetchInscriptions = async () => {
-  const { data } = await supabase.from('inscriptions_cours').select('*').order('created_at', { ascending: false })
-  inscriptions.value = data || []
-}
-
-const fetchEleves = async () => {
-  elevesLoading.value = true
-  const [, { data: profs }] = await Promise.all([
-    fetchInscriptions(),
-    supabase.from('profiles').select('id, prenom, nom, role_eleve').order('prenom'),
-  ])
-  profils.value = profs || []
-  elevesLoading.value = false
-}
-
-const updateInscription = async (i, statut) => {
-  const { error } = await supabase.from('inscriptions_cours').update({ statut }).eq('id', i.id)
-  if (!error) i.statut = statut
-}
-
-const changerRoleEleve = async (p, role) => {
-  roleError.value = ''
-  const ancien = p.role_eleve
-  p.role_eleve = role
-  // Passe par la fonction SQL set_role_eleve : la policy RLS de profiles
-  // n'autorise à modifier que son propre profil.
-  const { error } = await supabase.rpc('set_role_eleve', { p_user_id: p.id, p_role: role })
-  if (error) {
-    p.role_eleve = ancien
-    roleError.value = 'Impossible de changer le rôle. Réessayez.'
+const editSeance = (se) => {
+  seanceForm.value = {
+    matiere: se.matiere, sujet: se.sujet || '', date: se.date, moment: se.moment, heure: se.heure?.slice(0, 5) || '',
+    duree_minutes: se.duree_minutes, enseignant: se.enseignant || '', public: se.public, lieu: se.lieu || '', note: se.note || '',
+    repeter: false, jusquau: '',
   }
+  editingSeanceId.value = se.id
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+const saveSeance = async () => {
+  saving.value = true
+  seanceErreur.value = ''
+  const f = seanceForm.value
+  const base = {
+    matiere: f.matiere.trim(), sujet: f.sujet.trim() || null, moment: f.moment,
+    heure: f.moment === 'heure' ? f.heure : null, duree_minutes: f.duree_minutes || 60,
+    enseignant: f.enseignant.trim() || null, public: f.public, lieu: f.lieu.trim() || null, note: f.note.trim() || null,
+  }
+  let error, premiereSeance = null
+  if (editingSeanceId.value) {
+    ({ error } = await supabase.from('seances').update({ ...base, date: f.date }).eq('id', editingSeanceId.value))
+  } else {
+    const serie_id = datesRepetition.value.length > 1 ? crypto.randomUUID() : null
+    let inserees
+    ;({ data: inserees, error } = await supabase.from('seances').insert(datesRepetition.value.map(date => ({ ...base, date, serie_id }))).select('id, date'))
+    // Une série n'envoie qu'une notification, pour sa première date
+    if (!error && f.notifier && inserees?.length) premiereSeance = [...inserees].sort((x, y) => x.date.localeCompare(y.date))[0].id
+  }
+  saving.value = false
+  if (error) { seanceErreur.value = "Erreur lors de l'enregistrement. Réessayez."; return }
+  resetSeanceForm()
+  if (premiereSeance) await envoyerNotification('seance', premiereSeance)
+  fetchSeances()
+}
+
+const basculerAnnulation = async (se) => {
+  const { error } = await supabase.from('seances').update({ annulee: !se.annulee }).eq('id', se.id)
+  if (!error) se.annulee = !se.annulee
+}
+
+const deleteSeance = async (se) => {
+  if (se.serie_id && confirm('Cette séance se répète chaque semaine.\n\nOK : supprimer TOUTES les séances à venir de la série\nAnnuler : choisir de supprimer seulement celle-ci')) {
+    await supabase.from('seances').delete().eq('serie_id', se.serie_id).gte('date', aujourdhuiISO())
+  } else if (confirm('Supprimer cette séance ?')) {
+    await supabase.from('seances').delete().eq('id', se.id)
+  } else return
+  fetchSeances()
+}
+
 const saving = ref(false)
 const uploading = ref(false)
 const adminUser = ref(null)
 const isSuperAdmin = computed(() => adminUser.value?.role === 'superadmin')
-const canSeeImamChat = computed(() => isSuperAdmin.value)
 const pageLoading = ref(true)
 
 // --- UPLOAD FICHIER ---
 const uploadProgress = ref('')
 
-const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
+// Taille réelle d'une image (en pixels), lue avant l'envoi
+const dimensionsImage = (file) => new Promise((resolve) => {
+  const url = URL.createObjectURL(file)
+  const img = new window.Image()
+  img.onload = () => { URL.revokeObjectURL(url); resolve({ largeur: img.naturalWidth, hauteur: img.naturalHeight }) }
+  img.onerror = () => { URL.revokeObjectURL(url); resolve(null) }
+  img.src = url
+})
+
+// Les grandes images du site (article, projet, « À la une ») s'affichent jusqu'à ~1400 px de large,
+// le double sur les écrans Retina : on garde 2400 px. En dessous de 1000 px, l'image sera floue.
+const LARGEUR_MAX = 2400
+const LARGEUR_CONSEILLEE = 1000
+
+const compressImage = (file, maxWidth = LARGEUR_MAX, quality = 0.86) => {
   return new Promise((resolve) => {
     // Si c'est pas une image, retourner tel quel
     if (!file.type.startsWith('image/')) { resolve(file); return }
-    // Si déjà petit (< 500KB), pas besoin de compresser
-    if (file.size < 500 * 1024) { resolve(file); return }
+    // Déjà léger (< 800 Ko) : on n'y touche pas, pour ne rien perdre en qualité
+    if (file.size < 800 * 1024) { resolve(file); return }
 
     const img = new window.Image()
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
     const url = URL.createObjectURL(file)
 
     img.onload = () => {
       URL.revokeObjectURL(url)
       let w = img.width, h = img.height
       if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth }
+      // Réduction par moitiés successives : bien plus net qu'une réduction d'un seul coup
+      let source = img, sw = img.width, sh = img.height
+      while (sw / 2 > w) {
+        const etape = document.createElement('canvas')
+        etape.width = Math.round(sw / 2); etape.height = Math.round(sh / 2)
+        const c = etape.getContext('2d')
+        c.imageSmoothingQuality = 'high'
+        c.drawImage(source, 0, 0, etape.width, etape.height)
+        source = etape; sw = etape.width; sh = etape.height
+      }
+      const canvas = document.createElement('canvas')
       canvas.width = w
       canvas.height = h
-      ctx.drawImage(img, 0, 0, w, h)
+      const ctx = canvas.getContext('2d')
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(source, 0, 0, w, h)
       canvas.toBlob((blob) => {
         resolve(blob || file)
       }, 'image/jpeg', quality)
@@ -954,28 +1121,53 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
 const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/webm', 'audio/x-m4a']
 
+// Vidéos depuis la galerie du téléphone (mp4 ; .mov sur iPhone ; webm)
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm']
+// Limite d'envoi de Supabase (offre gratuite) : 50 Mo par fichier
+const TAILLE_MAX_VIDEO = 50 * 1024 * 1024
+
+// genre : false = image (par défaut), true = audio, 'video' = vidéo
 const uploadFile = async (file, forceAudio = false) => {
   if (!file) return null
 
-  if (forceAudio && !ALLOWED_AUDIO_TYPES.includes(file.type)) {
+  const typeSimple = (file.type || '').split(';')[0]
+  if (forceAudio === 'video') {
+    if (!ALLOWED_VIDEO_TYPES.includes(typeSimple)) {
+      alert('Format vidéo non supporté. Utilisez une vidéo MP4 ou MOV (celles du téléphone conviennent).')
+      return null
+    }
+    if (file.size > TAILLE_MAX_VIDEO) {
+      alert(`Vidéo trop lourde (${(file.size / 1024 / 1024).toFixed(0)} Mo, maximum 50 Mo, soit environ 30 s à 1 min de vidéo de téléphone).\n\nRaccourcissez-la dans la galerie (« Modifier » → couper), ou mettez-la sur YouTube et collez le lien.`)
+      return null
+    }
+  } else if (forceAudio && !ALLOWED_AUDIO_TYPES.includes(typeSimple)) {
     alert('Format audio non supporté. Utilisez MP3, MP4, OGG, WAV ou WebM.')
     return null
   }
-  if (!forceAudio && !ALLOWED_IMAGE_TYPES.includes(file.type) && !file.type.startsWith('image/')) {
+  if (forceAudio === false && !ALLOWED_IMAGE_TYPES.includes(file.type) && !file.type.startsWith('image/')) {
     alert('Format image non supporté. Utilisez JPG, PNG, WebP ou GIF.')
     return null
   }
 
+  // Image trop petite : elle sera floue une fois agrandie sur le site
+  if (forceAudio === false && file.type.startsWith('image/')) {
+    const dim = await dimensionsImage(file)
+    if (dim && dim.largeur < LARGEUR_CONSEILLEE && !confirm(
+      `Cette image est petite (${dim.largeur} × ${dim.hauteur} pixels) : elle sera floue en grand sur le site.\n\n` +
+      `Conseil : prenez une image d'au moins ${LARGEUR_CONSEILLEE} pixels de large (pas une miniature enregistrée depuis Google).\n\nL'envoyer quand même ?`
+    )) return null
+  }
+
   uploading.value = true
   const sizeMB = (file.size / 1024 / 1024).toFixed(1)
-  uploadProgress.value = `Upload (${sizeMB} MB)...`
+  uploadProgress.value = forceAudio === 'video' ? `Envoi de la vidéo (${sizeMB} Mo), patientez…` : `Upload (${sizeMB} MB)...`
 
   let uploadBlob = file
   let ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
-  let contentType = file.type || 'application/octet-stream'
+  let contentType = typeSimple || 'application/octet-stream'
 
   // Compresser les images (inclut HEIC → JPEG via canvas)
-  if (!forceAudio && file.type.startsWith('image/')) {
+  if (forceAudio === false && file.type.startsWith('image/')) {
     uploadProgress.value = `Compression...`
     uploadBlob = await compressImage(file)
     ext = 'jpg'
@@ -1037,7 +1229,7 @@ const editingCours = ref(null)
 const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const coursForm = ref({
   titre: '', description: '', enseignant: '', jour: '', heure: '',
-  lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true, prive: false
+  lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true
 })
 
 const fetchCours = async () => {
@@ -1047,12 +1239,15 @@ const fetchCours = async () => {
   coursLoading.value = false
 }
 
+const notifierCours = ref(true) // à part : coursForm est envoyé tel quel à la base
+
 const openCoursForm = (c = null) => {
   editingCours.value = c
+  notifierCours.value = true
   if (c) {
     coursForm.value = { ...c }
   } else {
-    coursForm.value = { titre: '', description: '', enseignant: '', jour: '', heure: '', lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true, prive: false }
+    coursForm.value = { titre: '', description: '', enseignant: '', jour: '', heure: '', lieu: 'Mosquée des Bienfaisants', categorie: '', image_url: '', video_url: '', audio_url: '', actif: true }
   }
   showCoursModal.value = true
 }
@@ -1075,7 +1270,7 @@ const saveCours = async () => {
     } else {
       delete payload.id
       delete payload.created_at
-      result = await supabase.from('cours_religieux').insert(payload)
+      result = await supabase.from('cours_religieux').insert(payload).select('id').single()
     }
     if (result.error) {
       alert('Erreur lors de l\'enregistrement. Réessayez.')
@@ -1084,6 +1279,7 @@ const saveCours = async () => {
     }
     saving.value = false
     showCoursModal.value = false
+    if (!editingCours.value && notifierCours.value && payload.actif !== false) await envoyerNotification('cours', result.data.id)
     fetchCours()
   } catch (e) {
     alert('Erreur réseau: ' + (e.message || 'Vérifie ta connexion.'))
@@ -1124,56 +1320,6 @@ const deleteBenevole = async (id) => {
   fetchBenevoles()
 }
 
-// --- NOTIFICATIONS ---
-const notifications = ref([])
-const showNotifPanel = ref(false)
-
-const unreadNotifCount = computed(() => notifications.value.filter(n => !n.lu).length)
-
-const fetchNotifications = async () => {
-  const { data } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30)
-  notifications.value = data || []
-}
-
-const markRead = async (n) => {
-  n.lu = true
-  await supabase.from('notifications').update({ lu: true }).eq('id', n.id)
-}
-
-const markAllRead = async () => {
-  notifications.value.forEach(n => n.lu = true)
-  await supabase.from('notifications').update({ lu: true }).eq('lu', false)
-}
-
-const formatNotifDate = (ds) => {
-  if (!ds) return ''
-  const d = new Date(ds)
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-}
-
-// --- SIGNALEMENTS (BUG REPORTS) ---
-const bugReports = ref([])
-const bugReportsLoading = ref(false)
-
-const fetchBugReports = async () => {
-  bugReportsLoading.value = true
-  const { data, error } = await supabase.from('bug_reports').select('*').order('created_at', { ascending: false })
-  if (!error) bugReports.value = data || []
-  else bugReports.value = []
-  bugReportsLoading.value = false
-}
-
-const deleteBugReport = async (id) => {
-  await supabase.from('bug_reports').delete().eq('id', id)
-  bugReports.value = bugReports.value.filter(b => b.id !== id)
-}
-
-const deleteAllBugReports = async () => {
-  if (!confirm('Supprimer tous les signalements ?')) return
-  const ids = bugReports.value.map(b => b.id)
-  await supabase.from('bug_reports').delete().in('id', ids)
-  bugReports.value = []
-}
 
 // --- GESTION DES RÔLES ---
 const allBenevolesForRole = ref([])
@@ -1232,273 +1378,6 @@ const updateDispoDates = async (b, field, value) => {
   await supabase.from('benevoles').update({ [field]: value || null }).eq('id', b.id)
 }
 
-// --- CHAT IMAM ---
-const imamLoading = ref(false)
-const imamConversations = ref([])
-const selectedImamConv = ref(null)
-const selectedImamMessages = ref([])
-const imamReply = ref('')
-const imamSending = ref(false)
-const imamUnreadCount = ref(0)
-const imamMsgsEl = ref(null)
-const unreadConvKeys = ref(new Set())
-const imamAudioEls = ref({})
-// shallowRef : évite que Vue enveloppe les File/Blob dans un Proxy réactif,
-// ce qui peut corrompre silencieusement leurs données binaires à l'envoi.
-const imamPendingFiles = shallowRef([])
-const imamFileInput = ref(null)
-const imamFileError = ref('')
-let allImamMessages = []
-let imamChannel = null
-
-const formatImamTime = (date) => {
-  if (!date) return ''
-  const d = new Date(date)
-  const now = new Date()
-  const diff = now - d
-  if (diff < 60000) return 'À l\'instant'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)} min`
-  if (diff < 86400000) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-}
-
-const buildImamConversations = (messages) => {
-  const convMap = new Map()
-  for (const msg of messages) {
-    if (msg.sender_role === 'imam') continue
-    const key = msg.session_id || msg.user_id || 'anon'
-    if (!convMap.has(key)) {
-      convMap.set(key, {
-        key,
-        label: msg.sender_name || 'Anonyme',
-        session_id: msg.session_id || null,
-        user_id: msg.user_id || null,
-        userMsgs: []
-      })
-    }
-    convMap.get(key).userMsgs.push(msg)
-  }
-  return Array.from(convMap.values()).map(c => {
-    const allConvMsgs = messages.filter(m => {
-      if (m.sender_role === 'imam') return m.session_id === c.session_id
-      return (m.session_id || m.user_id || 'anon') === c.key
-    })
-    const lastMsg = allConvMsgs[allConvMsgs.length - 1]
-    const hasUnread = lastMsg && lastMsg.sender_role !== 'imam'
-    return {
-      ...c,
-      msgCount: allConvMsgs.length,
-      lastMsg: lastMsg?.type === 'audio' ? '🎵 Message vocal' : lastMsg?.type === 'image' ? '🖼️ Image' : (lastMsg?.content || ''),
-      time: formatImamTime(lastMsg?.created_at),
-      lastMsgAt: lastMsg?.created_at || '',
-      hasUnread
-    }
-  }).sort((a, b) => b.lastMsgAt.localeCompare(a.lastMsgAt))
-}
-
-const computeImamUnread = (conversations, messages) => {
-  return conversations.filter(c => {
-    const convMsgs = messages.filter(m => {
-      if (m.sender_role === 'imam') return m.session_id === c.session_id
-      return (m.session_id || m.user_id || 'anon') === c.key
-    })
-    const last = convMsgs[convMsgs.length - 1]
-    return last && last.sender_role !== 'imam'
-  }).length
-}
-
-const loadImamConversations = async () => {
-  imamLoading.value = true
-  // Plus de notion de "room" dans le nouveau schéma : l'admin (via is_admin_or_superadmin
-  // dans la policy chat_select_own) peut lire tous les messages directement.
-  const { data: messages } = await supabase
-    .from('chat_messages')
-    .select('*')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: true })
-
-  allImamMessages = (messages || []).map(m => ({ ...m, playing: false }))
-  imamConversations.value = buildImamConversations(allImamMessages)
-  imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
-  // Seulement les conversations dont le dernier message n'est pas de l'imam
-  unreadConvKeys.value = new Set(imamConversations.value.filter(c => c.hasUnread).map(c => c.key))
-
-  if (imamChannel) supabase.removeChannel(imamChannel)
-  imamChannel = supabase
-    .channel('imam-admin-all')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'chat_messages',
-    }, (payload) => {
-      const newMsg = { ...payload.new, playing: false }
-      if (allImamMessages.some(m => m.id === newMsg.id)) return
-      allImamMessages = [...allImamMessages, newMsg]
-      imamConversations.value = buildImamConversations(allImamMessages)
-      imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
-      // Marquer comme non lu si message d'un visiteur et conv pas sélectionnée
-      const msgKey = newMsg.session_id || newMsg.user_id || 'anon'
-      if (newMsg.sender_role !== 'imam' && selectedImamConv.value?.key !== msgKey) {
-        unreadConvKeys.value = new Set([...unreadConvKeys.value, msgKey])
-        // Notification navigateur si onglet en arrière-plan
-        if (document.hidden && Notification.permission === 'granted') {
-          new Notification('💬 Nouveau message pour l\'Imam', {
-            body: `${newMsg.sender_name || 'Visiteur'} : ${newMsg.content || '📎 Fichier'}`,
-            icon: '/mosque-icon.png'
-          })
-        }
-      }
-      if (selectedImamConv.value) {
-        const conv = imamConversations.value.find(c => c.key === selectedImamConv.value.key)
-        if (conv) selectImamConversation(conv)
-      }
-    })
-    .subscribe()
-
-  imamLoading.value = false
-}
-
-const selectImamConversation = (conv) => {
-  selectedImamConv.value = conv
-  // Supprimer le point rouge quand on clique sur la conversation
-  unreadConvKeys.value.delete(conv.key)
-  unreadConvKeys.value = new Set(unreadConvKeys.value)
-  selectedImamMessages.value = allImamMessages
-    .filter(m => {
-      if (m.sender_role === 'imam') return m.session_id === conv.session_id
-      return (m.session_id || m.user_id || 'anon') === conv.key
-    })
-    .map(m => ({ ...m, isImamReply: m.sender_role === 'imam' }))
-  setTimeout(() => {
-    if (imamMsgsEl.value) imamMsgsEl.value.scrollTop = imamMsgsEl.value.scrollHeight
-  }, 50)
-}
-
-const uploadImamFile = async (file, userId) => {
-  const MAX = 10 * 1024 * 1024
-  if (file.size > MAX) {
-    imamFileError.value = `Fichier trop volumineux (max 10 Mo).`
-    return null
-  }
-  const allowedPrefixes = ['image/', 'audio/']
-  const allowedExact = ['application/pdf', 'text/plain',
-    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-  if (!allowedPrefixes.some(p => file.type.startsWith(p)) && !allowedExact.includes(file.type)) {
-    imamFileError.value = 'Type non autorisé. Utilisez image, PDF, DOC ou TXT.'
-    return null
-  }
-  try {
-    const safeName = `${Date.now()}_${Math.random().toString(36).slice(2)}`
-    const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
-    // Le premier dossier DOIT être l'UUID auth (politique RLS chat_media_insert)
-    const path = `${userId}/imam-admin/${safeName}.${ext}`
-    const { data, error } = await supabase.storage.from('chat-media').upload(path, file, { upsert: false })
-    if (error) throw new Error(error.message || JSON.stringify(error))
-    const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(data.path)
-    return {
-      url: urlData.publicUrl,
-      name: file.name.slice(0, 100),
-      size: file.size,
-      type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file',
-    }
-  } catch (err) {
-    imamFileError.value = 'Erreur upload : ' + (err?.message || JSON.stringify(err))
-    return null
-  }
-}
-
-const onImamFileChange = (e) => {
-  imamFileError.value = ''
-  imamPendingFiles.value = [...imamPendingFiles.value, ...e.target.files]
-  e.target.value = ''
-}
-
-const sendImamReply = async () => {
-  const hasText = imamReply.value.trim()
-  const hasFiles = imamPendingFiles.value.length > 0
-  if (!hasText && !hasFiles) return
-  if (imamSending.value || !selectedImamConv.value) return
-  imamSending.value = true
-  imamFileError.value = ''
-  const { data: { session } } = await supabase.auth.getSession()
-
-  // Important : la réponse doit être classée dans LA CONVERSATION DU VISITEUR
-  // (son user_id ou son session_id), pas dans le compte de l'admin — sinon la
-  // policy "chat_select_own" (user_id = auth.uid()) empêcherait le visiteur
-  // connecté de voir la réponse de l'imam, puisque ce ne serait pas son propre id.
-  const conv = selectedImamConv.value
-
-  const insertMsg = async (msgData) => {
-    const { data: inserted, error } = await supabase.from('chat_messages').insert({
-      user_id: conv.user_id,
-      session_id: conv.session_id,
-      sender_role: 'imam',
-      sender_name: 'Imam',
-      ...msgData,
-    }).select().single()
-    if (error) { alert('Erreur envoi : ' + error.message); return }
-    const newMsg = { ...inserted, playing: false }
-    if (!allImamMessages.some(m => m.id === newMsg.id)) {
-      allImamMessages = [...allImamMessages, newMsg]
-      imamConversations.value = buildImamConversations(allImamMessages)
-      imamUnreadCount.value = computeImamUnread(imamConversations.value, allImamMessages)
-    }
-    // Un visiteur anonyme ne peut pas lire chat_messages directement (pas de policy
-    // SELECT pour anon), donc postgres_changes ne le préviendra jamais. On lui envoie
-    // la réponse en direct via un broadcast ciblé sur SA session — voir ChatImamWidget.vue,
-    // qui écoute exactement ce canal/événement quand il n'est pas connecté.
-    if (conv.session_id && !conv.user_id) {
-      await supabase.channel(`imam-session:${conv.session_id}`).send({
-        type: 'broadcast',
-        event: 'imam_reply',
-        payload: inserted,
-      })
-    }
-  }
-
-  // Envoi des fichiers
-  for (const file of imamPendingFiles.value) {
-    const result = await uploadImamFile(file, session?.user?.id)
-    if (result) {
-      await insertMsg({
-        content: '',
-        type: result.type,
-        file_url: result.url,
-        file_name: result.name,
-        file_size: result.size,
-      })
-    }
-  }
-  imamPendingFiles.value = []
-
-  // Envoi du texte
-  if (hasText) {
-    await insertMsg({ content: hasText, type: 'text' })
-    imamReply.value = ''
-  }
-
-  selectImamConversation(selectedImamConv.value)
-  imamSending.value = false
-}
-
-const toggleImamAudio = (msg) => {
-  const audio = imamAudioEls.value[msg.id]
-  if (!audio) return
-  if (msg.playing) {
-    audio.pause()
-    msg.playing = false
-  } else {
-    selectedImamMessages.value.forEach(m => {
-      if (m.playing && m.id !== msg.id && imamAudioEls.value[m.id]) {
-        imamAudioEls.value[m.id].pause()
-        m.playing = false
-      }
-    })
-    audio.play()
-    msg.playing = true
-  }
-}
-
 // --- AUTH ---
 const handleLogout = async () => {
   const { error } = await supabase.auth.signOut()
@@ -1508,19 +1387,14 @@ const handleLogout = async () => {
     if (projectId) localStorage.removeItem(`sb-${projectId}-auth-token`)
   }
   adminUser.value = null
-  router.push('/admin')
+  router.push('/')
 }
 
 onMounted(async () => {
-  // Demander permission notifications navigateur
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission()
-  }
-
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
-      router.push('/admin')
+      router.push('/')
       return
     }
 
@@ -1531,10 +1405,7 @@ onMounted(async () => {
       supabase.from('benevoles').select('*').eq('email', email.toLowerCase().trim()).eq('statut', 'accepté'),
       fetchCours(),
       fetchBenevoles(),
-      fetchNotifications(),
-      fetchBugReports(),
-      fetchActus(), // onglet ouvert par défaut
-      fetchInscriptions() // pour le badge "Élèves" dès l'ouverture
+      fetchActus() // onglet ouvert par défaut
     ])
 
     const benevoleAdmin = (adminResult.data || []).find(r => ['admin', 'superadmin'].includes(r.role))

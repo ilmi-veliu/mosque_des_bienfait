@@ -30,7 +30,7 @@
       <!-- Contact -->
       <p class="maintenance__contact">
         Pour toute urgence, contactez-nous à<br>
-        <a href="mailto:contact@mosqueedesbienfaisants.fr">contact@mosqueedesbienfaisants.fr</a>
+        <a href="mailto:mosquee.perigueux@gmail.com">mosquee.perigueux@gmail.com</a>
       </p>
     </div>
   </div>
@@ -39,9 +39,9 @@
   <div v-else id="app">
     <BarreHoraires v-if="!$route.meta.hideNavbar" />
     <Navbar v-if="!$route.meta.hideNavbar" />
-    <router-view />
+    <main id="contenu"><router-view /></main>
     <Footer v-if="!$route.meta.hideFooter" />
-    <ChatImamWidget />
+    <BulleChat />
     <CookieBanner />
   </div>
 </template>
@@ -50,7 +50,7 @@
 import Navbar from './composants/Navbar.vue'
 import BarreHoraires from './composants/BarreHoraires.vue'
 import Footer from './composants/Footer.vue'
-import ChatImamWidget from './composants/ChatImamWidget.vue'
+import BulleChat from './composants/BulleChat.vue'
 import CookieBanner from './composants/CookieBanner.vue'
 
 const RELOAD_AFTER_MS = 5 * 60 * 1000
@@ -68,7 +68,7 @@ document.addEventListener('visibilitychange', () => {
 
 export default {
   name: 'App',
-  components: { Navbar, BarreHoraires, Footer, ChatImamWidget, CookieBanner },
+  components: { Navbar, BarreHoraires, Footer, BulleChat, CookieBanner },
   data() {
     return {
       MAINTENANCE_MODE: false,

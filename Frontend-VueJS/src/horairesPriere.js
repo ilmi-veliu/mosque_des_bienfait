@@ -3,6 +3,7 @@
 // c'est-à-dire les horaires réglés par la mosquée elle-même.
 // Secours : calcul Aladhan, recalé sur les horaires de la mosquée.
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { langue } from './traduction'
 
 const FUSEAU = 'Europe/Paris' // la mosquée est à Périgueux, quel que soit le fuseau du visiteur
 const CLE_CACHE = 'mosque_horaires_v1'
@@ -58,11 +59,12 @@ export const prochainePriere = (calendar, now) => {
   return { key: 'fajr', label: 'Fajr', heure: demain[0], demain: true, dansSecondes: 86400 - now.secondes + enSecondes(demain[0]) }
 }
 
-export const formatCompteARebours = (s) => {
+export const formatCompteARebours = (s, enArabe = false) => {
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
   const sec = s % 60
   const pad = (n) => String(n).padStart(2, '0')
+  if (enArabe) return h > 0 ? `${h} س ${pad(m)} د` : `${m} د ${pad(sec)} ث`
   return h > 0 ? `${h} h ${pad(m)} min` : `${m} min ${pad(sec)} s`
 }
 
@@ -148,7 +150,8 @@ export const useHorairesPriere = () => {
   const chourouk = computed(() => ligne.value?.[1] || null)
   const joumoua = computed(() => donnees.value?.jumua || null)
   const source = computed(() => donnees.value?.source || null)
-  const compteARebours = computed(() => prochaine.value ? formatCompteARebours(prochaine.value.dansSecondes) : '')
+  // Formaté dans la langue du site : traduit par l'IA, il changerait chaque seconde
+  const compteARebours = computed(() => prochaine.value ? formatCompteARebours(prochaine.value.dansSecondes, langue.value === 'ar') : '')
   // Dépend de now.jour pour se mettre à jour à minuit
   const dateLabel = computed(() => {
     const { annee, mois, jour } = now.value

@@ -64,11 +64,29 @@
             <h2 class="text-xl font-semibold text-gray-900 mb-2">Formulaire d'inscription</h2>
             <p class="text-sm text-gray-500 mb-6">Remplissez vos informations pour rejoindre notre communauté.</p>
 
-            <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
+            <!-- Inscription envoyée : le compte ne marche qu'après avoir cliqué sur le lien reçu par email -->
+            <div v-if="emailEnvoye" class="space-y-4 text-sm">
+              <div class="flex items-start gap-3 rounded-xl border border-accent-200 bg-accent-50 p-4 text-accent-800">
+                <MailCheck :size="22" class="mt-0.5 shrink-0" />
+                <div>
+                  <p class="font-semibold">Vérifiez votre boîte mail</p>
+                  <p class="mt-1">Si l'adresse <strong>{{ emailEnvoye }}</strong> est valide, un email de confirmation vient d'y être envoyé. Cliquez sur le lien qu'il contient pour activer votre compte.</p>
+                </div>
+              </div>
+              <p class="text-gray-500">Rien reçu après quelques minutes ? Regardez dans les courriers indésirables (spam), puis :</p>
+              <button @click="renvoyerEmail" :disabled="renvoiEnCours || renvoiAttente > 0"
+                class="w-full rounded-xl border px-4 py-2.5 hover:bg-gray-50 disabled:opacity-50">
+                {{ renvoiAttente > 0 ? `Renvoyer l'email (dans ${renvoiAttente} s)` : renvoiEnCours ? 'Envoi…' : "Renvoyer l'email de confirmation" }}
+              </button>
+              <p v-if="messageRenvoi" class="text-accent-700">{{ messageRenvoi }}</p>
+              <button @click="emailEnvoye = ''" class="w-full text-gray-500 hover:text-gray-800">Je me suis trompé d'adresse</button>
+            </div>
+
+            <div v-if="errorMsg && !emailEnvoye" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
               {{ errorMsg }}
             </div>
 
-            <form @submit.prevent="handleSignup" class="space-y-5">
+            <form v-if="!emailEnvoye" @submit.prevent="handleSignup" class="space-y-5">
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
@@ -158,7 +176,7 @@
             <div class="mt-6 text-center space-y-3">
               <p class="text-sm text-gray-500">
                 Déjà inscrit ?
-                <router-link to="/connexion" class="text-accent-700 font-medium hover:underline">Se connecter</router-link>
+                <router-link :to="{ path: '/connexion', query: route.query.retour ? { retour: route.query.retour } : {} }" class="text-accent-700 font-medium hover:underline">Se connecter</router-link>
               </p>
               <router-link to="/" class="text-sm text-gray-400 hover:text-gray-600 inline-flex items-center gap-1">
                 <ChevronLeft :size="14" />
@@ -173,12 +191,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { UserPlus, ChevronLeft, Eye, EyeOff } from 'lucide-vue-next'
+import { ref, onBeforeUnmount } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { UserPlus, ChevronLeft, Eye, EyeOff, MailCheck } from 'lucide-vue-next'
 import { supabase } from '../supabase'
+import { pageRetour } from '../retour'
+import { problemeMotDePasse } from '../motDePasse'
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
 const errorMsg = ref('')
 const emailError = ref('')
@@ -208,11 +229,7 @@ const validatePassword = () => {
   const pw = form.value.password
   passwordError.value = ''
   if (!pw) return
-  if (pw.length < 8) { passwordError.value = 'Minimum 8 caractères'; return }
-  if (!/[A-Z]/.test(pw)) { passwordError.value = 'Au moins une lettre majuscule'; return }
-  if (!/[a-z]/.test(pw)) { passwordError.value = 'Au moins une lettre minuscule'; return }
-  if (!/[0-9]/.test(pw)) { passwordError.value = 'Au moins un chiffre'; return }
-  if (!/[^A-Za-z0-9]/.test(pw)) { passwordError.value = 'Au moins un caractère spécial (!@#$...)'; return }
+  passwordError.value = problemeMotDePasse(pw)
 }
 
 const handleSignup = async () => {
@@ -234,68 +251,50 @@ const handleSignup = async () => {
   }
 
   const { data, error } = await supabase.auth.signUp({
-    email: form.value.email,
+    email: form.value.email.trim(),
     password: form.value.password,
     options: {
-      data: {
-        prenom: form.value.prenom,
-        nom: form.value.nom,
-        sexe: form.value.sexe
-      }
-    }
+      // Le lien de confirmation ramène sur la page de connexion du site
+      emailRedirectTo: `${window.location.origin}/connexion?confirme=1${route.query.retour ? '&retour=' + encodeURIComponent(pageRetour(route)) : ''}`,
+      // Prénom, nom et genre : le profil est créé par la base (voir creer_profil_inscription)
+      data: { prenom: form.value.prenom, nom: form.value.nom, sexe: form.value.sexe },
+    },
   })
+  loading.value = false
 
-  if (error) {
-    if (error.message.includes('password')) {
-      errorMsg.value = 'Le mot de passe doit contenir au moins 8 caractères.'
-    } else {
-      // Message générique pour ne pas révéler si l'email existe
-      errorMsg.value = 'Si cette adresse est disponible, votre compte a été créé. Vérifiez votre email ou connectez-vous.'
-    }
-    loading.value = false
+  if (error && /password/i.test(error.message)) {
+    errorMsg.value = 'Mot de passe trop faible : 8 caractères minimum, avec majuscule, minuscule, chiffre et caractère spécial.'
     return
   }
 
-  // Supabase retourne un user avec identities vide si l'email existe déjà (sans erreur)
-  if (data?.user?.identities?.length === 0) {
-    // Message identique au succès pour ne pas révéler l'existence du compte
-    errorMsg.value = 'Si cette adresse est disponible, votre compte a été créé. Vérifiez votre email ou connectez-vous.'
-    loading.value = false
-    return
-  }
+  // Vérification d'email désactivée dans Supabase : la personne est déjà connectée
+  if (data?.session) { router.push(pageRetour(route)); return }
 
-  // Sauvegarder le genre dans le profil
-  if (data?.user) {
-    await supabase.from('profiles').upsert({
-      id: data.user.id,
-      prenom: form.value.prenom,
-      nom: form.value.nom,
-      sexe: form.value.sexe
-    }, { onConflict: 'id' })
-  }
-
-  // Connexion automatique après inscription
-  // Si Supabase a confirmé directement (pas de confirmation email), on a une session
-  if (data?.session) {
-    loading.value = false
-    router.push('/')
-    return
-  }
-
-  // Si confirmation email requise, on connecte manuellement
-  const { error: loginError } = await supabase.auth.signInWithPassword({
-    email: form.value.email,
-    password: form.value.password
-  })
-
-  if (!loginError) {
-    loading.value = false
-    router.push('/')
-  } else {
-    // Si la confirmation email est obligatoire et empêche la connexion
-    errorMsg.value = 'Inscription réussie ! Vérifiez votre email pour confirmer votre compte.'
-    form.value = { prenom: '', nom: '', email: '', password: '' }
-    loading.value = false
-  }
+  // Sinon (cas normal) : même écran que l'adresse existe déjà ou non, pour ne pas révéler
+  // à un inconnu quelles adresses ont un compte sur le site
+  emailEnvoye.value = form.value.email.trim()
+  form.value = { prenom: '', nom: '', email: '', password: '', sexe: '' }
+  attendreAvantRenvoi()
 }
+
+// --- Renvoi de l'email de confirmation (une fois par minute au plus) ---
+const emailEnvoye = ref('')
+const renvoiEnCours = ref(false)
+const renvoiAttente = ref(0)
+const messageRenvoi = ref('')
+let minuteur = null
+const attendreAvantRenvoi = () => {
+  renvoiAttente.value = 60
+  clearInterval(minuteur)
+  minuteur = setInterval(() => { if (--renvoiAttente.value <= 0) clearInterval(minuteur) }, 1000)
+}
+const renvoyerEmail = async () => {
+  renvoiEnCours.value = true
+  messageRenvoi.value = ''
+  await supabase.auth.resend({ type: 'signup', email: emailEnvoye.value, options: { emailRedirectTo: `${window.location.origin}/connexion?confirme=1${route.query.retour ? '&retour=' + encodeURIComponent(pageRetour(route)) : ''}` } })
+  renvoiEnCours.value = false
+  messageRenvoi.value = 'Email renvoyé.'
+  attendreAvantRenvoi()
+}
+onBeforeUnmount(() => clearInterval(minuteur))
 </script>

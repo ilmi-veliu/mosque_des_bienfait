@@ -9,7 +9,7 @@
     </div>
 
     <article v-else>
-      <header class="mx-auto max-w-3xl px-5 pt-12 md:pt-16">
+      <header class="mx-auto max-w-3xl px-5 pt-8 md:pt-10">
         <router-link to="/actualites" class="inline-flex items-center gap-2 text-sm text-muted hover:text-ink">
           <ArrowLeft class="h-4 w-4" />Actualités
         </router-link>
@@ -18,15 +18,24 @@
         <p class="mt-4 text-sm text-muted capitalize">{{ dateLongue(article.date_publication) }}</p>
       </header>
 
-      <img v-if="article.image_url" :src="article.image_url" :alt="article.titre"
-        class="mx-auto mt-10 aspect-[16/9] w-full max-w-5xl object-cover md:px-5" />
+      <!-- Vidéo de l'article (fichier envoyé depuis le téléphone, ou YouTube), sinon sa photo -->
+      <div v-if="article.video_url" class="mx-auto mt-7 w-full max-w-5xl md:px-5">
+        <!-- Le lecteur prend la forme de la vidéo : pas de bandes noires pour une vidéo filmée en hauteur -->
+        <iframe v-if="youtube" :src="youtube" :title="article.titre" frameborder="0"
+          :class="short ? 'mx-auto block aspect-[9/16] h-[80vh] max-w-full' : 'aspect-video w-full'"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <video v-else :src="article.video_url" :poster="article.image_url || undefined" controls playsinline preload="metadata"
+          class="mx-auto block h-auto max-h-[80vh] w-auto max-w-full"></video>
+      </div>
+      <img v-else-if="article.image_url" :src="article.image_url" :alt="article.titre"
+        class="mx-auto mt-7 aspect-[16/9] w-full max-w-5xl object-cover md:px-5" />
 
-      <div class="mx-auto max-w-3xl px-5 py-12">
+      <div class="mx-auto max-w-3xl px-5 py-8">
         <p v-if="article.extrait" class="font-serif text-2xl leading-snug">{{ article.extrait }}</p>
         <div class="mt-8 space-y-5 text-lg leading-relaxed">
           <p v-for="(para, i) in paragraphes" :key="i" class="whitespace-pre-line">{{ para }}</p>
         </div>
-        <div class="mt-12 flex flex-wrap items-center gap-3 border-t border-line pt-6">
+        <div class="mt-9 flex flex-wrap items-center gap-3 border-t border-line pt-6">
           <span class="text-sm text-muted">Partager :</span>
           <button @click="partager" class="btn btn-outline !px-4 !py-2">
             <Check v-if="copie" class="h-4 w-4" /><Share2 v-else class="h-4 w-4" />
@@ -38,10 +47,10 @@
 
     <!-- Autres actualités -->
     <section v-if="autres.length" class="border-t border-line bg-card">
-      <div class="mx-auto max-w-6xl px-5 py-14 md:py-20">
+      <div class="mx-auto max-w-site px-5 lg:px-10 py-10 md:py-12">
         <p class="eyebrow">À lire aussi</p>
         <h2 class="mt-3 text-4xl">Autres actualités</h2>
-        <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mt-7 grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
           <CarteActualite v-for="a in autres" :key="a.id" :article="a" />
         </div>
       </div>
@@ -55,9 +64,12 @@ import { useRoute } from 'vue-router'
 import { ArrowLeft, Share2, Check } from 'lucide-vue-next'
 import CarteActualite from '../composants/CarteActualite.vue'
 import { chargerActualite, chargerActualites, dateLongue } from '../actualites'
+import { lecteurYoutube, estShortYoutube } from '../video'
 
 const route = useRoute()
 const article = ref(null)
+const youtube = computed(() => lecteurYoutube(article.value?.video_url))
+const short = computed(() => estShortYoutube(article.value?.video_url))
 const autres = ref([])
 const loading = ref(true)
 const copie = ref(false)

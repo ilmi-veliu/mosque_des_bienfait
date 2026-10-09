@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mosquee-v1';
+const CACHE_NAME = 'mosquee-v2';
 
 // Ressources à mettre en cache au démarrage
 const PRECACHE_URLS = [
@@ -42,3 +42,31 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(event.request))
   );
 });
+
+// ─── Notifications push (nouvelle actualité) ─────────────
+// Le serveur envoie un message { titre, texte, url } ; on l'affiche, et un
+// toucher sur la notification ouvre (ou ramène) la page concernée.
+self.addEventListener('push', (event) => {
+  let data = {}
+  try { data = event.data ? event.data.json() : {} } catch { data = { texte: event.data?.text() } }
+  event.waitUntil(
+    self.registration.showNotification(data.titre || 'Mosquée des Bienfaisants', {
+      body: data.texte || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: data.url || '/' },
+    })
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = new URL(event.notification.data?.url || '/', self.location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((fenetres) => {
+      const ouverte = fenetres.find((f) => f.url === url)
+      if (ouverte) return ouverte.focus()
+      return self.clients.openWindow(url)
+    })
+  )
+})

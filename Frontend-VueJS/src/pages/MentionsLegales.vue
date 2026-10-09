@@ -39,7 +39,7 @@
         <section>
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <Server :size="24" class="text-accent-600" />
-            3. Hébergeur
+            3. Hébergement et prestataires
           </h2>
           <div class="bg-gray-50 rounded-xl p-6 space-y-2">
             <p class="text-gray-700"><strong>Nom :</strong> Vercel Inc.</p>
@@ -50,6 +50,12 @@
             <p class="text-gray-700"><strong>Base de données hébergée par :</strong> Supabase Inc.</p>
             <p class="text-gray-700"><strong>Région :</strong> Union Européenne (Frankfurt, Allemagne)</p>
             <p class="text-gray-700"><strong>Site web :</strong> <a href="https://supabase.com" target="_blank" rel="noopener" class="text-accent-600 hover:underline">supabase.com</a></p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-6 space-y-2 mt-4">
+            <p class="text-gray-700"><strong>Chat en ligne avec l'imam :</strong> Crisp IM SAS</p>
+            <p class="text-gray-700"><strong>Adresse :</strong> 2 Boulevard de Launay, 44100 Nantes, France</p>
+            <p class="text-gray-700"><strong>Hébergement des conversations :</strong> Union Européenne (Amsterdam, Pays-Bas)</p>
+            <p class="text-gray-700"><strong>Site web :</strong> <a href="https://crisp.chat" target="_blank" rel="noopener" class="text-accent-600 hover:underline">crisp.chat</a></p>
           </div>
         </section>
 

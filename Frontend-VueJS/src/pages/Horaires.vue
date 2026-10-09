@@ -3,7 +3,7 @@
     <PageIntro eyebrow="Prières" title="Horaires du mois"
       text="Les horaires officiels de la mosquée, tels qu'ils sont réglés sur Mawaqit." />
 
-    <section class="mx-auto max-w-6xl px-5 py-12 md:py-16">
+    <section class="mx-auto max-w-site px-5 lg:px-10 py-8 md:py-10">
       <div class="flex items-center justify-between gap-4">
         <button @click="changerMois(-1)" class="btn btn-outline !px-3 !py-2" aria-label="Mois précédent"><ChevronLeft class="h-4 w-4" /></button>
         <h2 class="text-3xl capitalize md:text-4xl">{{ nomMois }}</h2>

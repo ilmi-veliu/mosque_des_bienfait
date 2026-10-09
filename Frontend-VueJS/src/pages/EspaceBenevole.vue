@@ -75,7 +75,7 @@
             <UserCheck :size="24" class="text-accent-400" />
             <div>
               <h1 class="text-lg font-semibold">{{ benevole.prenom }} {{ benevole.nom }}</h1>
-              <p class="text-xs text-gray-400">{{ benevole.domaine }}</p>
+              <p v-if="benevole.domaine" class="text-xs text-gray-400">{{ benevole.domaine }}</p>
             </div>
           </div>
           <div class="flex items-center gap-3 sm:gap-4">
@@ -102,21 +102,11 @@
           <Eye :size="18" class="text-amber-600 flex-shrink-0" />
           <p class="text-sm text-amber-800">Vous voyez la page telle qu'un <strong>visiteur non-bénévole</strong> la voit. Cliquez sur "Vue bénévole" pour revenir.</p>
         </div>
-        <h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Nos domaines de bénévolat</h2>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          <div v-for="d in domaines" :key="d.titre" class="bg-card rounded-xl p-6 shadow-sm border">
-            <div class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-              <component :is="d.icon" :size="24" class="text-accent-600" />
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-2">{{ d.titre }}</h3>
-            <p class="text-sm text-gray-600">{{ d.desc }}</p>
-          </div>
-        </div>
         <div class="max-w-2xl mx-auto text-center">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-2">Formulaire de candidature</h2>
-          <p class="text-gray-500 text-sm mb-6">Les visiteurs voient ici le formulaire pour envoyer leur candidature bénévole.</p>
+          <h2 class="text-2xl font-semibold text-gray-900 mb-2">Proposer son aide</h2>
+          <p class="text-gray-500 text-sm mb-6">Les visiteurs voient ici le formulaire de la page Bénévolat.</p>
           <div class="bg-gray-100 rounded-xl p-8 text-gray-400 text-sm italic">
-            Formulaire de candidature (prénom, nom, email, téléphone, domaine, message)
+            Prénom, nom, ce que la personne aimerait faire, et son email ou son téléphone
           </div>
         </div>
       </div>
@@ -175,10 +165,6 @@
               <p class="text-xs text-gray-400 mb-1">Email</p>
               <p class="text-gray-800">{{ benevole.email }}</p>
             </div>
-            <div v-if="benevole.telephone">
-              <p class="text-xs text-gray-400 mb-1">Téléphone</p>
-              <p class="text-gray-800">{{ benevole.telephone }}</p>
-            </div>
             <div v-if="benevole.domaine">
               <p class="text-xs text-gray-400 mb-1">Domaine</p>
               <p class="text-gray-800">{{ benevole.domaine }}</p>
@@ -223,16 +209,14 @@
               <p class="text-xs text-gray-500">
                 {{ dispoForm.disponible ? 'Précisez vos dates de disponibilité ou laissez vide pour indéfini.' : 'Précisez vos dates d\'indisponibilité ou laissez vide pour indéfini.' }}
               </p>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label class="block text-xs font-medium text-gray-600 mb-1">Du (optionnel)</label>
-                  <input v-model="dispoForm.dispo_debut" type="date"
-                    class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-accent-600" />
+                  <p class="block text-xs font-medium text-gray-600 mb-1">Du (optionnel)</p>
+                  <ChoixDate v-model="dispoForm.dispo_debut" effacable placeholder="Non précisé" />
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-600 mb-1">Au (optionnel)</label>
-                  <input v-model="dispoForm.dispo_fin" type="date"
-                    class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-accent-600" />
+                  <p class="block text-xs font-medium text-gray-600 mb-1">Au (optionnel)</p>
+                  <ChoixDate v-model="dispoForm.dispo_fin" :min="dispoForm.dispo_debut || ''" effacable placeholder="Non précisé" />
                 </div>
               </div>
               <div>
@@ -256,8 +240,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, UserCheck, Clock, LogOut, X, Eye, BookOpen, Heart, Calendar, Wrench, Monitor, HandHelping, CalendarCheck, CalendarX } from 'lucide-vue-next'
+import { ChevronLeft, UserCheck, Clock, LogOut, X, Eye, CalendarCheck, CalendarX } from 'lucide-vue-next'
 import { supabase } from '../supabase'
+import ChoixDate from '../composants/ChoixDate.vue'
 
 const router = useRouter()
 
@@ -270,15 +255,6 @@ const isAdmin = computed(() => ['admin', 'superadmin'].includes(benevole.value?.
 const isSuperAdmin = computed(() => benevole.value?.role === 'superadmin')
 const previewMode = ref('benevole')
 let statusPollInterval = null
-
-const domaines = [
-  { titre: 'Enseignement', desc: 'Cours de Coran, langue arabe, soutien scolaire.', icon: BookOpen },
-  { titre: 'Social & Entraide', desc: 'Distribution alimentaire, aide aux familles.', icon: Heart },
-  { titre: 'Événements', desc: 'Organisation, accueil des visiteurs, logistique.', icon: Calendar },
-  { titre: 'Entretien & Travaux', desc: 'Nettoyage, petits travaux, maintenance.', icon: Wrench },
-  { titre: 'Communication', desc: 'Réseaux sociaux, site web, graphisme.', icon: Monitor },
-  { titre: 'Accompagnement', desc: 'Soutien aux personnes âgées, aide sociale.', icon: HandHelping },
-]
 
 onMounted(async () => {
   const { data: { session: s } } = await supabase.auth.getSession()
@@ -349,7 +325,6 @@ const handleLogout = async () => {
   router.push('/')
 }
 
-const monNom = computed(() => benevole.value ? `${benevole.value.prenom} ${benevole.value.nom}` : '')
 
 // --- DISPONIBILITÉ ---
 const showDispoModal = ref(false)
@@ -381,23 +356,6 @@ const saveDisponibilite = async () => {
   benevole.value.dispo_debut = update.dispo_debut
   benevole.value.dispo_fin = update.dispo_fin
   benevole.value.dispo_motif = update.dispo_motif
-
-  let message = `${monNom.value} est maintenant `
-  message += update.disponible ? 'disponible' : 'indisponible'
-  if (update.dispo_debut || update.dispo_fin) {
-    message += ' du ' + (update.dispo_debut ? formatDateShort(update.dispo_debut) : '?')
-    message += ' au ' + (update.dispo_fin ? formatDateShort(update.dispo_fin) : '?')
-  } else {
-    message += ' (indéfini)'
-  }
-  if (update.dispo_motif) message += ` — ${update.dispo_motif}`
-  message += '.'
-
-  await supabase.from('notifications').insert({
-    type: 'disponibilite',
-    message,
-    benevole_id: benevole.value.id
-  })
 
   savingDispo.value = false
   showDispoModal.value = false

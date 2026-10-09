@@ -4,20 +4,23 @@
   "description": "Prières, cours islamiques et communauté musulmane à Périgueux",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#030213",
+  "background_color": "#FAF6F1",
   "theme_color": "#FAF6F1",
   "lang": "fr",
   "orientation": "portrait-primary",
-  "categories": ["religion", "education"],
+  "categories": [
+    "religion",
+    "education"
+  ],
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/favicon.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -26,18 +29,18 @@
   "shortcuts": [
     {
       "name": "Horaires de prière",
-      "url": "/#horaires",
-      "description": "Voir les horaires de prière"
+      "url": "/horaires",
+      "description": "Les horaires du mois"
+    },
+    {
+      "name": "Actualités",
+      "url": "/actualites",
+      "description": "Les nouvelles de la mosquée"
     },
     {
       "name": "Cours religieux",
       "url": "/cours",
       "description": "Accéder aux cours islamiques"
-    },
-    {
-      "name": "Contact",
-      "url": "/contact",
-      "description": "Contacter l'imam"
     }
   ]
 }

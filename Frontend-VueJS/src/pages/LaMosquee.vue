@@ -5,7 +5,7 @@
       <img :src="salleLarge" alt="La salle de prière de la mosquée" class="h-[60vh] min-h-[420px] w-full object-cover" />
       <div class="absolute inset-0 bg-ink/55"></div>
       <div class="absolute inset-0">
-        <div class="mx-auto flex h-full max-w-6xl flex-col justify-end px-5 pb-12 text-ink-foreground md:pb-16">
+        <div class="mx-auto flex h-full max-w-site flex-col justify-end px-5 lg:px-10 pb-10 text-ink-foreground md:pb-12">
           <p class="eyebrow !text-ink-foreground/70">Présentation</p>
           <h1 class="mt-3 text-5xl md:text-7xl">La mosquée</h1>
           <p class="mt-5 max-w-xl text-lg opacity-85">Un lieu de prière, d'apprentissage et de rencontre au cœur de Périgueux, ouvert à tous.</p>
@@ -14,8 +14,8 @@
     </section>
 
     <!-- Bienvenue -->
-    <section class="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-2 md:items-center md:py-24">
-      <img :src="courEntree" alt="La cour et l'entrée de la mosquée" class="aspect-[4/5] w-full object-cover" />
+    <section class="mx-auto grid max-w-site gap-10 px-5 lg:px-10 py-10 md:grid-cols-2 md:items-center md:py-14">
+      <img :src="courEntree" alt="La cour et l'entrée de la mosquée" class="aspect-[4/5] w-full object-cover lg:aspect-[6/7]" />
       <div>
         <p class="eyebrow">Bienvenue</p>
         <h2 class="mt-3 text-4xl md:text-5xl">Une maison ouverte à tous</h2>
@@ -31,7 +31,7 @@
 
     <!-- La salle de prière -->
     <section class="border-y border-line bg-card">
-      <div class="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-[1fr_1.3fr] md:items-center md:py-24">
+      <div class="mx-auto grid max-w-site gap-10 px-5 lg:px-10 py-10 md:grid-cols-[1fr_1.3fr] md:items-center md:py-14">
         <div class="md:order-2">
           <img :src="salle" alt="La salle de prière" class="aspect-[3/2] w-full object-cover" />
           <div class="mt-4 grid grid-cols-2 gap-4">
@@ -65,10 +65,10 @@
     </section>
 
     <!-- Sur place -->
-    <section class="mx-auto max-w-6xl px-5 py-16 md:py-24">
+    <section class="mx-auto max-w-site px-5 lg:px-10 py-10 md:py-14">
       <p class="eyebrow">Sur place</p>
       <h2 class="mt-3 text-4xl md:text-5xl">À votre disposition</h2>
-      <div class="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mt-7 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <article v-for="s in services" :key="s.titre">
           <img :src="s.photo" :alt="s.titre" loading="lazy" class="aspect-[4/5] w-full object-cover" :class="s.cadrage" />
           <div class="mt-5 flex items-start gap-3">
@@ -84,7 +84,7 @@
 
     <!-- Venir à la mosquée -->
     <section class="bg-pierre">
-      <div class="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-2 md:items-center md:py-24">
+      <div class="mx-auto grid max-w-site gap-10 px-5 lg:px-10 py-10 md:grid-cols-2 md:items-center md:py-14">
         <div>
           <p class="eyebrow">Accès</p>
           <h2 class="mt-3 text-4xl md:text-5xl">Venir à la mosquée</h2>
@@ -103,12 +103,12 @@
             <Navigation class="h-4 w-4" />Itinéraire
           </a>
         </div>
-        <img :src="parking" alt="Le parking devant la mosquée" loading="lazy" class="aspect-[4/3] w-full object-cover" />
+        <img :src="parking" alt="Le parking devant la mosquée" loading="lazy" class="aspect-[4/3] w-full object-cover lg:aspect-[3/2]" />
       </div>
     </section>
 
     <!-- Bon à savoir + première visite -->
-    <section class="mx-auto grid max-w-6xl gap-12 px-5 py-16 md:grid-cols-2 md:py-24">
+    <section class="mx-auto grid max-w-site gap-10 px-5 lg:px-10 py-10 md:grid-cols-2 md:py-14">
       <div>
         <p class="eyebrow">Bon à savoir</p>
         <h2 class="mt-3 text-4xl">Pour bien vivre le lieu</h2>
@@ -119,8 +119,7 @@
         </ul>
       </div>
       <div class="border border-line bg-card p-6 md:p-8">
-        <Etoile class="h-7 w-7 text-accent-500" />
-        <p class="eyebrow mt-6">Première visite</p>
+        <p class="eyebrow">Première visite</p>
         <h2 class="mt-3 text-4xl">Vous découvrez l'islam ou la mosquée ?</h2>
         <p class="mt-5 text-muted">
           Curieux, nouveau converti ou simplement de passage : l'imam peut vous accueillir, répondre à vos questions
@@ -136,7 +135,6 @@
 
 <script setup>
 import { Shirt, BookOpen, Footprints, Bike, Car, MapPin, Phone, Navigation } from 'lucide-vue-next'
-import Etoile from '../composants/Etoile.vue'
 import { useHorairesPriere } from '../horairesPriere'
 import courEntree from '../assets/cour-entree.jpg'
 import salleLarge from '../assets/salle-priere-large.jpg'

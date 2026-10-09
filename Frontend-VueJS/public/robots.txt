@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /admin/dashboard
 Disallow: /espace-benevole
+Disallow: /profil
+Disallow: /reset-password
 
 Sitemap: https://mosquee-des-bienfaisants.com/sitemap.xml

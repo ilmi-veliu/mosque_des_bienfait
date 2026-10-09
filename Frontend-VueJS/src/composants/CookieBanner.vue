@@ -4,7 +4,7 @@
         v-if="showBanner"
         class="fixed bottom-0 left-0 right-0 z-[9999] p-4"
       >
-        <div class="max-w-6xl mx-auto">
+        <div class="max-w-site mx-auto">
           <div class="bg-ink rounded-lg shadow-2xl p-6 text-white">
             <div class="flex flex-col md:flex-row items-center gap-4">
               <!-- Icon -->
@@ -20,7 +20,7 @@
               <div class="flex-1 text-center md:text-left">
                 <h3 class="text-lg font-semibold mb-1">Cookies et confidentialité</h3>
                 <p class="text-accent-100 text-sm">
-                  Ce site utilise le stockage local de votre navigateur pour le chat avec l'imam. Les messages sont hébergés en Europe (Supabase, Allemagne) et <strong>supprimés automatiquement après 7 jours</strong>.
+                  Le chat avec l'imam utilise <strong>Crisp</strong> (société française, données hébergées en Europe), qui dépose des cookies. Si vous refusez, le chat ne se chargera que lorsque vous cliquerez sur la bulle.
                 </p>
                 <p class="text-accent-200 text-xs mt-2">
                   <router-link to="/politique-confidentialite" class="underline hover:text-white">
@@ -63,22 +63,30 @@
 
   <script setup lang="ts">
   import { ref, onMounted } from 'vue';
+  import { chargerCrisp, crispCharge } from '../crisp';
+  import { lireConsentement, enregistrerConsentement } from '../consentement';
 
   const showBanner = ref(false);
 
   const acceptCookies = () => {
-    localStorage.setItem('cookieConsent', 'accepted');
+    enregistrerConsentement('accepted');
     showBanner.value = false;
+    chargerCrisp();
   };
 
   const refuseCookies = () => {
-    localStorage.setItem('cookieConsent', 'refused');
+    enregistrerConsentement('refused');
     showBanner.value = false;
+    // Retrait de l'accord alors que Crisp tourne déjà : on efface sa session et on recharge sans lui
+    if (crispCharge.value) {
+      window.$crisp.push(['do', 'session:reset']);
+      setTimeout(() => window.location.reload(), 300);
+    }
   };
 
   onMounted(() => {
-    const consent = localStorage.getItem('cookieConsent');
-    if (!consent) {
+    window.addEventListener('gerer-cookies', () => { showBanner.value = true; });
+    if (!lireConsentement()) {
       showBanner.value = true;
     }
   });

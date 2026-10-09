@@ -48,16 +48,14 @@ const routes = [
     redirect: '/actualites'
   },
   {
+    // Récitation du Coran supprimée : l'ancienne adresse mène aux cours
     path: '/coran',
-    name: 'Coran',
-    component: () => import('./pages/Coran.vue'),
-    meta: { requiresAuth: true, title: 'Coran | Mosquée des Bienfaisants Périgueux' }
+    redirect: '/cours'
   },
   {
+    // Espace professeur (correction des récitations) supprimé
     path: '/espace-professeur',
-    name: 'EspaceProfesseur',
-    component: () => import('./pages/EspaceProfesseur.vue'),
-    meta: { requiresAuth: true, title: 'Espace Professeur | Mosquée des Bienfaisants Périgueux' }
+    redirect: '/cours'
   },
   {
     path: '/cours',
@@ -94,16 +92,13 @@ const routes = [
     path: '/benevole',
     name: 'DevenirBenevole',
     component: () => import('./pages/DevenirBenevole.vue'),
-    meta: { requiresAuth: true, title: 'Devenir Bénévole | Mosquée des Bienfaisants Périgueux' }
+    meta: { title: 'Devenir Bénévole | Mosquée des Bienfaisants Périgueux' }
   },
   {
-    path: '/admin',
-    name: 'AdminLogin',
-    component: () => import('./pages/AdminLogin.vue'),
-    meta: { hideNavbar: true, hideFooter: true, title: 'Administration | Mosquée des Bienfaisants' }
-  },
-  {
+    // Pas de page de connexion admin à part : l'admin se connecte comme tout le monde,
+    // puis « Administration » apparaît dans son menu de compte. Pour les autres : page introuvable.
     path: '/admin/dashboard',
+    alias: '/admin',
     name: 'AdminDashboard',
     component: () => import('./pages/AdminDashboard.vue'),
     meta: { requiresAuth: true, requiresAdmin: true, hideNavbar: true, hideFooter: true, title: 'Dashboard Admin | Mosquée des Bienfaisants' }
@@ -126,12 +121,20 @@ const routes = [
     component: () => import('./pages/MonProfil.vue'),
     meta: { requiresAuth: true, title: 'Mon Profil | Mosquée des Bienfaisants' }
   },
+  {
+    // Toute autre adresse : page « introuvable »
+    path: '/:pathMatch(.*)*',
+    name: 'PageIntrouvable',
+    component: () => import('./pages/PageIntrouvable.vue'),
+    meta: { title: 'Page introuvable | Mosquée des Bienfaisants' }
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from) {
+    if (to.hash) return { el: to.hash, behavior: 'smooth', top: 80 }
     // Même page, seule l'adresse change (ex. paramètre ?...) : on ne bouge pas
     if (to.path === from.path) return false
     return { top: 0 }
@@ -165,8 +168,11 @@ router.beforeEach(async (to) => {
     cachedSession = session
   }
 
+  // Administration : pour qui n'est pas admin (connecté ou non), la page « n'existe pas »
+  const introuvable = { name: 'PageIntrouvable', params: { pathMatch: to.path.substring(1).split('/') } }
+
   if (!session) {
-    if (to.meta.requiresAdmin) return '/admin'
+    if (to.meta.requiresAdmin) return introuvable
     return '/connexion'
   }
 
@@ -174,7 +180,7 @@ router.beforeEach(async (to) => {
     // Vérifier le cache admin
     const now = Date.now()
     if (cachedAdminRole !== null && (now - cacheTime) < CACHE_MS) {
-      if (!cachedAdminRole) return '/'
+      if (!cachedAdminRole) return introuvable
       return true
     }
 
@@ -186,7 +192,7 @@ router.beforeEach(async (to) => {
     const isAdmin = (data || []).some(r => ['admin', 'superadmin'].includes(r.role))
     cachedAdminRole = isAdmin
     cacheTime = now
-    if (!isAdmin) return '/'
+    if (!isAdmin) return introuvable
   }
 
   return true

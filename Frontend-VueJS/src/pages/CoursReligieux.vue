@@ -3,7 +3,10 @@
     <PageIntro eyebrow="Enseignement" title="Cours religieux"
       text="Des cours hebdomadaires ouverts à tous, et des cours privés réservés aux élèves de l'imam." />
 
-    <div class="mx-auto max-w-6xl px-5 py-10">
+    <EmploiDuTemps />
+
+
+    <div class="mx-auto max-w-site px-5 lg:px-10 py-10">
       <!-- Filtres par catégorie -->
       <div class="flex flex-wrap gap-2">
         <button v-for="cat in filtres" :key="cat" @click="selectedCategorie = cat"
@@ -17,12 +20,12 @@
       <p v-else-if="error" class="py-20 text-center text-red-700">{{ error }}</p>
       <p v-else-if="filteredCours.length === 0" class="py-20 text-center text-muted">Aucun cours pour le moment.</p>
 
-      <div v-else class="mt-8 grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+      <div v-else class="mt-8 grid gap-x-8 gap-y-9 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <article v-for="c in filteredCours" :key="c.id" class="flex flex-col">
           <!-- Média : vidéo YouTube (chargée au clic), sinon image du cours -->
           <div class="relative aspect-[3/2] bg-ink">
             <iframe v-if="youtubeActive[c.id]"
-              :src="`https://www.youtube.com/embed/${getYoutubeId(c.video_url)}?autoplay=1${getVideoStart(c.id) ? '&start=' + Math.floor(getVideoStart(c.id)) : ''}`"
+              :src="`https://www.youtube-nocookie.com/embed/${getYoutubeId(c.video_url)}?autoplay=1${getVideoStart(c.id) ? '&start=' + Math.floor(getVideoStart(c.id)) : ''}`"
               class="absolute inset-0 h-full w-full" frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             <template v-else>
@@ -31,13 +34,7 @@
                 class="absolute inset-0 flex items-center justify-center" :aria-label="`Lancer la vidéo ${c.titre}`">
                 <span class="flex h-12 w-12 items-center justify-center rounded-full bg-paper/90"><Play class="h-5 w-5" /></span>
               </button>
-              <div v-else-if="c.audio_url" class="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <span class="flex h-12 w-12 items-center justify-center rounded-full bg-paper/90"><Headphones class="h-5 w-5" /></span>
-              </div>
             </template>
-            <span v-if="c.prive" class="absolute left-3 top-3 flex items-center gap-1.5 bg-ink px-2.5 py-1 text-xs text-ink-foreground">
-              <Lock class="h-3 w-3" />Privé
-            </span>
           </div>
 
           <p class="eyebrow mt-5">
@@ -49,33 +46,25 @@
             <Eye class="h-3.5 w-3.5" />{{ vuesMap[c.id] || 0 }} vue{{ (vuesMap[c.id] || 0) > 1 ? 's' : '' }}
           </p>
 
-          <!-- Lecteur audio, avec reprise là où on s'était arrêté -->
+          <!-- Lecteur audio, avec reprise là où on s'était arrêté.
+               Continue écran éteint, commandes sur l'écran de verrouillage (voir lectureArrierePlan.js) -->
           <div v-if="c.audio_url" class="mt-4">
             <button v-if="currentUserId && getAudioStart(c.id) > 0" @click="resumeAudio(c.id)"
               class="mb-2 flex items-center gap-2 text-xs text-accent-600 hover:opacity-70">
               <RotateCcw class="h-3.5 w-3.5" />Reprendre à {{ formatTime(getAudioStart(c.id)) }}
             </button>
             <audio :ref="el => { if (el) audioRefs[c.id] = el }" :src="c.audio_url" controls class="w-full"
-              @loadedmetadata="onAudioLoaded(c.id)" @timeupdate="onAudioTimeUpdate(c.id)"
-              @pause="saveProgress(c.id)" @play="enregistrerVue(c.id)"></audio>
+              preload="metadata"
+              @loadedmetadata="onAudioLoaded(c.id)" @timeupdate="onAudioTimeUpdate(c.id); avancementCours(audioRefs[c.id])"
+              @pause="saveProgress(c.id); pauseCours(audioRefs[c.id])" @ended="pauseCours(audioRefs[c.id])"
+              @play="enregistrerVue(c.id); lectureCours(audioRefs[c.id], { titre: c.titre, enseignant: c.enseignant, image: miniature(c) })"></audio>
           </div>
 
-          <!-- Jour, heure et inscription (cours récurrents seulement) -->
-          <div v-if="c.jour" class="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">
-            <p class="text-sm">
-              <span class="font-medium">{{ c.jour }}</span>
-              <span v-if="c.heure" class="text-muted"> · {{ c.heure.substring(0, 5) }}</span>
-            </p>
-            <button v-if="!inscriptionsMap[c.id]" @click="sInscrire(c.id)" :disabled="inscrivant === c.id"
-              class="btn btn-primary !px-4 !py-2 disabled:opacity-50">
-              {{ inscrivant === c.id ? 'Envoi…' : "S'inscrire" }}
-            </button>
-            <span v-else class="text-sm"
-              :class="inscriptionsMap[c.id] === 'refusee' ? 'text-red-700' : inscriptionsMap[c.id] === 'validee' ? 'text-accent-600' : 'text-muted'">
-              {{ inscriptionsMap[c.id] === 'en_attente' ? 'En attente de validation'
-                 : inscriptionsMap[c.id] === 'validee' ? 'Inscrit ✓' : 'Inscription refusée' }}
-            </span>
-          </div>
+          <!-- Jour et heure (cours récurrents seulement) -->
+          <p v-if="c.jour" class="mt-5 border-t border-line pt-4 text-sm">
+            <span class="font-medium">{{ c.jour }}</span>
+            <span v-if="c.heure" class="text-muted"> · {{ c.heure.substring(0, 5) }}</span>
+          </p>
         </article>
       </div>
     </div>
@@ -84,14 +73,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import { Play, Headphones, Lock, RotateCcw, Eye } from 'lucide-vue-next'
+import { Play, RotateCcw, Eye } from 'lucide-vue-next'
 import PageIntro from '../composants/PageIntro.vue'
+import EmploiDuTemps from '../composants/EmploiDuTemps.vue'
 import imageParDefaut from '../assets/mihrab.jpg'
+import { lectureCours, pauseCours, avancementCours } from '../lectureArrierePlan'
 import { supabase } from '../supabase'
 import { store, preloadCours } from '../store'
 
-const router = useRouter()
 const isAdmin = ref(false)
 
 const selectedCategorie = ref('Tous')
@@ -145,8 +134,11 @@ const onAudioTimeUpdate = (coursId) => {
   progressMap.value[coursId].audio_position = audio.currentTime
 }
 
+// Droit d'opposition : si la personne a désactivé le suivi dans « Mon profil », rien n'est enregistré
+const suiviCours = ref(true)
+
 const saveProgress = async (coursId) => {
-  if (!currentUserId.value) return
+  if (!currentUserId.value || !suiviCours.value) return
   const progress = progressMap.value[coursId]
   if (!progress) return
 
@@ -171,7 +163,7 @@ const saveAllProgress = async () => {
 
 // Enregistre une vue unique avec cooldown de 7 jours
 const enregistrerVue = async (coursId) => {
-  if (!currentUserId.value) return
+  if (!currentUserId.value || !suiviCours.value) return
   if (viewedThisSession.has(coursId)) return
   viewedThisSession.add(coursId) // marquer pour éviter plusieurs appels dans la même session
 
@@ -204,27 +196,6 @@ const activerYoutube = (coursId) => {
   enregistrerVue(coursId)
 }
 
-// --- Inscription aux cours ---
-const inscriptionsMap = ref({}) // { cours_id: statut }
-const inscrivant = ref(null)
-
-const fetchInscriptions = async () => {
-  if (!currentUserId.value) return
-  const { data } = await supabase.from('inscriptions_cours').select('cours_id, statut').eq('user_id', currentUserId.value)
-  const map = {}
-  ;(data || []).forEach(i => { map[i.cours_id] = i.statut })
-  inscriptionsMap.value = map
-}
-
-const sInscrire = async (coursId) => {
-  if (!currentUserId.value) { router.push('/connexion'); return }
-  if (inscrivant.value) return
-  inscrivant.value = coursId
-  const { error } = await supabase.from('inscriptions_cours').insert({ user_id: currentUserId.value, cours_id: coursId })
-  if (!error) inscriptionsMap.value = { ...inscriptionsMap.value, [coursId]: 'en_attente' }
-  inscrivant.value = null
-}
-
 // Charger les compteurs de vues depuis Supabase
 const fetchVues = async () => {
   const { data } = await supabase.from('cours_vues').select('cours_id')
@@ -246,6 +217,10 @@ const fetchProgress = async () => {
     .eq('statut', 'accepté')
     .maybeSingle()
   isAdmin.value = ['admin', 'superadmin'].includes(ben?.role)
+
+  const { data: profil } = await supabase.from('profiles').select('suivi_cours').eq('id', session.user.id).maybeSingle()
+  suiviCours.value = profil?.suivi_cours !== false
+  if (!suiviCours.value) return // rien à reprendre : la progression n'est pas gardée
 
   const { data } = await supabase
     .from('user_progress')
@@ -300,7 +275,6 @@ const fetchCours = async () => {
 onMounted(async () => {
   const coursPromise = fetchCours()
   await fetchProgress()
-  fetchInscriptions()
   fetchVues()
 
   await coursPromise

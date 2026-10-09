@@ -54,7 +54,8 @@
                 :type="showPassword ? 'text' : 'password'"
                 required
                 minlength="8"
-                placeholder="Minimum 8 caractères"
+                autocomplete="new-password"
+                placeholder="Nouveau mot de passe"
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-accent-600 transition-colors pr-12"
               />
               <button type="button" @click="showPassword = !showPassword"
@@ -63,6 +64,7 @@
                 <Eye v-else :size="18" />
               </button>
             </div>
+            <p class="text-xs mt-1" :class="password && probleme ? 'text-red-500' : 'text-gray-500'">{{ password && probleme ? probleme : REGLES_MOT_DE_PASSE }}</p>
           </div>
 
           <div>
@@ -100,10 +102,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { KeyRound, Eye, EyeOff, ChevronLeft, Check, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
+import { problemeMotDePasse, REGLES_MOT_DE_PASSE } from '../motDePasse'
 
 const router = useRouter()
 const password = ref('')
@@ -115,6 +118,7 @@ const ready = ref(false)
 const success = ref(false)
 const tokenError = ref(false)
 const errorMsg = ref('')
+const probleme = computed(() => problemeMotDePasse(password.value))
 
 let authSub = null
 
@@ -123,13 +127,18 @@ onMounted(() => {
     if (event === 'PASSWORD_RECOVERY') {
       ready.value = true
       loading.value = false
-    } else if (event === 'SIGNED_IN' && session) {
+    } else if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
       // Token de récupération déjà actif
       ready.value = true
       loading.value = false
     }
   })
   authSub = data.subscription
+
+  // Supabase a souvent déjà lu le lien de l'email avant que la page ne commence à écouter
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) { ready.value = true; loading.value = false }
+  })
 
   // Si pas de token reçu dans les 5s, afficher erreur
   setTimeout(() => {
@@ -146,8 +155,8 @@ onBeforeUnmount(() => {
 
 const handleReset = async () => {
   if (password.value !== confirmPassword.value) return
-  if (password.value.length < 8) {
-    errorMsg.value = 'Le mot de passe doit contenir au moins 8 caractères.'
+  if (probleme.value) {
+    errorMsg.value = 'Mot de passe trop faible : ' + probleme.value.toLowerCase() + '.'
     return
   }
 

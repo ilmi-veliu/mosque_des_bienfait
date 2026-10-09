@@ -1,7 +1,7 @@
 <template>
   <div>
     <PageIntro eyebrow="Données personnelles" title="Politique de confidentialité"
-      text="Dernière mise à jour : 26 février 2026." />
+      text="Dernière mise à jour : 7 octobre 2026." />
 
     <!-- Content -->
     <div class="max-w-4xl mx-auto px-4 py-12">
@@ -39,15 +39,15 @@
           <div class="space-y-4">
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800 mb-2">Données de contact</h3>
-              <p class="text-gray-600 text-sm">Nom, prénom, adresse email, numéro de téléphone - collectées lorsque vous nous contactez via le formulaire ou le chat.</p>
+              <p class="text-gray-600 text-sm">Nom, prénom, adresse email, et numéro de téléphone si vous le donnez en proposant votre aide comme bénévole - collectées lorsque vous nous les communiquez (inscription, bénévolat, chat).</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
-              <h3 class="font-semibold text-gray-800 mb-2">Données de conversation (Chat Imam)</h3>
-              <p class="text-gray-600 text-sm">Messages échangés via le chat en ligne avec l'imam. Ces données sont stockées dans notre base de données hébergée par Supabase (région Frankfurt, Union Européenne) et sont <strong>automatiquement supprimées après 7 jours</strong>.</p>
+              <h3 class="font-semibold text-gray-800 mb-2">Données de conversation (chat avec l'imam)</h3>
+              <p class="text-gray-600 text-sm">Messages échangés via le chat en ligne avec l'imam, ainsi que l'email ou le nom si vous choisissez de les donner. Le chat est fourni par Crisp (société française), qui héberge les conversations dans l'Union Européenne.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
-              <h3 class="font-semibold text-gray-800 mb-2">Données de session (Chat)</h3>
-              <p class="text-gray-600 text-sm">Un identifiant de session anonyme est stocké localement dans votre navigateur (localStorage) afin de relier vos messages à votre conversation sans nécessiter de compte.</p>
+              <h3 class="font-semibold text-gray-800 mb-2">Notifications</h3>
+              <p class="text-gray-600 text-sm">Si vous activez les notifications (actualités, cours, projets), nous enregistrons l'adresse technique fournie par votre navigateur (Google, Apple ou Mozilla) pour vous les envoyer. Aucune donnée personnelle n'y est associée. Vous pouvez vous désabonner à tout moment depuis la page Actualités.</p>
             </div>
           </div>
         </section>
@@ -90,6 +90,10 @@
             </li>
             <li class="flex items-start gap-3">
               <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
+              <span class="text-gray-700">Envoi des notifications (actualités, cours, projets), uniquement si vous les activez</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
               <span class="text-gray-700">Amélioration de l'expérience utilisateur sur le site</span>
             </li>
           </ul>
@@ -111,12 +115,16 @@
               </thead>
               <tbody>
                 <tr class="border-b border-gray-100">
-                  <td class="p-4 text-gray-700">Données de contact (nom, email, téléphone)</td>
+                  <td class="p-4 text-gray-700">Données de contact (nom, email)</td>
                   <td class="p-4 text-gray-600">3 ans après le dernier contact</td>
                 </tr>
                 <tr class="border-b border-gray-100 bg-gray-50">
-                  <td class="p-4 text-gray-700">Messages du Chat Imam</td>
-                  <td class="p-4 text-gray-600">7 jours (suppression automatique)</td>
+                  <td class="p-4 text-gray-700">Messages du chat avec l'imam</td>
+                  <td class="p-4 text-gray-600">Le temps nécessaire au suivi de votre demande</td>
+                </tr>
+                <tr class="border-b border-gray-100">
+                  <td class="p-4 text-gray-700">Abonnement aux notifications</td>
+                  <td class="p-4 text-gray-600">Jusqu'à votre désabonnement</td>
                 </tr>
                 <tr class="border-b border-gray-100">
                   <td class="p-4 text-gray-700">Cookie de consentement</td>
@@ -124,7 +132,7 @@
                 </tr>
                 <tr class="bg-gray-50">
                   <td class="p-4 text-gray-700">Données de compte utilisateur</td>
-                  <td class="p-4 text-gray-600">Durée de l'inscription + 3 ans après suppression du compte</td>
+                  <td class="p-4 text-gray-600">Jusqu'à la suppression de votre compte, puis effacement immédiat</td>
                 </tr>
               </tbody>
             </table>
@@ -145,7 +153,19 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">Supabase</h3>
-              <p class="text-gray-600 text-sm mt-1">Base de données et chat en ligne hébergés dans l'Union Européenne (région Frankfurt, Allemagne). Les données restent dans l'UE. Les messages du chat imam sont automatiquement supprimés après 7 jours.</p>
+              <p class="text-gray-600 text-sm mt-1">Base de données hébergée dans l'Union Européenne (région Frankfurt, Allemagne). Les données restent dans l'UE.</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-semibold text-gray-800">Crisp</h3>
+              <p class="text-gray-600 text-sm mt-1">Chat en ligne avec l'imam. Société française (Crisp IM SAS, Nantes), conversations hébergées dans l'Union Européenne (Amsterdam, Pays-Bas). Si la réponse automatique par intelligence artificielle de Crisp est activée, le contenu de votre message peut être transmis à son fournisseur d'IA (OpenAI, États-Unis) pour préparer la réponse.</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-semibold text-gray-800">YouTube (Google)</h3>
+              <p class="text-gray-600 text-sm mt-1">Lecteur des vidéos de cours. Il n'est chargé que si vous lancez une vidéo, en mode « confidentialité renforcée » (youtube-nocookie.com). Google peut alors traiter des données de navigation, notamment aux États-Unis.</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-semibold text-gray-800">Services de notification (Google, Apple, Mozilla)</h3>
+              <p class="text-gray-600 text-sm mt-1">Si vous activez les notifications, elles transitent par le service de votre navigateur (Google pour Chrome et Android, Apple pour Safari et iPhone, Mozilla pour Firefox). Seule une adresse technique, sans nom ni email, leur est transmise.</p>
             </div>
           </div>
         </section>
@@ -162,32 +182,32 @@
           <div class="grid md:grid-cols-2 gap-4">
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit d'accès</h3>
-              <p class="text-gray-600 text-xs mt-1">Obtenir une copie de vos données personnelles</p>
+              <p class="text-gray-600 text-xs mt-1">Obtenir une copie de vos données : « Mon profil » → « Télécharger mes données »</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit de rectification</h3>
-              <p class="text-gray-600 text-xs mt-1">Corriger des données inexactes ou incomplètes</p>
+              <p class="text-gray-600 text-xs mt-1">Corriger vos informations : nom, prénom, présentation et email, depuis « Mon profil »</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit à l'effacement</h3>
-              <p class="text-gray-600 text-xs mt-1">Demander la suppression de vos données</p>
+              <p class="text-gray-600 text-xs mt-1">Supprimer votre compte vous-même à tout moment, depuis « Mon profil » : toutes vos données sont effacées immédiatement</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit à la portabilité</h3>
-              <p class="text-gray-600 text-xs mt-1">Recevoir vos données dans un format structuré</p>
+              <p class="text-gray-600 text-xs mt-1">Le fichier téléchargé depuis « Mon profil » est dans un format structuré (JSON), réutilisable ailleurs</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit d'opposition</h3>
-              <p class="text-gray-600 text-xs mt-1">Vous opposer au traitement de vos données</p>
+              <p class="text-gray-600 text-xs mt-1">Refuser le suivi de votre progression dans les cours (« Mon profil »), les cookies et les notifications</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit de retrait du consentement</h3>
-              <p class="text-gray-600 text-xs mt-1">Retirer votre consentement à tout moment</p>
+              <p class="text-gray-600 text-xs mt-1">Changer à tout moment votre choix de cookies et de notifications, depuis « Mon profil » ou « Gérer les cookies »</p>
             </div>
           </div>
           <div class="bg-accent-50 border-l-4 border-accent-600 rounded-xl p-6 mt-6">
             <p class="text-gray-700">
-              Pour exercer vos droits, contactez-nous à :
+              Tous ces droits s'exercent directement depuis votre compte, dans « Mon profil ». Si vous n'avez pas de compte ou pour toute question, contactez-nous à :
               <a href="mailto:mosquee.perigueux@gmail.com" class="text-accent-600 font-semibold hover:underline">mosquee.perigueux@gmail.com</a>
             </p>
             <p class="text-gray-600 text-sm mt-2">
@@ -204,7 +224,7 @@
             8. Gestion des cookies
           </h2>
           <p class="text-gray-700 leading-relaxed mb-4">
-            Notre site utilise uniquement les données de stockage local suivantes :
+            Notre site utilise les cookies et données de stockage local suivants :
           </p>
           <div class="bg-gray-50 rounded-xl p-6">
             <table class="w-full">
@@ -217,15 +237,35 @@
               </thead>
               <tbody>
                 <tr>
-                  <td class="p-3 text-sm text-gray-700">pwaInstallDismissed</td>
-                  <td class="p-3 text-sm text-gray-600">Mémoriser si vous avez refusé la bannière d'installation de l'application</td>
-                  <td class="p-3 text-sm text-gray-600">7 jours</td>
+                  <td class="p-3 text-sm text-gray-700">cookieConsent</td>
+                  <td class="p-3 text-sm text-gray-600">Mémoriser votre choix (accepter ou refuser les cookies)</td>
+                  <td class="p-3 text-sm text-gray-600">13 mois, puis le choix vous est redemandé</td>
+                </tr>
+                <tr>
+                  <td class="p-3 text-sm text-gray-700">sb-…-auth-token</td>
+                  <td class="p-3 text-sm text-gray-600">Garder votre session ouverte si vous avez un compte</td>
+                  <td class="p-3 text-sm text-gray-600">Jusqu'à la déconnexion</td>
+                </tr>
+                <tr>
+                  <td class="p-3 text-sm text-gray-700">mosque_horaires_v1</td>
+                  <td class="p-3 text-sm text-gray-600">Garder les horaires de prière pour un affichage plus rapide (aucune donnée personnelle)</td>
+                  <td class="p-3 text-sm text-gray-600">Mis à jour à chaque visite</td>
+                </tr>
+                <tr>
+                  <td class="p-3 text-sm text-gray-700">crisp-client/…</td>
+                  <td class="p-3 text-sm text-gray-600">Chat Crisp : retrouver votre conversation. Déposé seulement si vous acceptez les cookies ou si vous ouvrez le chat.</td>
+                  <td class="p-3 text-sm text-gray-600">6 mois</td>
+                </tr>
+                <tr>
+                  <td class="p-3 text-sm text-gray-700">Cookies YouTube</td>
+                  <td class="p-3 text-sm text-gray-600">Lecture d'une vidéo de cours. Déposés par Google seulement si vous lancez une vidéo.</td>
+                  <td class="p-3 text-sm text-gray-600">Fixée par Google</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p class="text-gray-600 text-sm mt-4">
-            Vous pouvez modifier votre choix de cookies à tout moment en supprimant vos données de navigation ou en nous contactant.
+            Vous pouvez modifier votre choix à tout moment avec le lien « Gérer les cookies » en bas de chaque page.
           </p>
         </section>
 
