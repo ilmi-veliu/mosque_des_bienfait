@@ -15,7 +15,11 @@
       <!-- Form -->
       <div class="bg-card rounded-2xl shadow-sm border p-8">
         <!-- Retour du lien de confirmation reçu par email -->
-        <div v-if="emailConfirme" class="bg-accent-50 border border-accent-200 text-accent-800 px-4 py-3 rounded-xl text-sm mb-6">
+        <div v-if="confirmation === 'expire'" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
+          Ce lien de confirmation n'est plus valable (il a déjà servi ou il est trop ancien).
+          Essayez de vous connecter ci-dessous : si le compte n'est pas encore activé, vous pourrez recevoir un nouveau lien.
+        </div>
+        <div v-else-if="confirmation === 'a-connecter'" class="bg-accent-50 border border-accent-200 text-accent-800 px-4 py-3 rounded-xl text-sm mb-6">
           Votre adresse email est confirmée. Vous pouvez vous connecter.
         </div>
         <div v-if="errorMsg" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
@@ -117,7 +121,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { LogIn, ChevronLeft, Eye, EyeOff } from 'lucide-vue-next'
 import { supabase } from '../supabase'
@@ -131,9 +135,18 @@ const errorMsg = ref('')
 const emailError = ref('')
 const showPassword = ref(false)
 
-// Arrivée depuis le lien de confirmation de l'inscription (?confirme=1)
+// Arrivée depuis le lien de confirmation de l'inscription (?confirme=1) : le lien connecte
+// la personne, qu'on ramène aussitôt sur la page où elle était (ex. /benevole)
 const route = useRoute()
-const emailConfirme = ref(route.query.confirme === '1')
+const confirmation = ref('')
+const erreurLien = /error_code=|error=/.test(window.location.hash + window.location.search)
+onMounted(async () => {
+  if (route.query.confirme !== '1') return
+  if (erreurLien) { confirmation.value = 'expire'; return }
+  const { data } = await supabase.auth.getSession()
+  if (data?.session) router.replace(pageRetour(route))
+  else confirmation.value = 'a-connecter'
+})
 
 // Compte non confirmé : renvoi du lien
 const nonConfirme = ref(false)

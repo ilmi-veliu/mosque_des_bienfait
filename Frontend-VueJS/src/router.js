@@ -198,4 +198,17 @@ router.beforeEach(async (to) => {
   return true
 })
 
+// Après une mise à jour du site, un onglet resté ouvert demande des morceaux de page qui
+// n'existent plus : on recharge la page voulue pour récupérer la nouvelle version
+// (une seule fois par page, pour ne pas boucler si le réseau est vraiment coupé).
+const MORCEAU_MANQUANT = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS|is not a valid JavaScript MIME type/i
+router.onError((err, to) => {
+  if (!MORCEAU_MANQUANT.test(err?.message || '')) return
+  try {
+    if (sessionStorage.getItem('rechargement-version') === to.fullPath) return
+    sessionStorage.setItem('rechargement-version', to.fullPath)
+  } catch { /* stockage bloqué : on recharge quand même une fois */ }
+  window.location.assign(to.fullPath)
+})
+
 export default router

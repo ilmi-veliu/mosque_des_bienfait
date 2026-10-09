@@ -20,11 +20,11 @@
           Vous devez avoir un compte sur le site et avoir été accepté(e) comme bénévole pour accéder à cet espace.
         </p>
         <div class="space-y-3">
-          <router-link to="/connexion"
+          <router-link :to="{ path: '/connexion', query: { retour: '/espace-benevole' } }"
             class="block w-full bg-ink text-paper py-3 rounded-xl hover:bg-accent-600 transition-colors font-medium">
             Se connecter
           </router-link>
-          <router-link to="/inscription"
+          <router-link :to="{ path: '/inscription', query: { retour: '/espace-benevole' } }"
             class="block w-full border border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition-colors font-medium">
             Créer un compte
           </router-link>

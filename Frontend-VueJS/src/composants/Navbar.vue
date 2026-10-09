@@ -109,7 +109,7 @@
           <!-- Non connecté -->
           <template v-else>
             <router-link
-              to="/connexion"
+              :to="lienConnexion"
               class="btn btn-outline !py-2"
             >
               Connexion
@@ -187,7 +187,7 @@
         <!-- Non connecté -->
         <template v-else>
           <div class="pt-3 mt-1">
-            <router-link @click="mobileOpen = false" to="/connexion" class="btn btn-primary w-full">
+            <router-link @click="mobileOpen = false" :to="lienConnexion" class="btn btn-primary w-full">
               Connexion
             </router-link>
           </div>
@@ -198,7 +198,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
@@ -207,6 +207,9 @@ import logo from '../assets/logo-mosquee.png'
 
 const router = useRouter()
 const route = useRoute()
+// « Connexion » ramène ensuite sur la page où l'on était (sauf depuis les pages de compte elles-mêmes)
+const lienConnexion = computed(() => /^\/(connexion|inscription|reset-password)/.test(route.path) || route.path === '/'
+  ? '/connexion' : { path: '/connexion', query: { retour: route.fullPath } })
 
 // Menu groupé ouvert au clic/toucher (en plus du survol)
 const menuOuvert = ref(null)

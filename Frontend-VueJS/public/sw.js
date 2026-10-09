@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mosquee-v2';
+const CACHE_NAME = 'mosquee-v3'; // changer de nom vide les anciens caches chez tous les visiteurs
 
 // Ressources à mettre en cache au démarrage
 const PRECACHE_URLS = [
@@ -29,17 +29,24 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== location.origin) return;
+  if (url.pathname.startsWith('/api/')) return; // réponses du serveur : jamais de copie
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (response && response.status === 200) {
+        const htmlAuLieuDunFichier = event.request.destination !== 'document' && (response.headers.get('content-type') || '').includes('text/html');
+        if (response && response.status === 200 && !htmlAuLieuDunFichier) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      // Réseau indisponible : la copie gardée ; pour une page, l'accueil gardé (le site s'y retrouve) ;
+      // sinon une vraie erreur réseau — jamais « rien », que le navigateur refuse
+      .catch(async () =>
+        (await caches.match(event.request)) ||
+        (event.request.mode === 'navigate' && (await caches.match('/'))) ||
+        Response.error())
   );
 });
 
