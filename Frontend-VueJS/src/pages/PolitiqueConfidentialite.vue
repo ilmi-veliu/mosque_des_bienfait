@@ -1,7 +1,7 @@
 <template>
   <div>
     <PageIntro eyebrow="Données personnelles" title="Politique de confidentialité"
-      text="Dernière mise à jour : 7 octobre 2026." />
+      text="Dernière mise à jour : 10 octobre 2026." />
 
     <!-- Content -->
     <div class="max-w-4xl mx-auto px-4 py-12">
@@ -254,7 +254,7 @@
                 <tr>
                   <td class="p-3 text-sm text-gray-700">crisp-client/…</td>
                   <td class="p-3 text-sm text-gray-600">Chat Crisp : retrouver votre conversation. Déposé seulement si vous acceptez les cookies ou si vous ouvrez le chat.</td>
-                  <td class="p-3 text-sm text-gray-600">6 mois</td>
+                  <td class="p-3 text-sm text-gray-600">6 mois, renouvelés à chaque nouvelle visite (durée fixée par Crisp). Vous pouvez l'effacer à tout moment dans les réglages de votre navigateur.</td>
                 </tr>
                 <tr>
                   <td class="p-3 text-sm text-gray-700">Cookies YouTube</td>
