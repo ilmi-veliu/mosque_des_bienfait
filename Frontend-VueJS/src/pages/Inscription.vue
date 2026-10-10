@@ -71,6 +71,7 @@
                 <div>
                   <p class="font-semibold">Vérifiez votre boîte mail</p>
                   <p class="mt-1">Si l'adresse <strong>{{ emailEnvoye }}</strong> est valide, un email de confirmation vient d'y être envoyé. Cliquez sur le lien qu'il contient pour activer votre compte.</p>
+                  <p class="mt-2">Vous pouvez l'ouvrir sur votre téléphone : cette page le verra toute seule et vous connectera.</p>
                 </div>
               </div>
               <p class="text-gray-500">Rien reçu après quelques minutes ? Regardez dans les courriers indésirables (spam), puis :</p>
@@ -79,7 +80,7 @@
                 {{ renvoiAttente > 0 ? `Renvoyer l'email (dans ${renvoiAttente} s)` : renvoiEnCours ? 'Envoi…' : "Renvoyer l'email de confirmation" }}
               </button>
               <p v-if="messageRenvoi" class="text-accent-700">{{ messageRenvoi }}</p>
-              <button @click="emailEnvoye = ''" class="w-full text-gray-500 hover:text-gray-800">Je me suis trompé d'adresse</button>
+              <button @click="emailEnvoye = ''; arreterSurveillance()" class="w-full text-gray-500 hover:text-gray-800">Je me suis trompé d'adresse</button>
             </div>
 
             <div v-if="errorMsg && !emailEnvoye" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
@@ -273,8 +274,43 @@ const handleSignup = async () => {
   // Sinon (cas normal) : même écran que l'adresse existe déjà ou non, pour ne pas révéler
   // à un inconnu quelles adresses ont un compte sur le site
   emailEnvoye.value = form.value.email.trim()
+  surveillerConfirmation(form.value.email.trim(), form.value.password)
   form.value = { prenom: '', nom: '', email: '', password: '', sexe: '' }
   attendreAvantRenvoi()
+}
+
+// --- Email validé ailleurs (ex. sur le téléphone) : cette page le voit toute seule ---
+// On réessaie régulièrement de se connecter avec ce qui vient d'être saisi : tant que l'email
+// n'est pas confirmé, Supabase refuse ; dès qu'il l'est, on est connecté et on part sur la page
+// d'où l'on venait (l'accueil par défaut). Le mot de passe reste seulement en mémoire, jamais stocké.
+const ATTENTE_MAX = 30 * 60 * 1000
+let identifiants = null
+let surveillance = null
+let debutSurveillance = 0
+const arreterSurveillance = () => {
+  clearInterval(surveillance)
+  surveillance = null
+  identifiants = null
+  document.removeEventListener('visibilitychange', essayerConnexion)
+  window.removeEventListener('focus', essayerConnexion)
+}
+const essayerConnexion = async () => {
+  if (!identifiants || document.visibilityState === 'hidden') return
+  if (Date.now() - debutSurveillance > ATTENTE_MAX) { arreterSurveillance(); return }
+  const { error } = await supabase.auth.signInWithPassword(identifiants)
+  if (!identifiants) return // arrêtée entre-temps
+  if (!error) { arreterSurveillance(); router.replace(pageRetour(route)); return }
+  // Toujours pas confirmé : on réessaiera ; autre refus (adresse déjà utilisée avec un autre mot de passe…) : on arrête
+  if (!(error.code === 'email_not_confirmed' || /not confirmed/i.test(error.message))) arreterSurveillance()
+}
+const surveillerConfirmation = (email, password) => {
+  arreterSurveillance()
+  identifiants = { email, password }
+  debutSurveillance = Date.now()
+  surveillance = setInterval(essayerConnexion, 5000)
+  // Retour sur l'onglet (après avoir cliqué le lien sur le téléphone) : on vérifie tout de suite
+  document.addEventListener('visibilitychange', essayerConnexion)
+  window.addEventListener('focus', essayerConnexion)
 }
 
 // --- Renvoi de l'email de confirmation (une fois par minute au plus) ---
@@ -296,5 +332,5 @@ const renvoyerEmail = async () => {
   messageRenvoi.value = 'Email renvoyé.'
   attendreAvantRenvoi()
 }
-onBeforeUnmount(() => clearInterval(minuteur))
+onBeforeUnmount(() => { clearInterval(minuteur); arreterSurveillance() })
 </script>

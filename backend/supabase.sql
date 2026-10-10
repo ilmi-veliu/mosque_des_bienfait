@@ -154,6 +154,10 @@ ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_telephone_format;
 ALTER TABLE benevoles ADD CONSTRAINT ben_telephone_format CHECK (telephone IS NULL OR telephone ~ '^\+?[0-9 .()-]{6,20}$');
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_un_contact;
 ALTER TABLE benevoles ADD CONSTRAINT ben_un_contact CHECK (email IS NOT NULL OR telephone IS NOT NULL);
+-- Compte qui a envoyé la demande (2026-10-10) : une seule demande par compte et par 24 h,
+-- même en changeant l'email ou le téléphone écrits dans le formulaire. Effacée avec le compte.
+ALTER TABLE benevoles ADD COLUMN IF NOT EXISTS user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS benevoles_user_id_idx ON benevoles (user_id, created_at DESC);
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_message_max;
 ALTER TABLE benevoles ADD CONSTRAINT ben_message_max CHECK (length(message) <= 2000);
 ALTER TABLE benevoles DROP CONSTRAINT IF EXISTS ben_dispo_motif_max;
@@ -246,20 +250,23 @@ DROP POLICY IF EXISTS "ben_delete" ON benevoles;
 
 CREATE POLICY "ben_select_auth" ON benevoles FOR SELECT TO authenticated USING (
   lower(email) = lower(auth.jwt()->>'email')
+  OR user_id = auth.uid()
   OR is_admin_or_superadmin()
   OR (statut = 'accepté' AND is_accepted_benevole())
 );
 -- Proposition d'aide (formulaire de la page Bénévolat) : il faut être connecté à un compte.
--- Toujours « nouveau » et simple bénévole (jamais admin) ; une par jour pour un même email ou
--- téléphone ; au plus 20 par heure au total, contre les envois en masse.
+-- Toujours « nouveau » et simple bénévole (jamais admin), au nom du compte connecté ;
+-- une par 24 h pour un même compte, email ou téléphone ; au plus 20 par heure au total,
+-- contre les envois en masse.
 -- (« benevoles.xxx » = la ligne envoyée ; « b.xxx » = les lignes déjà enregistrées.)
 CREATE POLICY "ben_insert" ON benevoles FOR INSERT TO authenticated WITH CHECK (
   (statut IS NULL OR statut = 'nouveau')
   AND (role IS NULL OR role = 'benevole')
+  AND user_id = auth.uid()
   AND NOT EXISTS (
     SELECT 1 FROM benevoles b
     WHERE b.created_at > NOW() - INTERVAL '1 day'
-    AND (lower(b.email) = lower(benevoles.email) OR b.telephone = benevoles.telephone)
+    AND (b.user_id = auth.uid() OR lower(b.email) = lower(benevoles.email) OR b.telephone = benevoles.telephone)
   )
   AND (SELECT count(*) FROM benevoles b WHERE b.created_at > NOW() - INTERVAL '1 hour') < 20
 );

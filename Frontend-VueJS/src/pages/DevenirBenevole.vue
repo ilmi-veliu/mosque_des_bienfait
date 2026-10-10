@@ -4,11 +4,22 @@
       text="Quelques heures peuvent faire une vraie différence. Dites-nous simplement ce que vous aimeriez faire : l'équipe vous recontactera." />
 
     <section class="mx-auto max-w-2xl px-5 py-10 md:py-12">
-      <!-- Envoyée -->
-      <div v-if="success" class="border border-line bg-card p-6 md:p-8">
+      <div v-if="chargement" class="py-16 text-center text-sm text-muted">Chargement…</div>
+
+      <!-- Déjà bénévole : plus de formulaire -->
+      <div v-else-if="dejaBenevole" class="border border-line bg-card p-6 md:p-8">
+        <Check class="h-6 w-6 text-accent-500" />
+        <h2 class="mt-4 text-3xl">Vous êtes déjà bénévole</h2>
+        <p class="mt-3 text-muted">Merci pour votre aide ! Retrouvez les informations de l'équipe dans votre espace.</p>
+        <router-link to="/espace-benevole" class="btn btn-primary mt-6">Mon espace bénévole</router-link>
+      </div>
+
+      <!-- Demande envoyée il y a moins de 24 h : le formulaire disparaît jusqu'à demain -->
+      <div v-else-if="derniereDemande" class="border border-line bg-card p-6 md:p-8">
         <Check class="h-6 w-6 text-accent-500" />
         <h2 class="mt-4 text-3xl">Merci, c'est envoyé</h2>
         <p class="mt-3 text-muted">L'équipe de la mosquée vous recontactera très prochainement, incha'Allah.</p>
+        <p class="mt-3 text-sm text-muted">Demande envoyée {{ quand(derniereDemande) }}. Vous pourrez en envoyer une nouvelle {{ quand(prochaineDemande) }}.</p>
       </div>
 
       <!-- Pas connecté au moment d'envoyer : on demande de créer un compte (le texte est gardé) -->
@@ -66,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Check, UserPlus } from 'lucide-vue-next'
 import PageIntro from '../composants/PageIntro.vue'
 import { supabase } from '../supabase'
@@ -76,8 +87,34 @@ const form = ref({ prenom: '', nom: '', message: '', email: '', telephone: '', s
 const compteRequis = ref(false)
 const connecte = ref(false)
 const envoi = ref(false)
-const success = ref(false)
 const erreur = ref('')
+const chargement = ref(true)
+const dejaBenevole = ref(false)
+const derniereDemande = ref(null) // date de la demande envoyée il y a moins de 24 h
+const ATTENTE = 24 * 3600 * 1000
+const prochaineDemande = computed(() => derniereDemande.value && new Date(new Date(derniereDemande.value).getTime() + ATTENTE))
+// « aujourd'hui à 14h05 », « demain à 14h05 » ou « le lundi 12 octobre à 14h05 »
+const quand = (d) => {
+  const date = new Date(d)
+  const heure = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h')
+  const jour = date.toDateString() === new Date().toDateString() ? "aujourd'hui"
+    : date.toDateString() === new Date(Date.now() + 864e5).toDateString() ? 'demain'
+    : `le ${date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}`
+  return `${jour} à ${heure}`
+}
+
+// Demandes déjà faites avec ce compte (ou à son adresse) : déjà bénévole, ou demande de moins de 24 h
+const lireMesDemandes = async (session) => {
+  const emailEchappe = (session.user.email || '').replace(/[\\%_]/g, (c) => '\\' + c)
+  const [parCompte, parEmail] = await Promise.all([
+    supabase.from('benevoles').select('created_at, statut').eq('user_id', session.user.id),
+    supabase.from('benevoles').select('created_at, statut').ilike('email', emailEchappe),
+  ])
+  const demandes = [...(parCompte.data || []), ...(parEmail.data || [])]
+  dejaBenevole.value = demandes.some(d => d.statut === 'accepté')
+  const recente = demandes.map(d => d.created_at).filter(d => Date.now() - new Date(d).getTime() < ATTENTE).sort().pop()
+  derniereDemande.value = recente || null
+}
 
 onMounted(async () => {
   // Texte écrit avant de créer son compte : on le remet
@@ -87,8 +124,10 @@ onMounted(async () => {
   } catch { /* stockage indisponible */ }
   // Personne connectée : on complète avec son compte (modifiable)
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return
+  if (!session) { chargement.value = false; return }
   connecte.value = true
+  await lireMesDemandes(session).catch(() => {})
+  chargement.value = false
   const meta = session.user.user_metadata || {}
   form.value.email ||= session.user.email || ''
   form.value.prenom ||= meta.prenom || ''
@@ -98,7 +137,7 @@ onMounted(async () => {
 const envoyer = async () => {
   erreur.value = ''
   const f = form.value
-  if (f.site) { success.value = true; return } // robot : on fait semblant que c'est envoyé
+  if (f.site) { derniereDemande.value = new Date().toISOString(); return } // robot : on fait semblant que c'est envoyé
   const email = f.email.trim().toLowerCase() || null
   const telephone = f.telephone.trim() || null
   if (!email && !telephone) { erreur.value = 'Laissez au moins un email ou un numéro de téléphone pour qu\'on puisse vous recontacter.'; return }
@@ -113,17 +152,19 @@ const envoyer = async () => {
   }
 
   envoi.value = true
+  const { data: { user } } = await supabase.auth.getUser()
   const { error } = await supabase.from('benevoles').insert({
-    prenom: f.prenom.trim(), nom: f.nom.trim(), message: f.message.trim(), email, telephone,
+    prenom: f.prenom.trim(), nom: f.nom.trim(), message: f.message.trim(), email, telephone, user_id: user?.id,
   })
   envoi.value = false
   if (error) {
     erreur.value = error.code === '42501'
-      ? 'Une proposition a déjà été envoyée avec ce contact aujourd\'hui. Merci, l\'équipe vous recontactera.'
+      ? 'Une proposition a déjà été envoyée avec ce compte ou ce contact il y a moins de 24 h. Merci, l\'équipe vous recontactera.'
       : "L'envoi n'a pas fonctionné. Réessayez dans un instant."
     return
   }
   try { localStorage.removeItem(BROUILLON) } catch { /* rien */ }
-  success.value = true
+  derniereDemande.value = new Date().toISOString()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>
