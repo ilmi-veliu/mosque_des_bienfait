@@ -13,9 +13,9 @@
       </ul>
 
       <!-- Téléphone : seulement la prochaine prière -->
-      <span v-if="prochaine && !erreur" class="md:hidden">
+      <span v-if="prochaine && !erreur" class="flex items-baseline gap-1.5 md:hidden">
         <span class="opacity-70">Prochaine :</span>
-        <span class="text-accent-400"> {{ prochaine.label }} {{ prochaine.heure }}</span>
+        <span class="text-accent-400">{{ prochaine.label }} {{ prochaine.heure }}</span>
       </span>
 
       <router-link to="/horaires" class="hidden whitespace-nowrap opacity-70 hover:opacity-100 sm:inline">Horaires du mois</router-link>

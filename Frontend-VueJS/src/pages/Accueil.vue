@@ -46,7 +46,8 @@
             ]">
             <div>
               <p class="font-serif text-2xl" :class="p.prochaine ? 'text-accent-600' : ''">{{ p.label }}</p>
-              <p class="font-arabic text-sm text-muted" dir="rtl" lang="ar">{{ p.ar }}</p>
+              <!-- Calé à gauche sous le nom français (sinon le sens arabe le pousse à droite) -->
+              <p class="font-arabic text-left text-sm text-muted" dir="rtl" lang="ar">{{ p.ar }}</p>
             </div>
             <p class="font-serif text-3xl tabular-nums md:text-4xl" :class="p.passee && !p.prochaine ? 'text-muted' : ''">{{ p.heure }}</p>
           </div>
