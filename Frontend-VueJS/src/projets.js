@@ -1,6 +1,6 @@
 // Projets avec collecte : créés depuis l'onglet « Projets » de l'admin.
 // Le projet « mis en avant » (et en cours) s'affiche sur l'accueil ; s'il n'y en a aucun, la section disparaît.
-import { supabase } from './supabase'
+import { supabasePublic as supabase } from './supabase'
 
 // ⏸ Dons en ligne désactivés (2026-10-10, HelloAsso pas encore opérationnel) :
 // bouton « Faire un don » et « Participer » masqués partout. Remettre true pour les réactiver.

@@ -1,6 +1,6 @@
 // Emploi du temps : séances de cours datées, saisies dans l'onglet « Emploi du temps » de l'admin.
 // Une séance est à une heure fixe, ou « après une prière » : l'heure suit alors Mawaqit.
-import { supabase } from './supabase'
+import { supabasePublic as supabase } from './supabase'
 import { ligneDuJour } from './horairesPriere'
 
 export const MATIERES = ['Coran', 'Tajwid', 'Croyance', 'Jurisprudence', 'Hadith', 'Sira', 'Langue arabe', 'Éducation islamique', 'Rappel']

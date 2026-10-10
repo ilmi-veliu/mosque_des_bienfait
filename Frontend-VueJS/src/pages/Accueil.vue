@@ -61,7 +61,7 @@
     </section>
 
     <!-- À la une : les derniers ajouts de l'admin, tous types confondus (actualité, cours, séance, projet) -->
-    <section v-if="aLaUne.length" class="mx-auto max-w-site px-5 lg:px-10 py-10 md:py-14">
+    <section v-if="aLaUne.length || erreurALaUne" class="mx-auto max-w-site px-5 lg:px-10 py-10 md:py-14">
       <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <p class="eyebrow">À la une</p>
@@ -71,7 +71,12 @@
           Toutes les actualités <ArrowRight class="h-4 w-4" />
         </router-link>
       </div>
-      <div class="mt-7 grid gap-x-8 gap-y-9 sm:grid-cols-2 xl:grid-cols-4">
+      <!-- Chargement raté (réseau) : on le dit, plutôt que de faire disparaître la rubrique -->
+      <div v-if="erreurALaUne" class="mt-7 border border-line bg-card p-6 text-sm text-muted">
+        Les dernières nouvelles n'ont pas pu être chargées. Vérifiez votre connexion internet.
+        <button @click="chargerALaUne" class="mt-3 block font-medium text-ink underline">Réessayer</button>
+      </div>
+      <div v-else class="mt-7 grid gap-x-8 gap-y-9 sm:grid-cols-2 xl:grid-cols-4">
         <CarteNouveaute v-for="n in aLaUne" :key="n.cle" :element="n" />
       </div>
       <!-- Pour recevoir chaque nouveauté sur son téléphone -->
@@ -168,9 +173,16 @@ const projet = ref(null)
 
 // ─── À la une ───
 const aLaUne = ref([])
+const erreurALaUne = ref(false)
+const chargerALaUne = () => {
+  erreurALaUne.value = false
+  chargerNouveautes(4)
+    .then(n => { aLaUne.value = n })
+    .catch((e) => { console.error('[À la une]', e); erreurALaUne.value = true })
+}
 
 onMounted(async () => {
-  chargerNouveautes(4).then(n => { aLaUne.value = n }).catch(() => {})
+  chargerALaUne()
   chargerProjetEnAvant().then(p => { projet.value = p }).catch(() => {})
 })
 

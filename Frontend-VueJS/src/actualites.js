@@ -1,5 +1,5 @@
 // Actualités : articles publiés depuis l'onglet « Actualités » de l'admin
-import { supabase } from './supabase'
+import { supabasePublic as supabase } from './supabase'
 import imageParDefaut from './assets/cour-entree.jpg'
 
 export { imageParDefaut }

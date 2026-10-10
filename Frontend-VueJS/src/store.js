@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { supabase } from './supabase'
+import { supabasePublic as supabase } from './supabase'
 
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 

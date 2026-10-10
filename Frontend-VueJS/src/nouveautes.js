@@ -1,7 +1,7 @@
 // « À la une » de l'accueil : les derniers ajouts de l'admin, quel que soit leur type
 // (actualité, cours en ligne, séance de l'emploi du temps, projet de collecte),
 // du plus récent au plus ancien. Rien à faire de plus dans l'admin : tout ajout y apparaît.
-import { supabase } from './supabase'
+import { supabasePublic as supabase } from './supabase'
 import { resume } from './actualites'
 import { MOMENTS, depuisISO, aujourdhuiISO } from './seances'
 import { miniatureYoutube, estFichierVideo } from './video'
@@ -27,6 +27,10 @@ export const chargerNouveautes = async (limite = 4) => {
     supabase.from('projets').select('id, titre, description, image_url, created_at')
       .eq('statut', 'en_cours').order('created_at', { ascending: false }).limit(PAR_TYPE),
   ])
+
+  // Tout a échoué (réseau coupé, base injoignable) : on le signale au lieu de renvoyer une liste vide
+  const reponses = [actus, cours, seances, projets]
+  if (reponses.every(r => r.error)) throw reponses[0].error
 
   const series = new Set()
   const elements = [
