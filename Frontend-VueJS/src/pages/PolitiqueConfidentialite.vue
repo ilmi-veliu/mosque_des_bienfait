@@ -38,8 +38,16 @@
           </p>
           <div class="space-y-4">
             <div class="bg-gray-50 rounded-xl p-6">
-              <h3 class="font-semibold text-gray-800 mb-2">Données de contact</h3>
-              <p class="text-gray-600 text-sm">Nom, prénom, adresse email, et numéro de téléphone si vous le donnez en proposant votre aide comme bénévole - collectées lorsque vous nous les communiquez (inscription, bénévolat, chat).</p>
+              <h3 class="font-semibold text-gray-800 mb-2">Données de compte</h3>
+              <p class="text-gray-600 text-sm">Si vous créez un compte : prénom, nom, genre (homme ou femme), adresse email et mot de passe (enregistré chiffré, illisible même pour nous). Facultatif : photo de profil et présentation.</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-semibold text-gray-800 mb-2">Demande de bénévolat</h3>
+              <p class="text-gray-600 text-sm">Prénom, nom, ce que vous aimeriez faire, et l'email ou le numéro de téléphone que vous laissez pour être recontacté.</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-semibold text-gray-800 mb-2">Progression dans les cours</h3>
+              <p class="text-gray-600 text-sm">Si vous êtes connecté : l'endroit où vous vous êtes arrêté dans les cours audio et vidéo, et les cours déjà vus. Vous pouvez désactiver ce suivi dans « Mon profil ».</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800 mb-2">Données de conversation (chat avec l'imam)</h3>
@@ -47,7 +55,7 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800 mb-2">Notifications</h3>
-              <p class="text-gray-600 text-sm">Si vous activez les notifications (actualités, cours, projets), nous enregistrons l'adresse technique fournie par votre navigateur (Google, Apple ou Mozilla) pour vous les envoyer. Aucune donnée personnelle n'y est associée. Vous pouvez vous désabonner à tout moment depuis la page Actualités.</p>
+              <p class="text-gray-600 text-sm">Si vous activez les notifications (actualités, cours, projets), nous enregistrons l'adresse technique fournie par votre navigateur (Google, Apple ou Mozilla) pour vous les envoyer. Aucune donnée personnelle n'y est associée. Vous pouvez vous désabonner à tout moment depuis l'accueil, la page Actualités ou « Mon profil ».</p>
             </div>
           </div>
         </section>
@@ -60,10 +68,10 @@
           </h2>
           <div class="bg-amber-50 border-l-4 border-amber-500 rounded-xl p-6">
             <p class="text-gray-700 leading-relaxed">
-              Notre site est celui d'un lieu de culte musulman. L'utilisation de nos services (contact avec l'imam, participation aux événements religieux, cours religieux) peut révéler indirectement votre appartenance religieuse, ce qui constitue une <strong>donnée sensible</strong> au sens de l'article 9 du RGPD.
+              Notre site est celui d'un lieu de culte musulman. L'utilisation de nos services (contact avec l'imam, cours religieux, bénévolat) peut révéler indirectement votre appartenance religieuse, ce qui constitue une <strong>donnée sensible</strong> au sens de l'article 9 du RGPD.
             </p>
             <p class="text-gray-700 leading-relaxed mt-3">
-              Le traitement de ces données repose sur votre <strong>consentement explicite</strong> (article 9.2.a du RGPD). En utilisant nos services de contact ou en participant à nos événements, vous consentez au traitement de ces informations dans le cadre strict des activités de la mosquée.
+              Le traitement de ces données repose sur votre <strong>consentement explicite</strong> (article 9.2.a du RGPD). En utilisant nos services (compte, chat, cours, bénévolat), vous consentez au traitement de ces informations dans le cadre strict des activités de la mosquée.
             </p>
           </div>
         </section>
@@ -82,11 +90,11 @@
             </li>
             <li class="flex items-start gap-3">
               <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
-              <span class="text-gray-700">Gestion et information sur les événements communautaires</span>
+              <span class="text-gray-700">Gestion de votre compte et des demandes de bénévolat</span>
             </li>
             <li class="flex items-start gap-3">
               <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
-              <span class="text-gray-700">Organisation des cours religieux</span>
+              <span class="text-gray-700">Organisation des cours religieux et suivi de votre progression</span>
             </li>
             <li class="flex items-start gap-3">
               <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
@@ -131,8 +139,8 @@
                   <td class="p-4 text-gray-600">13 mois maximum (norme CNIL)</td>
                 </tr>
                 <tr class="bg-gray-50">
-                  <td class="p-4 text-gray-700">Données de compte utilisateur</td>
-                  <td class="p-4 text-gray-600">Jusqu'à la suppression de votre compte, puis effacement immédiat</td>
+                  <td class="p-4 text-gray-700">Données de compte, demandes de bénévolat et progression dans les cours</td>
+                  <td class="p-4 text-gray-600">Jusqu'à la suppression de votre compte, puis effacement immédiat (la progression est aussi effacée si vous désactivez le suivi)</td>
                 </tr>
               </tbody>
             </table>
@@ -157,15 +165,23 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">Crisp</h3>
-              <p class="text-gray-600 text-sm mt-1">Chat en ligne avec l'imam. Société française (Crisp IM SAS, Nantes), conversations hébergées dans l'Union Européenne (Amsterdam, Pays-Bas). Si la réponse automatique par intelligence artificielle de Crisp est activée, le contenu de votre message peut être transmis à son fournisseur d'IA (OpenAI, États-Unis) pour préparer la réponse.</p>
+              <p class="text-gray-600 text-sm mt-1">Chat en ligne avec l'imam. Société française (Crisp IM SAS, Nantes), conversations hébergées dans l'Union Européenne (Amsterdam, Pays-Bas).</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-semibold text-gray-800">Resend</h3>
+              <p class="text-gray-600 text-sm mt-1">Envoi des emails du site (confirmation d'inscription, mot de passe oublié, changement d'adresse). Votre adresse email lui est transmise pour l'envoi. Société américaine : des données peuvent être traitées aux États-Unis.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">YouTube (Google)</h3>
-              <p class="text-gray-600 text-sm mt-1">Lecteur des vidéos de cours. Il n'est chargé que si vous lancez une vidéo, en mode « confidentialité renforcée » (youtube-nocookie.com). Google peut alors traiter des données de navigation, notamment aux États-Unis.</p>
+              <p class="text-gray-600 text-sm mt-1">Vidéos publiées sur YouTube, en mode « confidentialité renforcée » (youtube-nocookie.com). Sur la page des cours, le lecteur n'est chargé que si vous lancez la vidéo ; sur une actualité contenant une vidéo YouTube, il est chargé à l'ouverture de l'article. Les images d'aperçu de ces vidéos viennent aussi de YouTube. Google peut alors traiter des données de navigation, notamment aux États-Unis.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">Services de notification (Google, Apple, Mozilla)</h3>
               <p class="text-gray-600 text-sm mt-1">Si vous activez les notifications, elles transitent par le service de votre navigateur (Google pour Chrome et Android, Apple pour Safari et iPhone, Mozilla pour Firefox). Seule une adresse technique, sans nom ni email, leur est transmise.</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-semibold text-gray-800">Aladhan</h3>
+              <p class="text-gray-600 text-sm mt-1">Calcul de secours des horaires de prière, utilisé seulement si les horaires de la mosquée (Mawaqit) sont indisponibles. Aucune donnée personnelle ne lui est transmise.</p>
             </div>
           </div>
         </section>
@@ -182,11 +198,11 @@
           <div class="grid md:grid-cols-2 gap-4">
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit d'accès</h3>
-              <p class="text-gray-600 text-xs mt-1">Obtenir une copie de vos données : « Mon profil » → « Télécharger mes données »</p>
+              <p class="text-gray-600 text-xs mt-1">Obtenir une copie de vos données : « Mon profil » → « Télécharger mes données » (document PDF)</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit de rectification</h3>
-              <p class="text-gray-600 text-xs mt-1">Corriger vos informations : nom, prénom, présentation et email, depuis « Mon profil »</p>
+              <p class="text-gray-600 text-xs mt-1">Corriger vos informations : prénom, nom, présentation, photo et email, depuis « Mon profil »</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit à l'effacement</h3>
@@ -194,7 +210,7 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit à la portabilité</h3>
-              <p class="text-gray-600 text-xs mt-1">Le fichier téléchargé depuis « Mon profil » est dans un format structuré (JSON), réutilisable ailleurs</p>
+              <p class="text-gray-600 text-xs mt-1">Recevoir vos données dans un format informatique réutilisable ailleurs : sur simple demande par email, à l'adresse ci-dessous</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit d'opposition</h3>
@@ -207,7 +223,7 @@
           </div>
           <div class="bg-accent-50 border-l-4 border-accent-600 rounded-xl p-6 mt-6">
             <p class="text-gray-700">
-              Tous ces droits s'exercent directement depuis votre compte, dans « Mon profil ». Si vous n'avez pas de compte ou pour toute question, contactez-nous à :
+              La plupart de ces droits s'exercent directement depuis votre compte, dans « Mon profil ». Pour la portabilité, si vous n'avez pas de compte ou pour toute question, contactez-nous à :
               <a href="mailto:mosquee.perigueux@gmail.com" class="text-accent-600 font-semibold hover:underline">mosquee.perigueux@gmail.com</a>
             </p>
             <p class="text-gray-600 text-sm mt-2">
@@ -250,6 +266,16 @@
                   <td class="p-3 text-sm text-gray-700">mosque_horaires_v1</td>
                   <td class="p-3 text-sm text-gray-600">Garder les horaires de prière pour un affichage plus rapide (aucune donnée personnelle)</td>
                   <td class="p-3 text-sm text-gray-600">Mis à jour à chaque visite</td>
+                </tr>
+                <tr>
+                  <td class="p-3 text-sm text-gray-700">brouillon_benevole</td>
+                  <td class="p-3 text-sm text-gray-600">Garder le texte de votre demande de bénévolat le temps de créer votre compte (sur votre appareil uniquement)</td>
+                  <td class="p-3 text-sm text-gray-600">7 jours, effacé dès l'envoi de la demande</td>
+                </tr>
+                <tr>
+                  <td class="p-3 text-sm text-gray-700">retour_mot_de_passe</td>
+                  <td class="p-3 text-sm text-gray-600">Revenir sur la page où vous étiez après « Mot de passe oublié »</td>
+                  <td class="p-3 text-sm text-gray-600">Effacé dès le nouveau mot de passe choisi</td>
                 </tr>
                 <tr>
                   <td class="p-3 text-sm text-gray-700">crisp-client/…</td>
