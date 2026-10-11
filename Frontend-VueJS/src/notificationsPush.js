@@ -2,7 +2,9 @@
 // Le téléphone s'abonne auprès de Google / Apple / Mozilla, et on garde son adresse
 // dans Supabase (table abonnements_push) pour lui envoyer les nouvelles actualités.
 import { ref } from 'vue'
-import { supabase } from './supabase'
+// Client « visiteur » : l'abonnement est lié à l'appareil, pas au compte, et ne doit pas
+// rester bloqué derrière une connexion abîmée (voir supabase.js)
+import { supabasePublic as supabase } from './supabase'
 
 const CLE_PUBLIQUE = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
@@ -24,16 +26,40 @@ const enOctets = (b64) => {
 
 const enregistrement = () => navigator.serviceWorker.register('/sw.js').then(() => navigator.serviceWorker.ready)
 
+const memeCle = (abo) => {
+  const cle = abo.options?.applicationServerKey
+  if (!cle) return true // navigateur qui ne la donne pas : on ne peut pas comparer
+  const a = new Uint8Array(cle), b = enOctets(CLE_PUBLIQUE)
+  return a.length === b.length && a.every((v, i) => v === b[i])
+}
+const abonner = (r) => r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: enOctets(CLE_PUBLIQUE) })
+const inscrire = async (abo) => {
+  const { endpoint, keys } = abo.toJSON()
+  const { error } = await supabase.rpc('abonner_push', { p_endpoint: endpoint, p_p256dh: keys.p256dh, p_auth: keys.auth })
+  if (error) throw error
+}
+// L'abonnement du téléphone, valable pour la clé actuelle du site (sinon il est refait)
+const abonnementValide = async (r) => {
+  let abo = await r.pushManager.getSubscription()
+  if (abo && !memeCle(abo)) { await abo.unsubscribe(); abo = null }
+  return abo
+}
+
 export const useNotificationsPush = () => {
   const etat = ref(etatInitial())
   const enCours = ref(false)
   const erreur = ref('')
 
-  // Déjà abonné sur ce téléphone ?
-  if (etat.value === 'inactive') {
-    enregistrement().then(r => r.pushManager.getSubscription())
-      .then(abo => { if (abo && Notification.permission === 'granted') etat.value = 'active' })
-      .catch(() => {})
+  // Déjà abonné sur ce téléphone ? On le réinscrit dans la base à chaque visite : si la ligne
+  // y a disparu (abonnement renouvelé par le navigateur, données du site effacées, ancienne
+  // inscription jamais arrivée), elle revient toute seule. « Actif » = vraiment enregistré.
+  if (etat.value === 'inactive' && Notification.permission === 'granted') {
+    enregistrement().then(async (r) => {
+      if (!await r.pushManager.getSubscription()) return // jamais abonné ici : on ne force rien
+      const abo = (await abonnementValide(r)) || await abonner(r)
+      await inscrire(abo)
+      etat.value = 'active'
+    }).catch((e) => console.error('[Notifications]', e))
   }
 
   const activer = async () => {
@@ -42,11 +68,8 @@ export const useNotificationsPush = () => {
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') { etat.value = permission === 'denied' ? 'refusee' : 'inactive'; return }
       const r = await enregistrement()
-      const abo = (await r.pushManager.getSubscription())
-        || await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: enOctets(CLE_PUBLIQUE) })
-      const { endpoint, keys } = abo.toJSON()
-      const { error } = await supabase.rpc('abonner_push', { p_endpoint: endpoint, p_p256dh: keys.p256dh, p_auth: keys.auth })
-      if (error) throw error
+      const abo = (await abonnementValide(r)) || await abonner(r)
+      await inscrire(abo)
       etat.value = 'active'
     } catch (e) {
       console.error('[Notifications]', e)

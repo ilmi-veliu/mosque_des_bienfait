@@ -97,5 +97,14 @@ export default async function handler(req, res) {
   if (expires.length) await supabase.from('abonnements_push').delete().in('endpoint', expires)
 
   const envoyees = resultats.filter(r => r.status === 'fulfilled').length
-  return repondre(res, 200, { envoyees, total: abonnements.length })
+  // Pourquoi les autres ont échoué (code renvoyé par Google / Apple / Mozilla), pour l'afficher à l'admin
+  const echecs = {}
+  resultats.filter(r => r.status === 'rejected').forEach((r) => {
+    const code = r.reason?.statusCode || 'erreur'
+    echecs[code] = (echecs[code] || 0) + 1
+    if (![404, 410].includes(code)) console.error('[notifier] envoi refusé', code, String(r.reason?.body || r.reason?.message || '').slice(0, 200))
+  })
+  // Personne ne l'a reçue : le contenu n'est pas considéré comme notifié, on pourra réessayer
+  if (!envoyees) await supabase.from(config.table).update({ notifie_le: null }).eq('id', id)
+  return repondre(res, 200, { envoyees, total: abonnements.length, echecs })
 }

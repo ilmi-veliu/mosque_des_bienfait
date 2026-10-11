@@ -880,9 +880,20 @@ const envoyerNotification = async (type, id) => {
     })
     const rep = await r.json()
     if (!r.ok) throw new Error(rep.erreur)
-    notifMessage.value = rep.total
-      ? `Notification envoyée à ${rep.envoyees} téléphone${rep.envoyees > 1 ? 's' : ''}.`
-      : 'Aucun téléphone abonné pour le moment.'
+    if (!rep.total) notifMessage.value = 'Aucun téléphone abonné pour le moment.'
+    else if (rep.envoyees === rep.total) notifMessage.value = `Notification envoyée à ${rep.envoyees} téléphone${rep.envoyees > 1 ? 's' : ''}.`
+    else {
+      // Une partie (ou la totalité) n'est pas partie : on dit pourquoi
+      const e = rep.echecs || {}
+      const expires = (e[404] || 0) + (e[410] || 0)
+      const refuses = Object.entries(e).filter(([code]) => !['404', '410'].includes(code))
+      const details = [
+        expires && `${expires} abonnement${expires > 1 ? 's' : ''} expiré${expires > 1 ? 's' : ''} (retiré${expires > 1 ? 's' : ''} de la liste)`,
+        ...refuses.map(([code, n]) => `${n} refusé${n > 1 ? 's' : ''} par le service d'envoi (code ${code})`),
+      ].filter(Boolean).join(', ')
+      notifErreur.value = !rep.envoyees
+      notifMessage.value = `Notification reçue par ${rep.envoyees} téléphone${rep.envoyees > 1 ? 's' : ''} sur ${rep.total} : ${details}.${rep.envoyees ? '' : ' Vous pourrez la renvoyer.'}`
+    }
   } catch (e) {
     notifErreur.value = true
     notifMessage.value = `La notification n'a pas pu partir : ${e.message || 'erreur réseau'}.`
