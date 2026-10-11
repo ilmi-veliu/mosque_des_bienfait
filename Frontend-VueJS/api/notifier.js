@@ -23,7 +23,7 @@ const TYPES = {
     message: (a) => ({ titre: 'Nouvelle actualité', texte: a.titre, url: `/actualites/${a.id}` }),
   },
   cours: {
-    table: 'cours_religieux', colonnes: 'id, titre', filtre: (q) => q.eq('prive', false).eq('actif', true),
+    table: 'cours_religieux', colonnes: 'id, titre', filtre: (q) => q.eq('actif', true),
     message: (c) => ({ titre: 'Nouveau cours en ligne', texte: c.titre, url: '/cours' }),
   },
   seance: {
@@ -72,10 +72,15 @@ export default async function handler(req, res) {
   if (!estAdmin) return repondre(res, 403, { erreur: 'Réservé aux administrateurs' })
 
   // On marque le contenu AVANT d'envoyer : deux clics rapides ne donnent qu'un seul envoi
-  const { data: contenu } = await config.filtre(supabase.from(config.table)
+  const { data: contenu, error: erreurContenu } = await config.filtre(supabase.from(config.table)
     .update({ notifie_le: new Date().toISOString() })
     .eq('id', id).is('notifie_le', null))
     .select(config.colonnes).maybeSingle()
+  // Une vraie erreur (ex. colonne disparue de la base) ne doit pas passer pour « déjà notifié »
+  if (erreurContenu) {
+    console.error('[notifier]', type, erreurContenu.message)
+    return repondre(res, 500, { erreur: 'Erreur du serveur en préparant la notification' })
+  }
   if (!contenu) return repondre(res, 409, { erreur: 'Contenu introuvable, non public ou déjà notifié' })
 
   const { data: abonnements, error } = await supabase.from('abonnements_push').select('endpoint, p256dh, auth')
