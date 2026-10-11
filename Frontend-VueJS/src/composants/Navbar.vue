@@ -85,6 +85,15 @@
                     Devenir bénévole
                   </router-link>
                   <router-link
+                    v-if="isProf"
+                    to="/espace-professeur"
+                    @click="dropdownOpen = false"
+                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <GraduationCap :size="16" class="text-gray-400" />
+                    Espace professeur
+                  </router-link>
+                  <router-link
                     v-if="isAdmin"
                     to="/admin/dashboard"
                     @click="dropdownOpen = false"
@@ -173,6 +182,10 @@
               <HandHelping :size="16" class="text-gray-400" />
               {{ isBenevole ? 'Espace Bénévole' : 'Devenir bénévole' }}
             </router-link>
+            <router-link v-if="isProf" @click="mobileOpen = false" to="/espace-professeur" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-gray-700">
+              <GraduationCap :size="16" class="text-gray-400" />
+              Espace professeur
+            </router-link>
             <router-link v-if="isAdmin" @click="mobileOpen = false" to="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm text-accent-600 font-medium">
               <Shield :size="16" />
               Administration
@@ -200,7 +213,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { HandHelping, LogOut, Shield, UserCircle, ChevronDown, Menu as MenuIcon, X } from 'lucide-vue-next'
+import { HandHelping, LogOut, Shield, UserCircle, ChevronDown, GraduationCap, Menu as MenuIcon, X } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import { langue, changerLangue, TRADUCTION_ACTIVE } from '../traduction'
 import logo from '../assets/logo-mosquee.png'
@@ -229,6 +242,7 @@ const groupes = [
 const isLoggedIn = ref(false)
 const isAdmin = ref(false)
 const isBenevole = ref(false)
+const isProf = ref(false) // professeur (ou admin) : lien « Espace professeur »
 const mobileOpen = ref(false)
 const dropdownOpen = ref(false)
 const dropdownRef = ref(null)
@@ -239,6 +253,7 @@ const checkBenevole = async (email) => {
   if (!email) {
     isBenevole.value = false
     isAdmin.value = false
+    isProf.value = false
     lastCheckedEmail = null
     return
   }
@@ -253,9 +268,11 @@ const checkBenevole = async (email) => {
     const row = data?.[0]
     isBenevole.value = !!row
     isAdmin.value = ['admin', 'superadmin'].includes(row?.role)
+    isProf.value = (data || []).some(r => ['professeur', 'admin', 'superadmin'].includes(r.role))
   } catch {
     isBenevole.value = false
     isAdmin.value = false
+    isProf.value = false
   }
 }
 
@@ -274,6 +291,7 @@ const updateAuthState = async (session) => {
     loadProfile(session.user.id)
   } else {
     isAdmin.value = false
+    isProf.value = false
     isBenevole.value = false
     avatarUrl.value = ''
     userInitiales.value = ''
@@ -289,6 +307,7 @@ const handleLogout = async () => {
   }
   isLoggedIn.value = false
   isAdmin.value = false
+  isProf.value = false
   isBenevole.value = false
   dropdownOpen.value = false
   router.push('/')

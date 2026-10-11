@@ -1,7 +1,7 @@
 <template>
   <div>
     <PageIntro eyebrow="Données personnelles" title="Politique de confidentialité"
-      text="Dernière mise à jour : 10 octobre 2026." />
+      text="Dernière mise à jour : 11 octobre 2026." />
 
     <!-- Content -->
     <div class="max-w-4xl mx-auto px-4 py-12">
@@ -54,6 +54,10 @@
               <p class="text-gray-600 text-sm">Messages échangés via le chat en ligne avec l'imam, ainsi que l'email ou le nom si vous choisissez de les donner. Le chat est fourni par Crisp (société française), qui héberge les conversations dans l'Union Européenne.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-semibold text-gray-800 mb-2">Suivi des élèves des cours</h3>
+              <p class="text-gray-600 text-sm">Pour les élèves inscrits aux cours de la mosquée, le professeur enregistre : le nom de l'élève, ses présences, absences et retards, une appréciation de son comportement, ses notes et d'éventuelles observations ou appréciations. Ces informations ne sont visibles que par le professeur de la classe et l'administration de la mosquée ; elles ne sont jamais publiées. Les élèves n'ont pas de compte : l'élève ou, s'il est mineur, ses parents peuvent demander à les consulter, les corriger ou les faire effacer à l'adresse indiquée plus bas.</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800 mb-2">Notifications</h3>
               <p class="text-gray-600 text-sm">Si vous activez les notifications (actualités, cours, projets), nous enregistrons l'adresse technique fournie par votre navigateur (Google, Apple ou Mozilla) pour vous les envoyer. Aucune donnée personnelle n'y est associée. Vous pouvez vous désabonner à tout moment depuis l'accueil, la page Actualités ou « Mon profil ».</p>
             </div>
@@ -94,11 +98,15 @@
             </li>
             <li class="flex items-start gap-3">
               <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
-              <span class="text-gray-700">Organisation des cours religieux et suivi de votre progression</span>
+              <span class="text-gray-700">Organisation des cours religieux, suivi de votre progression et suivi pédagogique des élèves (présence, comportement, notes)</span>
             </li>
             <li class="flex items-start gap-3">
               <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
               <span class="text-gray-700">Envoi des notifications (actualités, cours, projets), uniquement si vous les activez</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
+              <span class="text-gray-700">Envoi d'e-mails d'information de la mosquée aux personnes qui ont un compte (annonces importantes), sauf si vous les refusez : case dans « Mon profil » ou lien « Se désinscrire » en bas de chaque e-mail</span>
             </li>
             <li class="flex items-start gap-3">
               <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
@@ -138,7 +146,11 @@
                   <td class="p-4 text-gray-700">Cookie de consentement</td>
                   <td class="p-4 text-gray-600">13 mois maximum (norme CNIL)</td>
                 </tr>
-                <tr class="bg-gray-50">
+                <tr class="border-b border-gray-100 bg-gray-50">
+                  <td class="p-4 text-gray-700">Suivi des élèves (présences, retards, comportement, notes, appréciations)</td>
+                  <td class="p-4 text-gray-600">Jusqu'à ce que le professeur ou l'administration retire l'élève ou supprime la classe ; effacé sur simple demande</td>
+                </tr>
+                <tr>
                   <td class="p-4 text-gray-700">Données de compte, demandes de bénévolat et progression dans les cours</td>
                   <td class="p-4 text-gray-600">Jusqu'à la suppression de votre compte, puis effacement immédiat (la progression est aussi effacée si vous désactivez le suivi)</td>
                 </tr>
@@ -169,7 +181,7 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">Resend</h3>
-              <p class="text-gray-600 text-sm mt-1">Envoi des emails du site (confirmation d'inscription, mot de passe oublié, changement d'adresse). Votre adresse email lui est transmise pour l'envoi. Société américaine : des données peuvent être traitées aux États-Unis.</p>
+              <p class="text-gray-600 text-sm mt-1">Envoi des emails du site (confirmation d'inscription, mot de passe oublié, changement d'adresse) et des e-mails d'information de la mosquée. Votre adresse email lui est transmise pour l'envoi. Société américaine : des données peuvent être traitées aux États-Unis.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">YouTube (Google)</h3>
@@ -214,7 +226,7 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit d'opposition</h3>
-              <p class="text-gray-600 text-xs mt-1">Refuser le suivi de votre progression dans les cours (« Mon profil »), les cookies et les notifications</p>
+              <p class="text-gray-600 text-xs mt-1">Refuser le suivi de votre progression dans les cours et les e-mails d'information de la mosquée (« Mon profil »), les cookies et les notifications</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit de retrait du consentement</h3>

@@ -755,3 +755,236 @@ LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
   RETURNING caracteres;
 $$;
 REVOKE ALL ON FUNCTION compter_traduction(INTEGER) FROM PUBLIC, anon, authenticated;
+
+
+-- ============================================================
+-- ESPACE PROFESSEUR (façon Pronote) : classes, élèves, feuille d'appel, devoirs et notes (2026-10-11)
+-- Le rôle « professeur » se donne dans l'admin (onglet Gestion), comme le rôle admin :
+-- c'est une ligne de la table benevoles (role = 'professeur', statut = 'accepté').
+-- Le professeur écrit lui-même le nom de ses élèves (les élèves n'ont pas de compte).
+-- Un professeur ne voit et ne modifie que SES classes ; l'administration voit tout.
+-- (Fonction nommée est_professeur : l'ancien is_professeur() est supprimé plus haut.)
+-- ============================================================
+CREATE OR REPLACE FUNCTION est_professeur() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM benevoles b
+    WHERE lower(b.email) = lower(COALESCE(
+      auth.jwt()->>'email',
+      (SELECT u.email FROM auth.users u WHERE u.id = auth.uid())
+    ))
+    AND b.role IN ('professeur', 'admin', 'superadmin')
+    AND b.statut = 'accepté'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public;
+
+CREATE TABLE IF NOT EXISTS classes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nom TEXT NOT NULL,
+  -- Si le compte du professeur est supprimé, la classe reste (visible de l'administration)
+  professeur_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE classes DROP CONSTRAINT IF EXISTS classe_nom_max;
+ALTER TABLE classes ADD CONSTRAINT classe_nom_max CHECK (length(nom) BETWEEN 1 AND 100);
+CREATE INDEX IF NOT EXISTS idx_classes_professeur ON classes (professeur_id);
+
+CREATE TABLE IF NOT EXISTS eleves (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  classe_id UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+  nom TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE eleves DROP CONSTRAINT IF EXISTS eleve_nom_max;
+ALTER TABLE eleves ADD CONSTRAINT eleve_nom_max CHECK (length(nom) BETWEEN 1 AND 150);
+CREATE INDEX IF NOT EXISTS idx_eleves_classe ON eleves (classe_id);
+
+-- Appréciation générale du professeur sur l'élève (colonne « Appréciation » du récapitulatif)
+ALTER TABLE eleves ADD COLUMN IF NOT EXISTS appreciation TEXT;
+ALTER TABLE eleves DROP CONSTRAINT IF EXISTS eleve_appreciation_max;
+ALTER TABLE eleves ADD CONSTRAINT eleve_appreciation_max CHECK (length(appreciation) <= 1000);
+
+-- La feuille d'appel : une ligne par élève et par jour (présence, retard, comportement, observation)
+CREATE TABLE IF NOT EXISTS suivi_eleves (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  eleve_id UUID NOT NULL REFERENCES eleves(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  present BOOLEAN NOT NULL,
+  comportement SMALLINT,              -- 1 = mauvais, 2 = bon, 3 = très bon (vide si non noté)
+  remarque TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (eleve_id, date)
+);
+ALTER TABLE suivi_eleves ADD COLUMN IF NOT EXISTS retard BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE suivi_eleves DROP CONSTRAINT IF EXISTS suivi_comportement;
+ALTER TABLE suivi_eleves ADD CONSTRAINT suivi_comportement CHECK (comportement IS NULL OR comportement BETWEEN 1 AND 3);
+ALTER TABLE suivi_eleves DROP CONSTRAINT IF EXISTS suivi_remarque_max;
+ALTER TABLE suivi_eleves ADD CONSTRAINT suivi_remarque_max CHECK (length(remarque) <= 1000);
+-- Un élève absent n'est ni « en retard » ni noté sur son comportement
+ALTER TABLE suivi_eleves DROP CONSTRAINT IF EXISTS suivi_absent;
+ALTER TABLE suivi_eleves ADD CONSTRAINT suivi_absent CHECK (present OR (NOT retard AND comportement IS NULL));
+
+-- Les devoirs (colonnes du tableau de notes) : intitulé, date, barème et coefficient
+CREATE TABLE IF NOT EXISTS evaluations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  classe_id UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+  intitule TEXT NOT NULL,             -- ex. « Récitation sourate Al-Mulk »
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  sur NUMERIC(5,2) NOT NULL DEFAULT 20,
+  coefficient NUMERIC(4,2) NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE evaluations DROP CONSTRAINT IF EXISTS evaluation_valeurs;
+ALTER TABLE evaluations ADD CONSTRAINT evaluation_valeurs CHECK (
+  length(intitule) BETWEEN 1 AND 200 AND sur > 0 AND sur <= 100 AND coefficient > 0 AND coefficient <= 20
+);
+CREATE INDEX IF NOT EXISTS idx_evaluations_classe ON evaluations (classe_id, date);
+
+-- Première version du jour (une note = une ligne avec son intitulé), jamais mise en ligne
+-- sur le site : remplacée par « un devoir + une note par élève ».
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'notes_eleves' AND column_name = 'intitule') THEN
+    DROP TABLE public.notes_eleves CASCADE;
+  END IF;
+END $$;
+
+-- Les notes : une case du tableau = un élève pour un devoir
+CREATE TABLE IF NOT EXISTS notes_eleves (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  evaluation_id UUID NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
+  eleve_id UUID NOT NULL REFERENCES eleves(id) ON DELETE CASCADE,
+  note NUMERIC(5,2) NOT NULL,
+  remarque TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (evaluation_id, eleve_id)
+);
+ALTER TABLE notes_eleves DROP CONSTRAINT IF EXISTS note_valeurs;
+ALTER TABLE notes_eleves ADD CONSTRAINT note_valeurs CHECK (note >= 0 AND length(coalesce(remarque, '')) <= 1000);
+CREATE INDEX IF NOT EXISTS idx_notes_eleve ON notes_eleves (eleve_id);
+
+-- Une note ne dépasse pas le barème du devoir, et l'élève doit être dans la classe du devoir
+CREATE OR REPLACE FUNCTION verifier_note() RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_sur NUMERIC;
+  v_classe UUID;
+BEGIN
+  SELECT sur, classe_id INTO v_sur, v_classe FROM evaluations WHERE id = NEW.evaluation_id;
+  IF NEW.note > v_sur THEN
+    RAISE EXCEPTION 'La note dépasse le barème du devoir (%)', v_sur;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM eleves WHERE id = NEW.eleve_id AND classe_id = v_classe) THEN
+    RAISE EXCEPTION 'Cet élève n''est pas dans la classe du devoir';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS verifier_note ON notes_eleves;
+CREATE TRIGGER verifier_note BEFORE INSERT OR UPDATE ON notes_eleves
+  FOR EACH ROW EXECUTE FUNCTION verifier_note();
+
+-- « Ai-je le droit de toucher à cette classe / à cet élève ? » (sa classe, ou administration)
+CREATE OR REPLACE FUNCTION classe_accessible(p_classe UUID) RETURNS BOOLEAN AS $$
+  SELECT is_admin_or_superadmin() OR (est_professeur() AND EXISTS (
+    SELECT 1 FROM classes c WHERE c.id = p_classe AND c.professeur_id = auth.uid()
+  ));
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public;
+
+CREATE OR REPLACE FUNCTION eleve_accessible(p_eleve UUID) RETURNS BOOLEAN AS $$
+  SELECT EXISTS (SELECT 1 FROM eleves e WHERE e.id = p_eleve AND classe_accessible(e.classe_id));
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public;
+
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "classe_select" ON classes;
+DROP POLICY IF EXISTS "classe_insert" ON classes;
+DROP POLICY IF EXISTS "classe_update" ON classes;
+DROP POLICY IF EXISTS "classe_delete" ON classes;
+CREATE POLICY "classe_select" ON classes FOR SELECT TO authenticated USING (
+  is_admin_or_superadmin() OR (est_professeur() AND professeur_id = auth.uid())
+);
+CREATE POLICY "classe_insert" ON classes FOR INSERT TO authenticated WITH CHECK (
+  est_professeur() AND professeur_id = auth.uid()
+);
+CREATE POLICY "classe_update" ON classes FOR UPDATE TO authenticated
+  USING (is_admin_or_superadmin() OR (est_professeur() AND professeur_id = auth.uid()))
+  WITH CHECK (is_admin_or_superadmin() OR (est_professeur() AND professeur_id = auth.uid()));
+CREATE POLICY "classe_delete" ON classes FOR DELETE TO authenticated USING (
+  is_admin_or_superadmin() OR (est_professeur() AND professeur_id = auth.uid())
+);
+
+ALTER TABLE eleves ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "eleve_tout" ON eleves;
+CREATE POLICY "eleve_tout" ON eleves FOR ALL TO authenticated
+  USING (classe_accessible(classe_id)) WITH CHECK (classe_accessible(classe_id));
+
+ALTER TABLE suivi_eleves ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "suivi_tout" ON suivi_eleves;
+CREATE POLICY "suivi_tout" ON suivi_eleves FOR ALL TO authenticated
+  USING (eleve_accessible(eleve_id)) WITH CHECK (eleve_accessible(eleve_id));
+
+ALTER TABLE evaluations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "evaluation_tout" ON evaluations;
+CREATE POLICY "evaluation_tout" ON evaluations FOR ALL TO authenticated
+  USING (classe_accessible(classe_id)) WITH CHECK (classe_accessible(classe_id));
+
+ALTER TABLE notes_eleves ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "note_tout" ON notes_eleves;
+CREATE POLICY "note_tout" ON notes_eleves FOR ALL TO authenticated
+  USING (eleve_accessible(eleve_id)) WITH CHECK (eleve_accessible(eleve_id));
+
+
+-- ============================================================
+-- E-MAILS DE LA MOSQUÉE (admin → onglet « E-mails ») (2026-10-11)
+-- L'admin écrit un message et l'envoie à tous les inscrits ou à ceux qu'il choisit.
+-- Chaque personne peut refuser ces e-mails : case dans « Mon profil », ou lien
+-- « Se désinscrire » en bas de chaque e-mail (un clic, sans se connecter).
+-- L'envoi passe par la fonction serveur /api/envoyer-email (service Resend).
+-- ============================================================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS emails_mosquee BOOLEAN NOT NULL DEFAULT TRUE;
+-- Jeton secret du lien « Se désinscrire » (impossible à deviner)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS jeton_emails UUID NOT NULL DEFAULT gen_random_uuid();
+
+-- Liste des comptes pour l'admin : adresse confirmée, nom, et s'ils acceptent les e-mails.
+-- Les adresses sont dans auth.users, illisible depuis le site : d'où cette fonction, réservée aux admins.
+CREATE OR REPLACE FUNCTION destinataires_emails() RETURNS TABLE (id UUID, email TEXT, prenom TEXT, nom TEXT, accepte BOOLEAN, jeton UUID)
+LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public AS $$
+BEGIN
+  IF NOT is_admin_or_superadmin() THEN
+    RAISE EXCEPTION 'Réservé aux administrateurs';
+  END IF;
+  RETURN QUERY
+    SELECT u.id, u.email::TEXT, p.prenom, p.nom, COALESCE(p.emails_mosquee, TRUE), p.jeton_emails
+    FROM auth.users u LEFT JOIN profiles p ON p.id = u.id
+    WHERE u.email IS NOT NULL AND u.email_confirmed_at IS NOT NULL
+    ORDER BY lower(COALESCE(p.prenom, '')), lower(u.email);
+END;
+$$;
+REVOKE ALL ON FUNCTION destinataires_emails() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION destinataires_emails() TO authenticated;
+
+-- Lien « Se désinscrire » : fonctionne sans être connecté, grâce au jeton
+CREATE OR REPLACE FUNCTION se_desinscrire_emails(p_jeton UUID) RETURNS BOOLEAN
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  UPDATE profiles SET emails_mosquee = FALSE WHERE jeton_emails = p_jeton;
+  RETURN FOUND;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION se_desinscrire_emails(UUID) TO anon, authenticated;
+
+-- Journal des envois (qui a envoyé quoi, à combien de personnes) : visible des admins seulement
+CREATE TABLE IF NOT EXISTS emails_envoyes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sujet TEXT NOT NULL,
+  message TEXT NOT NULL,
+  destinataires INTEGER NOT NULL,
+  envoye_par UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE emails_envoyes DROP CONSTRAINT IF EXISTS email_textes_max;
+ALTER TABLE emails_envoyes ADD CONSTRAINT email_textes_max CHECK (length(sujet) BETWEEN 1 AND 150 AND length(message) BETWEEN 1 AND 5000);
+ALTER TABLE emails_envoyes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "email_select" ON emails_envoyes;
+DROP POLICY IF EXISTS "email_insert" ON emails_envoyes;
+CREATE POLICY "email_select" ON emails_envoyes FOR SELECT TO authenticated USING (is_admin_or_superadmin());
+CREATE POLICY "email_insert" ON emails_envoyes FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin() AND envoye_par = auth.uid());

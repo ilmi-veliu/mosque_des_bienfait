@@ -53,9 +53,11 @@ const routes = [
     redirect: '/cours'
   },
   {
-    // Espace professeur (correction des récitations) supprimé
+    // Espace professeur : classes, appel, comportement et notes des élèves (accès vérifié dans la page et par la base)
     path: '/espace-professeur',
-    redirect: '/cours'
+    name: 'EspaceProfesseur',
+    component: () => import('./pages/EspaceProfesseur.vue'),
+    meta: { requiresAuth: true, hideFooter: true, title: 'Espace professeur | Mosquée des Bienfaisants' }
   },
   {
     path: '/cours',
@@ -120,6 +122,13 @@ const routes = [
     name: 'MonProfil',
     component: () => import('./pages/MonProfil.vue'),
     meta: { requiresAuth: true, title: 'Mon Profil | Mosquée des Bienfaisants' }
+  },
+  {
+    // Lien « Se désinscrire » en bas des e-mails de la mosquée (fonctionne sans être connecté)
+    path: '/desinscription',
+    name: 'Desinscription',
+    component: () => import('./pages/Desinscription.vue'),
+    meta: { title: 'Désinscription des e-mails | Mosquée des Bienfaisants' }
   },
   {
     // Toute autre adresse : page « introuvable »
