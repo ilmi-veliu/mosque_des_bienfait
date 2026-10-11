@@ -934,57 +934,11 @@ CREATE POLICY "note_tout" ON notes_eleves FOR ALL TO authenticated
 
 
 -- ============================================================
--- E-MAILS DE LA MOSQUÉE (admin → onglet « E-mails ») (2026-10-11)
--- L'admin écrit un message et l'envoie à tous les inscrits ou à ceux qu'il choisit.
--- Chaque personne peut refuser ces e-mails : case dans « Mon profil », ou lien
--- « Se désinscrire » en bas de chaque e-mail (un clic, sans se connecter).
--- L'envoi passe par la fonction serveur /api/envoyer-email (service Resend).
+-- E-MAILS DE LA MOSQUÉE : outil retiré le jour même (2026-10-11), remis à plus tard.
+-- Tout ce qu'il avait créé dans la base est supprimé. Relançable sans erreur.
 -- ============================================================
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS emails_mosquee BOOLEAN NOT NULL DEFAULT TRUE;
--- Jeton secret du lien « Se désinscrire » (impossible à deviner)
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS jeton_emails UUID NOT NULL DEFAULT gen_random_uuid();
-
--- Liste des comptes pour l'admin : adresse confirmée, nom, et s'ils acceptent les e-mails.
--- Les adresses sont dans auth.users, illisible depuis le site : d'où cette fonction, réservée aux admins.
-CREATE OR REPLACE FUNCTION destinataires_emails() RETURNS TABLE (id UUID, email TEXT, prenom TEXT, nom TEXT, accepte BOOLEAN, jeton UUID)
-LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public AS $$
-BEGIN
-  IF NOT is_admin_or_superadmin() THEN
-    RAISE EXCEPTION 'Réservé aux administrateurs';
-  END IF;
-  RETURN QUERY
-    SELECT u.id, u.email::TEXT, p.prenom, p.nom, COALESCE(p.emails_mosquee, TRUE), p.jeton_emails
-    FROM auth.users u LEFT JOIN profiles p ON p.id = u.id
-    WHERE u.email IS NOT NULL AND u.email_confirmed_at IS NOT NULL
-    ORDER BY lower(COALESCE(p.prenom, '')), lower(u.email);
-END;
-$$;
-REVOKE ALL ON FUNCTION destinataires_emails() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION destinataires_emails() TO authenticated;
-
--- Lien « Se désinscrire » : fonctionne sans être connecté, grâce au jeton
-CREATE OR REPLACE FUNCTION se_desinscrire_emails(p_jeton UUID) RETURNS BOOLEAN
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-BEGIN
-  UPDATE profiles SET emails_mosquee = FALSE WHERE jeton_emails = p_jeton;
-  RETURN FOUND;
-END;
-$$;
-GRANT EXECUTE ON FUNCTION se_desinscrire_emails(UUID) TO anon, authenticated;
-
--- Journal des envois (qui a envoyé quoi, à combien de personnes) : visible des admins seulement
-CREATE TABLE IF NOT EXISTS emails_envoyes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sujet TEXT NOT NULL,
-  message TEXT NOT NULL,
-  destinataires INTEGER NOT NULL,
-  envoye_par UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-ALTER TABLE emails_envoyes DROP CONSTRAINT IF EXISTS email_textes_max;
-ALTER TABLE emails_envoyes ADD CONSTRAINT email_textes_max CHECK (length(sujet) BETWEEN 1 AND 150 AND length(message) BETWEEN 1 AND 5000);
-ALTER TABLE emails_envoyes ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "email_select" ON emails_envoyes;
-DROP POLICY IF EXISTS "email_insert" ON emails_envoyes;
-CREATE POLICY "email_select" ON emails_envoyes FOR SELECT TO authenticated USING (is_admin_or_superadmin());
-CREATE POLICY "email_insert" ON emails_envoyes FOR INSERT TO authenticated WITH CHECK (is_admin_or_superadmin() AND envoye_par = auth.uid());
+DROP FUNCTION IF EXISTS destinataires_emails();
+DROP FUNCTION IF EXISTS se_desinscrire_emails(UUID);
+DROP TABLE IF EXISTS emails_envoyes;
+ALTER TABLE profiles DROP COLUMN IF EXISTS emails_mosquee;
+ALTER TABLE profiles DROP COLUMN IF EXISTS jeton_emails;

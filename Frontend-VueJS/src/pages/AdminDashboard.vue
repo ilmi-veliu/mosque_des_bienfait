@@ -60,14 +60,6 @@
           <BookOpen :size="18" />
           Cours
         </button>
-        <button
-          @click="activeTab = 'emails'; chargerDestinataires()"
-          :class="activeTab === 'emails' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
-          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
-        >
-          <Mail :size="18" />
-          E-mails
-        </button>
         <!-- Classes et élèves : tous les admins voient l'espace professeur (toutes les classes) -->
         <router-link to="/espace-professeur"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap">
@@ -544,81 +536,6 @@
 
     </div>
 
-      <!-- E-MAILS : écrire aux inscrits (tous, ou ceux qu'on choisit) -->
-      <div v-if="activeTab === 'emails'" class="max-w-3xl">
-        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Envoyer un e-mail</h2>
-        <p class="text-sm text-gray-500 mb-6">Le message part aux personnes qui ont un compte sur le site. Celles qui ont refusé les e-mails de la mosquée ne le reçoivent jamais. Chaque e-mail contient un lien pour se désinscrire.</p>
-
-        <div class="bg-card rounded-xl border p-4 sm:p-6 space-y-5">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Sujet</label>
-            <input v-model="emailForm.sujet" maxlength="150" placeholder="Ex. Collecte alimentaire ce samedi"
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-            <textarea v-model="emailForm.message" rows="9" maxlength="5000" placeholder="Écrivez votre message. Laissez une ligne vide entre deux paragraphes."
-              class="w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm"></textarea>
-            <p class="mt-1 text-xs text-gray-400">{{ emailForm.message.length }} / 5000 caractères</p>
-          </div>
-
-          <div>
-            <p class="text-sm font-medium text-gray-700 mb-2">Destinataires</p>
-            <div v-if="destinatairesLoading" class="text-sm text-gray-500">Chargement des inscrits…</div>
-            <p v-else-if="destinatairesErreur" class="text-sm text-red-600">{{ destinatairesErreur }}</p>
-            <template v-else>
-              <div class="flex flex-col sm:flex-row gap-2">
-                <label class="flex-1 flex items-center gap-2 border rounded-xl px-4 py-2.5 text-sm cursor-pointer" :class="emailForm.mode === 'tous' ? 'border-accent-600 bg-accent-50' : ''">
-                  <input type="radio" value="tous" v-model="emailForm.mode" class="accent-accent-600" />
-                  Tout le monde ({{ destinatairesJoignables.length }})
-                </label>
-                <label class="flex-1 flex items-center gap-2 border rounded-xl px-4 py-2.5 text-sm cursor-pointer" :class="emailForm.mode === 'choix' ? 'border-accent-600 bg-accent-50' : ''">
-                  <input type="radio" value="choix" v-model="emailForm.mode" class="accent-accent-600" />
-                  Seulement les personnes que je choisis
-                </label>
-              </div>
-              <p v-if="destinatairesRefus" class="mt-2 text-xs text-gray-400">{{ destinatairesRefus }} personne{{ destinatairesRefus > 1 ? 's ont' : ' a' }} refusé les e-mails et ne {{ destinatairesRefus > 1 ? 'sont' : 'est' }} pas contactée{{ destinatairesRefus > 1 ? 's' : '' }}.</p>
-
-              <div v-if="emailForm.mode === 'choix'" class="mt-3">
-                <div class="relative">
-                  <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input v-model="emailRecherche" type="text" placeholder="Rechercher un nom ou une adresse…"
-                    class="w-full pl-9 pr-4 py-2 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm" />
-                </div>
-                <div class="mt-2 max-h-72 overflow-y-auto border rounded-xl divide-y">
-                  <label v-for="d in destinatairesFiltres" :key="d.id" class="flex items-center gap-3 px-4 py-2.5 text-sm" :class="d.accepte ? 'cursor-pointer hover:bg-gray-50' : 'opacity-50'">
-                    <input type="checkbox" :value="d.id" v-model="emailForm.choisis" :disabled="!d.accepte" class="w-4 h-4 accent-accent-600" />
-                    <span class="flex-1 min-w-0">
-                      <span class="font-medium text-gray-800">{{ [d.prenom, d.nom].filter(Boolean).join(' ') || 'Sans nom' }}</span>
-                      <span class="block text-xs text-gray-400 truncate">{{ d.email }}</span>
-                    </span>
-                    <span v-if="!d.accepte" class="text-xs text-gray-400">a refusé les e-mails</span>
-                  </label>
-                  <p v-if="!destinatairesFiltres.length" class="px-4 py-3 text-sm text-gray-500">Aucun résultat.</p>
-                </div>
-                <p class="mt-2 text-xs text-gray-500">{{ emailForm.choisis.length }} personne{{ emailForm.choisis.length > 1 ? 's' : '' }} choisie{{ emailForm.choisis.length > 1 ? 's' : '' }}</p>
-              </div>
-            </template>
-          </div>
-
-          <p v-if="emailResultat" class="text-sm px-4 py-3 rounded-xl" :class="emailErreur ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-accent-50 text-accent-800 border border-accent-200'">{{ emailResultat }}</p>
-          <button @click="envoyerEmail" :disabled="emailEnvoi || !emailPret"
-            class="bg-ink text-paper px-6 py-3 rounded-xl font-medium hover:bg-accent-600 transition-colors disabled:opacity-40 flex items-center gap-2">
-            <Send :size="16" /> {{ emailEnvoi ? 'Envoi en cours…' : `Envoyer à ${emailNombre} personne${emailNombre > 1 ? 's' : ''}` }}
-          </button>
-        </div>
-
-        <div v-if="emailsEnvoyes.length" class="mt-8">
-          <h3 class="font-semibold text-gray-800 mb-3">Derniers envois</h3>
-          <div class="space-y-2">
-            <div v-for="e in emailsEnvoyes" :key="e.id" class="bg-card rounded-xl border px-4 py-3 text-sm">
-              <p class="font-medium text-gray-800">{{ e.sujet }}</p>
-              <p class="text-xs text-gray-400">{{ new Date(e.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }} · {{ e.destinataires }} destinataire{{ e.destinataires > 1 ? 's' : '' }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- GESTION DES BÉNÉVOLES (Super Admin only) -->
       <div v-if="activeTab === 'gestion' && isSuperAdmin">
         <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion des bénévoles</h2>
@@ -827,7 +744,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, Newspaper, HandCoins, CalendarDays, ClipboardPaste, Film, GraduationCap, Mail, Send } from 'lucide-vue-next'
+import { Shield, LogOut, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, Newspaper, HandCoins, CalendarDays, ClipboardPaste, Film, GraduationCap } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import EnregistreurAudio from '../composants/EnregistreurAudio.vue'
 import ChoixDate from '../composants/ChoixDate.vue'
@@ -970,66 +887,6 @@ const envoyerNotification = async (type, id) => {
     notifErreur.value = true
     notifMessage.value = `La notification n'a pas pu partir : ${e.message || 'erreur réseau'}.`
   }
-}
-
-// ─── E-mails aux inscrits (voir api/envoyer-email.js) ───
-const destinataires = ref([])
-const destinatairesLoading = ref(false)
-const destinatairesErreur = ref('')
-const emailsEnvoyes = ref([])
-const emailForm = ref({ sujet: '', message: '', mode: 'tous', choisis: [] })
-const emailRecherche = ref('')
-const emailEnvoi = ref(false)
-const emailResultat = ref('')
-const emailErreur = ref(false)
-
-const chargerDestinataires = async () => {
-  destinatairesLoading.value = true
-  destinatairesErreur.value = ''
-  const [liste, journal] = await Promise.all([
-    supabase.rpc('destinataires_emails'),
-    supabase.from('emails_envoyes').select('id, sujet, destinataires, created_at').order('created_at', { ascending: false }).limit(10),
-  ])
-  if (liste.error) destinatairesErreur.value = 'La liste des inscrits n\'a pas pu être chargée.'
-  destinataires.value = liste.data || []
-  emailsEnvoyes.value = journal.data || []
-  destinatairesLoading.value = false
-}
-const destinatairesJoignables = computed(() => destinataires.value.filter(d => d.accepte))
-const destinatairesRefus = computed(() => destinataires.value.length - destinatairesJoignables.value.length)
-const destinatairesFiltres = computed(() => {
-  const q = emailRecherche.value.trim().toLowerCase()
-  if (!q) return destinataires.value
-  return destinataires.value.filter(d => `${d.prenom || ''} ${d.nom || ''} ${d.email}`.toLowerCase().includes(q))
-})
-const emailNombre = computed(() => emailForm.value.mode === 'tous' ? destinatairesJoignables.value.length : emailForm.value.choisis.length)
-const emailPret = computed(() => emailForm.value.sujet.trim() && emailForm.value.message.trim() && emailNombre.value > 0)
-
-const envoyerEmail = async () => {
-  const f = emailForm.value
-  if (!confirm(`Envoyer « ${f.sujet.trim()} » à ${emailNombre.value} personne${emailNombre.value > 1 ? 's' : ''} ? Un e-mail envoyé ne peut pas être rattrapé.`)) return
-  emailEnvoi.value = true
-  emailErreur.value = false
-  emailResultat.value = ''
-  try {
-    const { data: { session } } = await supabase.auth.getSession()
-    const r = await fetch('/api/envoyer-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ sujet: f.sujet, message: f.message, destinataires: f.mode === 'tous' ? 'tous' : f.choisis }),
-    })
-    const rep = await r.json()
-    if (!r.ok) throw new Error(rep.erreur)
-    emailResultat.value = rep.envoyes === rep.total
-      ? `E-mail envoyé à ${rep.envoyes} personne${rep.envoyes > 1 ? 's' : ''}.`
-      : `E-mail envoyé à ${rep.envoyes} personne${rep.envoyes > 1 ? 's' : ''} sur ${rep.total} : une partie de l'envoi a échoué.`
-    emailForm.value = { sujet: '', message: '', mode: 'tous', choisis: [] }
-    chargerDestinataires()
-  } catch (e) {
-    emailErreur.value = true
-    emailResultat.value = `L'e-mail n'est pas parti : ${e.message || 'erreur réseau'}.`
-  }
-  emailEnvoi.value = false
 }
 
 const notifierUnCours = async (c) => {

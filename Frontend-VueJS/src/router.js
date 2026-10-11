@@ -124,13 +124,6 @@ const routes = [
     meta: { requiresAuth: true, title: 'Mon Profil | Mosquée des Bienfaisants' }
   },
   {
-    // Lien « Se désinscrire » en bas des e-mails de la mosquée (fonctionne sans être connecté)
-    path: '/desinscription',
-    name: 'Desinscription',
-    component: () => import('./pages/Desinscription.vue'),
-    meta: { title: 'Désinscription des e-mails | Mosquée des Bienfaisants' }
-  },
-  {
     // Toute autre adresse : page « introuvable »
     path: '/:pathMatch(.*)*',
     name: 'PageIntrouvable',

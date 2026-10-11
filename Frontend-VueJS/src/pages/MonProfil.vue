@@ -167,11 +167,6 @@
               <span class="text-gray-700">Cookies du chat (Crisp) : <strong>{{ consentement === 'accepted' ? 'acceptés' : consentement === 'refused' ? 'refusés' : 'pas encore choisi' }}</strong></span>
               <button @click="gererCookies" class="rounded-xl border px-4 py-2 text-sm hover:bg-gray-50">Modifier mon choix</button>
             </div>
-            <label class="mt-4 flex items-start gap-3 text-sm text-gray-700">
-              <input type="checkbox" :checked="emailsMosquee" @change="changerEmails($event.target.checked)" class="mt-0.5 w-4 h-4 accent-accent-600" />
-              <span>Recevoir les e-mails d'information de la mosquée.
-                <span class="block text-gray-500">Annonces importantes envoyées par l'administration. Vous pouvez aussi vous désinscrire par le lien en bas de chaque e-mail.</span></span>
-            </label>
             <BoutonNotifications class="mt-4" />
           </div>
         </div>
@@ -332,13 +327,6 @@ const changerEmail = async () => {
 }
 
 // --- Opposition : suivi des cours ---
-// Opposition : e-mails d'information de la mosquée
-const emailsMosquee = ref(true)
-const changerEmails = async (actif) => {
-  emailsMosquee.value = actif
-  await supabase.from('profiles').upsert({ id: userId.value, emails_mosquee: actif }, { onConflict: 'id' })
-}
-
 const suiviCours = ref(true)
 const changerSuivi = async (actif) => {
   suiviCours.value = actif
@@ -440,7 +428,6 @@ onMounted(async () => {
   if (data) {
     userSexe.value = data.sexe || null
     suiviCours.value = data.suivi_cours !== false
-    emailsMosquee.value = data.emails_mosquee !== false
     form.value = {
       prenom: data.prenom || '',
       nom: data.nom || '',

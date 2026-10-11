@@ -106,10 +106,6 @@
             </li>
             <li class="flex items-start gap-3">
               <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
-              <span class="text-gray-700">Envoi d'e-mails d'information de la mosquée aux personnes qui ont un compte (annonces importantes), sauf si vous les refusez : case dans « Mon profil » ou lien « Se désinscrire » en bas de chaque e-mail</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <div class="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
               <span class="text-gray-700">Amélioration de l'expérience utilisateur sur le site</span>
             </li>
           </ul>
@@ -181,7 +177,7 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">Resend</h3>
-              <p class="text-gray-600 text-sm mt-1">Envoi des emails du site (confirmation d'inscription, mot de passe oublié, changement d'adresse) et des e-mails d'information de la mosquée. Votre adresse email lui est transmise pour l'envoi. Société américaine : des données peuvent être traitées aux États-Unis.</p>
+              <p class="text-gray-600 text-sm mt-1">Envoi des emails du site (confirmation d'inscription, mot de passe oublié, changement d'adresse). Votre adresse email lui est transmise pour l'envoi. Société américaine : des données peuvent être traitées aux États-Unis.</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-6">
               <h3 class="font-semibold text-gray-800">YouTube (Google)</h3>
@@ -226,7 +222,7 @@
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit d'opposition</h3>
-              <p class="text-gray-600 text-xs mt-1">Refuser le suivi de votre progression dans les cours et les e-mails d'information de la mosquée (« Mon profil »), les cookies et les notifications</p>
+              <p class="text-gray-600 text-xs mt-1">Refuser le suivi de votre progression dans les cours (« Mon profil »), les cookies et les notifications</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-5">
               <h3 class="font-semibold text-gray-800 text-sm">Droit de retrait du consentement</h3>
