@@ -60,6 +60,14 @@
           <BookOpen :size="18" />
           Cours
         </button>
+        <button
+          @click="activeTab = 'utilisateurs'; chargerUtilisateurs()"
+          :class="activeTab === 'utilisateurs' ? 'border-accent-600 text-accent-700' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+        >
+          <Users :size="18" />
+          Utilisateurs
+        </button>
         <!-- Classes et élèves : tous les admins voient l'espace professeur (toutes les classes) -->
         <router-link to="/espace-professeur"
           class="flex-1 sm:flex-none px-4 sm:px-6 py-4 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap">
@@ -536,6 +544,70 @@
 
     </div>
 
+      <!-- UTILISATEURS : tous les comptes du site, et le rôle de chacun -->
+      <div v-if="activeTab === 'utilisateurs'">
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Utilisateurs</h2>
+            <p class="text-sm text-gray-500 mt-1">Tous les comptes créés sur le site. Choisissez le rôle de chacun : membre, bénévole, professeur{{ isSuperAdmin ? ' ou admin' : '' }}.</p>
+          </div>
+          <span class="text-sm text-gray-500">{{ utilisateurs.length }} compte{{ utilisateurs.length > 1 ? 's' : '' }}</span>
+        </div>
+        <div class="relative mb-4">
+          <Search :size="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input v-model="rechercheUtilisateur" type="text" placeholder="Rechercher par nom ou adresse e-mail…"
+            class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:border-accent-600 text-base sm:text-sm" />
+        </div>
+        <div class="flex flex-wrap gap-2 mb-4 text-xs">
+          <button v-for="f in FILTRES_ROLE" :key="f.cle" @click="filtreRole = f.cle"
+            class="px-3 py-1.5 rounded-lg border" :class="filtreRole === f.cle ? 'border-accent-600 bg-accent-50 text-accent-800' : 'text-gray-600 hover:bg-gray-50'">
+            {{ f.nom }} ({{ f.cle === 'tous' ? utilisateurs.length : utilisateurs.filter(u => u.role === f.cle || (f.cle === 'admin' && u.role === 'superadmin')).length }})
+          </button>
+        </div>
+        <p v-if="utilisateursMessage" class="mb-4 text-sm px-4 py-3 rounded-xl" :class="utilisateursErreur ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-accent-50 text-accent-800 border border-accent-200'">{{ utilisateursMessage }}</p>
+
+        <div v-if="utilisateursLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-accent-600"></div>
+        </div>
+        <div v-else-if="!utilisateursFiltres.length" class="text-center py-12 text-gray-500">Aucun compte trouvé.</div>
+        <div v-else class="bg-card rounded-xl border overflow-x-auto">
+          <table class="w-full min-w-[40rem] text-sm">
+            <thead>
+              <tr class="border-b text-left text-xs uppercase tracking-wide text-gray-500">
+                <th class="px-4 py-3 font-medium">Personne</th>
+                <th class="px-4 py-3 font-medium">Inscrit le</th>
+                <th class="px-4 py-3 font-medium">Dernière connexion</th>
+                <th class="px-4 py-3 font-medium">Rôle</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="u in utilisateursFiltres" :key="u.id" class="border-b last:border-b-0">
+                <td class="px-4 py-3">
+                  <p class="font-medium text-gray-800">{{ [u.prenom, u.nom].filter(Boolean).join(' ') || 'Sans nom' }}</p>
+                  <p class="text-xs text-gray-400">{{ u.email }}</p>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-gray-600">{{ dateCompte(u.cree_le) }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-gray-600">{{ u.derniere_connexion ? dateCompte(u.derniere_connexion) : 'Jamais' }}</td>
+                <td class="px-4 py-3">
+                  <span v-if="u.role === 'superadmin'" class="text-xs px-2.5 py-1 rounded-lg font-medium bg-amber-100 text-amber-700">Super admin</span>
+                  <span v-else-if="u.id === monIdAdmin" class="text-xs text-gray-400 italic">{{ LIBELLES_ROLE[u.role] }} (vous)</span>
+                  <span v-else-if="u.role === 'admin' && !isSuperAdmin" class="text-xs px-2.5 py-1 rounded-lg font-medium bg-purple-100 text-purple-700">Admin</span>
+                  <select v-else :value="u.role" @change="changerRole(u, $event)" :disabled="roleEnCours === u.id"
+                    class="text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:border-accent-600 disabled:opacity-50"
+                    :class="{ 'bg-purple-50 text-purple-800': u.role === 'admin', 'bg-accent-50 text-accent-800': u.role === 'professeur', 'bg-green-50 text-green-800': u.role === 'benevole' }">
+                    <option value="membre">Membre</option>
+                    <option value="benevole">Bénévole</option>
+                    <option value="professeur">Professeur</option>
+                    <option v-if="isSuperAdmin" value="admin">Admin</option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-3 text-xs text-gray-500">Membre : compte simple. Bénévole : accès à l'espace bénévole. Professeur : accès à l'espace professeur (ses classes). Admin : accès à toute l'administration{{ isSuperAdmin ? '' : ' (seul le super-admin peut le donner)' }}.</p>
+      </div>
+
       <!-- GESTION DES BÉNÉVOLES (Super Admin only) -->
       <div v-if="activeTab === 'gestion' && isSuperAdmin">
         <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Gestion des bénévoles</h2>
@@ -744,7 +816,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, LogOut, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, Newspaper, HandCoins, CalendarDays, ClipboardPaste, Film, GraduationCap } from 'lucide-vue-next'
+import { Shield, LogOut, BookOpen, HandHelping, Plus, Pencil, Trash2, X, Upload, Music, UserCheck, Crown, Search, Bell, Newspaper, HandCoins, CalendarDays, ClipboardPaste, Film, GraduationCap, Users } from 'lucide-vue-next'
 import { supabase } from '../supabase'
 import EnregistreurAudio from '../composants/EnregistreurAudio.vue'
 import ChoixDate from '../composants/ChoixDate.vue'
@@ -898,6 +970,56 @@ const envoyerNotification = async (type, id) => {
     notifErreur.value = true
     notifMessage.value = `La notification n'a pas pu partir : ${e.message || 'erreur réseau'}.`
   }
+}
+
+// ─── Utilisateurs : tous les comptes, et leur rôle (voir liste_utilisateurs / changer_role dans supabase.sql) ───
+const LIBELLES_ROLE = { membre: 'Membre', benevole: 'Bénévole', professeur: 'Professeur', admin: 'Admin', superadmin: 'Super admin' }
+const FILTRES_ROLE = [
+  { cle: 'tous', nom: 'Tous' }, { cle: 'membre', nom: 'Membres' }, { cle: 'benevole', nom: 'Bénévoles' },
+  { cle: 'professeur', nom: 'Professeurs' }, { cle: 'admin', nom: 'Admins' },
+]
+const utilisateurs = ref([])
+const utilisateursLoading = ref(false)
+const utilisateursMessage = ref('')
+const utilisateursErreur = ref(false)
+const rechercheUtilisateur = ref('')
+const filtreRole = ref('tous')
+const roleEnCours = ref(null)
+const monIdAdmin = ref(null)
+const dateCompte = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+
+const chargerUtilisateurs = async () => {
+  utilisateursLoading.value = true
+  utilisateursMessage.value = ''
+  const { data: { session } } = await supabase.auth.getSession()
+  monIdAdmin.value = session?.user.id || null
+  const { data, error } = await supabase.rpc('liste_utilisateurs')
+  if (error) { utilisateursErreur.value = true; utilisateursMessage.value = "La liste des comptes n'a pas pu être chargée." }
+  utilisateurs.value = data || []
+  utilisateursLoading.value = false
+}
+const utilisateursFiltres = computed(() => {
+  const q = rechercheUtilisateur.value.trim().toLowerCase()
+  return utilisateurs.value.filter(u =>
+    (filtreRole.value === 'tous' || u.role === filtreRole.value || (filtreRole.value === 'admin' && u.role === 'superadmin')) &&
+    (!q || `${u.prenom || ''} ${u.nom || ''} ${u.email}`.toLowerCase().includes(q)))
+})
+const changerRole = async (u, evenement) => {
+  const nouveau = evenement.target.value
+  const nom = [u.prenom, u.nom].filter(Boolean).join(' ') || u.email
+  if (!confirm(`Donner le rôle « ${LIBELLES_ROLE[nouveau]} » à ${nom} ?`)) { evenement.target.value = u.role; return }
+  roleEnCours.value = u.id
+  utilisateursErreur.value = false
+  const { error } = await supabase.rpc('changer_role', { p_user: u.id, p_role: nouveau })
+  roleEnCours.value = null
+  if (error) {
+    evenement.target.value = u.role
+    utilisateursErreur.value = true
+    utilisateursMessage.value = `Le rôle n'a pas été changé : ${error.message}`
+    return
+  }
+  u.role = nouveau
+  utilisateursMessage.value = `${nom} est maintenant ${LIBELLES_ROLE[nouveau].toLowerCase()}.`
 }
 
 const notifierUnCours = async (c) => {

@@ -942,3 +942,94 @@ DROP FUNCTION IF EXISTS se_desinscrire_emails(UUID);
 DROP TABLE IF EXISTS emails_envoyes;
 ALTER TABLE profiles DROP COLUMN IF EXISTS emails_mosquee;
 ALTER TABLE profiles DROP COLUMN IF EXISTS jeton_emails;
+
+
+-- ============================================================
+-- UTILISATEURS (admin → onglet « Utilisateurs ») (2026-10-18)
+-- L'admin voit TOUS les comptes du site et choisit le rôle de chacun :
+-- membre (aucun droit particulier), bénévole, professeur, admin.
+-- Le rôle reste rangé dans la table benevoles (ligne « acceptée ») : c'est elle
+-- que lisent toutes les règles d'accès (is_admin_or_superadmin, est_professeur…).
+-- Garde-fous : seul le super-admin nomme ou retire un admin ; personne ne change
+-- son propre rôle ni celui du super-admin (la mosquée ne peut pas perdre son accès).
+-- ============================================================
+CREATE OR REPLACE FUNCTION liste_utilisateurs() RETURNS TABLE (
+  id UUID, email TEXT, prenom TEXT, nom TEXT, cree_le TIMESTAMPTZ, derniere_connexion TIMESTAMPTZ, role TEXT
+)
+LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public AS $$
+BEGIN
+  IF NOT is_admin_or_superadmin() THEN
+    RAISE EXCEPTION 'Réservé aux administrateurs';
+  END IF;
+  RETURN QUERY
+    SELECT u.id, u.email::TEXT, p.prenom, p.nom, u.created_at, u.last_sign_in_at,
+      COALESCE((
+        SELECT b.role FROM benevoles b
+        WHERE lower(b.email) = lower(u.email) AND b.statut = 'accepté'
+        ORDER BY CASE b.role WHEN 'superadmin' THEN 0 WHEN 'admin' THEN 1 WHEN 'professeur' THEN 2 ELSE 3 END
+        LIMIT 1
+      ), 'membre')
+    FROM auth.users u LEFT JOIN profiles p ON p.id = u.id
+    WHERE u.email IS NOT NULL
+    ORDER BY u.created_at DESC;
+END;
+$$;
+REVOKE ALL ON FUNCTION liste_utilisateurs() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION liste_utilisateurs() TO authenticated;
+
+CREATE OR REPLACE FUNCTION changer_role(p_user UUID, p_role TEXT) RETURNS TEXT
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_email TEXT;
+  v_actuel TEXT;
+  v_prenom TEXT;
+  v_nom TEXT;
+BEGIN
+  IF NOT is_admin_or_superadmin() THEN
+    RAISE EXCEPTION 'Réservé aux administrateurs';
+  END IF;
+  IF p_role NOT IN ('membre', 'benevole', 'professeur', 'admin') THEN
+    RAISE EXCEPTION 'Rôle inconnu';
+  END IF;
+  IF p_user = auth.uid() THEN
+    RAISE EXCEPTION 'Vous ne pouvez pas changer votre propre rôle';
+  END IF;
+
+  SELECT u.email INTO v_email FROM auth.users u WHERE u.id = p_user;
+  IF v_email IS NULL THEN
+    RAISE EXCEPTION 'Compte introuvable';
+  END IF;
+  SELECT b.role INTO v_actuel FROM benevoles b
+    WHERE lower(b.email) = lower(v_email) AND b.statut = 'accepté'
+    ORDER BY CASE b.role WHEN 'superadmin' THEN 0 WHEN 'admin' THEN 1 WHEN 'professeur' THEN 2 ELSE 3 END LIMIT 1;
+
+  IF v_actuel = 'superadmin' THEN
+    RAISE EXCEPTION 'Le rôle du super-admin ne peut pas être changé ici';
+  END IF;
+  IF (p_role = 'admin' OR v_actuel = 'admin') AND NOT is_superadmin() THEN
+    RAISE EXCEPTION 'Seul le super-admin peut nommer ou retirer un admin';
+  END IF;
+
+  IF p_role = 'membre' THEN
+    -- Plus aucun droit : ses fiches « acceptées » repassent en simple bénévole refusé
+    -- (l'historique de sa demande reste visible de l'administration)
+    UPDATE benevoles SET role = 'benevole', statut = 'refusé'
+      WHERE lower(email) = lower(v_email) AND statut = 'accepté';
+  ELSIF EXISTS (SELECT 1 FROM benevoles WHERE lower(email) = lower(v_email)) THEN
+    -- Une seule fiche porte le rôle : la plus récente ; les autres fiches acceptées sont ramenées à bénévole
+    UPDATE benevoles SET role = 'benevole'
+      WHERE lower(email) = lower(v_email) AND statut = 'accepté';
+    UPDATE benevoles SET role = p_role, statut = 'accepté'
+      WHERE id = (SELECT b.id FROM benevoles b WHERE lower(b.email) = lower(v_email) ORDER BY b.created_at DESC LIMIT 1);
+  ELSE
+    -- Pas encore de fiche (jamais proposé son aide) : on la crée avec son nom de compte
+    SELECT p.prenom, p.nom INTO v_prenom, v_nom FROM profiles p WHERE p.id = p_user;
+    INSERT INTO benevoles (prenom, nom, email, domaine, statut, role, user_id)
+    VALUES (COALESCE(NULLIF(v_prenom, ''), split_part(v_email, '@', 1)), COALESCE(NULLIF(v_nom, ''), '—'),
+            lower(v_email), 'Rôle donné par l''administration', 'accepté', p_role, p_user);
+  END IF;
+  RETURN p_role;
+END;
+$$;
+REVOKE ALL ON FUNCTION changer_role(UUID, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION changer_role(UUID, TEXT) TO authenticated;
