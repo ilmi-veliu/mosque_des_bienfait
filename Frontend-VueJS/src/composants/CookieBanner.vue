@@ -62,7 +62,7 @@
   <script setup lang="ts">
   import { ref, onMounted } from 'vue';
   import { Cookie } from 'lucide-vue-next';
-  import { chargerCrisp, crispCharge } from '../crisp';
+  import { chargerCrisp, crispCharge, chatDemande } from '../crisp';
   import { lireConsentement, enregistrerConsentement } from '../consentement';
 
   const showBanner = ref(false);
@@ -76,8 +76,9 @@
   const refuseCookies = () => {
     enregistrerConsentement('refused');
     showBanner.value = false;
-    // Retrait de l'accord alors que Crisp tourne déjà : on efface sa session et on recharge sans lui
-    if (crispCharge.value) {
+    // Retrait de l'accord alors que Crisp a été chargé SEULEMENT à cause de l'accord : on efface sa
+    // session et on recharge sans lui. Si la personne a ouvert le chat elle-même, on garde sa conversation.
+    if (crispCharge.value && !chatDemande.value) {
       window.$crisp.push(['do', 'session:reset']);
       setTimeout(() => window.location.reload(), 300);
     }

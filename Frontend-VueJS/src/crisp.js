@@ -9,6 +9,12 @@ const CRISP_WEBSITE_ID = '8dfc9865-dfe6-480b-a35a-6b94ef9b3a8e'
 
 export const crispCharge = ref(false)   // script demandé
 export const crispPret = ref(false)     // fenêtre de chat prête à s'afficher
+// Le visiteur a lui-même ouvert le chat (bouton « Écrire à l'imam », bulle) : c'est un service
+// qu'il a demandé, sa conversation ne doit pas être effacée s'il refuse ensuite les cookies.
+export const chatDemande = ref(false)
+
+// Une conversation a déjà été commencée sur ce navigateur (cookie de session de Crisp)
+const conversationEnCours = () => document.cookie.includes('crisp-client%2Fsession%2F' + CRISP_WEBSITE_ID)
 
 export const chargerCrisp = () => {
   if (crispCharge.value) return
@@ -27,12 +33,18 @@ export const chargerCrisp = () => {
 
 // Les boutons « Écrire à l'imam » du site envoient l'événement « ouvrir-chat-imam »
 export const ouvrirChat = () => {
+  chatDemande.value = true
   chargerCrisp()
   window.$crisp.push(['do', 'chat:show'])
   window.$crisp.push(['do', 'chat:open'])
 }
 
 export const initCrisp = () => {
-  if (lireConsentement() === 'accepted') chargerCrisp()
+  // Chargé tout seul si les cookies sont acceptés, ou pour retrouver une conversation déjà
+  // commencée (sinon, après un rechargement, la personne croit l'avoir perdue)
+  if (lireConsentement() === 'accepted' || conversationEnCours()) {
+    if (conversationEnCours()) chatDemande.value = true
+    chargerCrisp()
+  }
   window.addEventListener('ouvrir-chat-imam', ouvrirChat)
 }
