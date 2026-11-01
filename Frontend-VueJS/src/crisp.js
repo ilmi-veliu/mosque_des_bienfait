@@ -4,6 +4,7 @@
 import { ref } from 'vue'
 import { lireConsentement } from './consentement'
 import { langue } from './traduction'
+import { supabase } from './supabase'
 
 const CRISP_WEBSITE_ID = '8dfc9865-dfe6-480b-a35a-6b94ef9b3a8e'
 
@@ -16,6 +17,19 @@ export const chatDemande = ref(false)
 // Une conversation a déjà été commencée sur ce navigateur (cookie de session de Crisp)
 const conversationEnCours = () => document.cookie.includes('crisp-client%2Fsession%2F' + CRISP_WEBSITE_ID)
 
+// Compte connecté : jeton secret du compte (voir mon_jeton_crisp dans supabase.sql). Donné à Crisp,
+// il rattache la conversation au compte : on la retrouve sur tous ses appareils et navigateurs,
+// même si le navigateur a tout effacé (navigateur d'Instagram / WhatsApp, navigation privée…).
+const lireCompte = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return { jeton: null, email: null }
+    const { data, error } = await supabase.rpc('mon_jeton_crisp')
+    return { jeton: error ? null : data, email: session.user.email }
+  } catch { return { jeton: null, email: null } }
+}
+let compte = null // promesse du compte utilisé par Crisp
+
 export const chargerCrisp = () => {
   if (crispCharge.value) return
   crispCharge.value = true
@@ -25,10 +39,35 @@ export const chargerCrisp = () => {
   const pret = () => { crispPret.value = true }
   window.$crisp.push(['on', 'session:loaded', pret])
   window.$crisp.push(['on', 'chat:opened', pret])
-  const s = document.createElement('script')
-  s.src = 'https://client.crisp.chat/l.js'
-  s.async = true
-  document.head.appendChild(s)
+  // Message écrit (y compris par la bulle de Crisp) : la conversation est un service demandé, on la garde
+  window.$crisp.push(['on', 'message:sent', () => { chatDemande.value = true }])
+  compte = lireCompte()
+  compte.then(({ jeton, email }) => {
+    if (jeton) window.CRISP_TOKEN_ID = jeton
+    if (email) window.$crisp.push(['set', 'user:email', [email]]) // l'imam voit qui écrit
+    const s = document.createElement('script')
+    s.src = 'https://client.crisp.chat/l.js'
+    s.async = true
+    document.head.appendChild(s)
+  })
+}
+
+// Connexion / déconnexion pendant la visite : Crisp passe sur la conversation du compte,
+// ou l'efface de l'appareil à la déconnexion (appareil partagé : le suivant ne la voit pas)
+const suivreConnexion = () => {
+  supabase.auth.onAuthStateChange((evenement) => {
+    if (!['SIGNED_IN', 'SIGNED_OUT'].includes(evenement) || !compte) return
+    // Hors de l'écouteur : Supabase déconseille d'y appeler la base directement
+    setTimeout(async () => {
+      const avant = (await compte).jeton
+      compte = lireCompte()
+      const { jeton, email } = await compte
+      if (jeton === avant) return
+      window.CRISP_TOKEN_ID = jeton || undefined
+      window.$crisp.push(['do', 'session:reset'])
+      if (email) window.$crisp.push(['set', 'user:email', [email]])
+    }, 0)
+  })
 }
 
 // Les boutons « Écrire à l'imam » du site envoient l'événement « ouvrir-chat-imam »
@@ -47,4 +86,5 @@ export const initCrisp = () => {
     chargerCrisp()
   }
   window.addEventListener('ouvrir-chat-imam', ouvrirChat)
+  suivreConnexion()
 }

@@ -1033,3 +1033,35 @@ END;
 $$;
 REVOKE ALL ON FUNCTION changer_role(UUID, TEXT) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION changer_role(UUID, TEXT) TO authenticated;
+
+
+-- ============================================================
+-- CHAT CRISP : la conversation suit le compte, sur tous les appareils
+-- Chaque compte a un jeton secret (lisible par son seul propriétaire, via mon_jeton_crisp()).
+-- Le site le donne à Crisp (CRISP_TOKEN_ID) : en étant connecté, la personne retrouve sa conversation
+-- même si son navigateur a tout effacé (navigateur d'Instagram / WhatsApp, navigation privée…).
+-- Ce n'est pas l'identifiant du compte, que les professeurs et l'admin peuvent voir.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS crisp_jetons (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, -- effacé avec le compte
+  jeton UUID NOT NULL DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE crisp_jetons ENABLE ROW LEVEL SECURITY; -- aucune règle : personne ne lit la table directement
+
+CREATE OR REPLACE FUNCTION mon_jeton_crisp() RETURNS UUID
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_jeton UUID;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RETURN NULL;
+  END IF;
+  INSERT INTO crisp_jetons (user_id) VALUES (auth.uid()) ON CONFLICT (user_id) DO NOTHING;
+  SELECT jeton INTO v_jeton FROM crisp_jetons WHERE user_id = auth.uid();
+  RETURN v_jeton;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION mon_jeton_crisp() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION mon_jeton_crisp() TO authenticated;
